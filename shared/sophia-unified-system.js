@@ -25,13 +25,25 @@ class SophiaDataManager {
 
     initFirebase() {
         try {
-            firebase.initializeApp({
-                apiKey: 'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU',
-                authDomain: 'sophia-infringements.firebaseapp.com',
-                projectId: 'sophia-infringements'
-            });
+            // IMPORTANT: Firebase config should be loaded from a secure source
+            // (e.g., environment variables, Firebase Hosting config)
+            const firebaseConfig = {
+                apiKey: "YOUR_API_KEY", // Load from secure config
+                authDomain: "YOUR_AUTH_DOMAIN", // Load from secure config
+                projectId: "YOUR_PROJECT_ID", // Load from secure config
+                storageBucket: "YOUR_STORAGE_BUCKET", // Load from secure config
+                messagingSenderId: "YOUR_SENDER_ID", // Load from secure config
+                appId: "YOUR_APP_ID" // Load from secure config
+            };
+
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                console.log('✅ Firebase initialized');
+            } else {
+                firebase.app(); // Use existing app
+                console.log('✅ Firebase already initialized, using existing app.');
+            }
             this.db = firebase.firestore();
-            console.log('✅ Firebase initialized');
         } catch (error) {
             console.error('❌ Firebase initialization failed:', error);
             throw error;
@@ -40,6 +52,7 @@ class SophiaDataManager {
 
     // AUTHENTICATION MANAGEMENT
     async checkAuthentication() {
+        throw new Error("Custom localStorage authentication is disabled for security reasons. Firebase Auth should be used.");
         const staff = JSON.parse(localStorage.getItem('loggedInStaff') || 'null');
         if (!staff) {
             throw new Error('Authentication required');
@@ -426,6 +439,7 @@ class SophiaDataManager {
 
     // FIREBASE UTILITIES
     async submitToFirebase(collection, data) {
+        throw new Error("submitToFirebase is temporarily disabled due to ongoing authentication system changes. Firebase Auth needs to be integrated before this can be re-enabled.");
         try {
             const staff = await this.checkAuthentication();
             const submissionData = {

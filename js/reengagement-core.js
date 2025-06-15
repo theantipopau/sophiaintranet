@@ -114,9 +114,13 @@ class ReengagementSystem {
   setupStudentSearch() {
     const input = document.getElementById('studentSearch');
     const dropdown = document.getElementById('studentDropdown');
-    input.addEventListener('input', () => {
+
+    const debouncedSearchHandler = this.debounce(() => {
       const term = input.value.trim().toLowerCase();
-      if (term.length < 2) { dropdown.style.display = 'none'; return; }
+      if (term.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
       const matches = this.students.filter(s =>
         s.FirstName.toLowerCase().includes(term) ||
         s.LegalSurname1.toLowerCase().includes(term) ||
@@ -126,7 +130,10 @@ class ReengagementSystem {
         ? matches.map(s => `<div class="student-option" data-id="${s.BCEID1}">${s.FirstName} ${s.LegalSurname1} (${s.BCEID1})</div>`).join('')
         : '<div class="student-option">No matches</div>';
       dropdown.style.display = 'block';
-    });
+    }, 300); // 300ms delay
+
+    input.addEventListener('input', debouncedSearchHandler);
+
     dropdown.addEventListener('click', e => {
       const id = e.target.dataset.id;
       if (!id) return;
@@ -150,6 +157,15 @@ class ReengagementSystem {
     });
     document.getElementById('studentProfile').style.display = 'block';
     this.validateForm();
+  }
+
+  debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+      const context = this;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), delay);
+    };
   }
 
   bindUI() {
@@ -213,9 +229,38 @@ class ReengagementSystem {
       await this.db.collection('referrals').add(data);
       this.showToast('Referral saved!', 'success');
       this.sendEmail(data);
+
+      // --- BEGIN Comprehensive Reset ---
       this.form.reset();
       this.submitBtn.disabled = true;
       document.getElementById('studentProfile').style.display = 'none';
+
+      document.getElementById('selectedStudentId').value = '';
+      document.getElementById('studentSearch').value = '';
+
+      const studentPhotoEl = document.getElementById('studentPhoto');
+      if (studentPhotoEl) studentPhotoEl.src = 'placeholder.jpg'; // Or a default placeholder image
+
+      const studentDetailIds = ['studentName', 'studentBCEID', 'studentHouse', 'studentHomeGroup', 'studentYearLevel'];
+      studentDetailIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+
+      this.reflectionBase64 = null;
+      this.type = '';
+
+      const referralTypeEl = document.getElementById('referralType');
+      if (referralTypeEl) referralTypeEl.value = '';
+
+      document.querySelectorAll('.type-option.selected').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+
+      // Re-validate the form, which should disable the submit button due to empty required fields
+      this.validateForm();
+      // --- END Comprehensive Reset ---
+
     } catch (err) {
       console.error('Save error:', err);
       this.showToast('Save failed', 'error');

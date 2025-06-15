@@ -2935,7 +2935,7 @@ Sophia College`;
       const tableBody = document.getElementById('masterListTableBody');
       const countElement = document.getElementById('masterListCount');
       
-      tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
       
       try {
         const snapshot = await db.collection('referrals').get();
@@ -2957,9 +2957,19 @@ Sophia College`;
           return timeA - timeB;
         });
         
-        // Assign referral numbers
+        // Assign referral numbers and calculate student counts
+        const studentCounts = {};
         masterListData.forEach((referral, index) => {
           referral.referralNumber = index + 1;
+          
+          // Count referrals per student
+          const studentId = referral.student;
+          if (studentId) {
+            studentCounts[studentId] = (studentCounts[studentId] || 0) + 1;
+            referral.studentCount = studentCounts[studentId];
+          } else {
+            referral.studentCount = 1;
+          }
         });
         
         populateMasterFilters();
@@ -2970,7 +2980,7 @@ Sophia College`;
         
       } catch (error) {
         console.error('❌ Error loading master list:', error);
-        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
       }
     }
 

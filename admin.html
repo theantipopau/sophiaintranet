@@ -1,0 +1,2970 @@
+<!DOCTYPE html>
+<html lang="en" aria-label="Sophia College Admin Dashboard">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sophia College – Admin Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="../logo.ico" type="image/x-icon">
+  
+  <!-- Firebase SDKs v11.7.1 -->
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Unified Sophia System -->
+  <script src="/shared/sophia-unified-system.js"></script>
+  
+  <style>
+    :root {
+      /* Enhanced color palette aligned with staff.html */
+      --primary-navy: #003057;
+      --primary-maroon: #660000;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --info: #0284c7;
+      
+      --white: #ffffff;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --radius: 0.5rem;
+      --radius-lg: 0.75rem;
+      --transition: all 0.15s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #fbecec 0%, var(--gray-50) 100%);
+      color: var(--gray-900);
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Enhanced Navigation aligned with staff.html */
+    .nav-bar {
+      background: var(--primary-navy);
+      color: var(--white);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-lg);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-logo {
+      height: 36px;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-logo:hover {
+      transform: scale(1.05);
+    }
+
+    .nav-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #staffName {
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      font-size: 0.875rem;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropbtn {
+      background: rgba(255,255,255,0.1);
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .dropbtn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: var(--white);
+      min-width: 200px;
+      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      z-index: 1000;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .dropdown-content a,
+    .dropdown-content button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: var(--gray-700);
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-bottom: 1px solid var(--gray-100);
+      transition: var(--transition);
+    }
+
+    .dropdown-content a:last-child,
+    .dropdown-content button:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-content a:hover,
+    .dropdown-content button:hover {
+      background: var(--gray-50);
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Enhanced Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Loading State */
+    .loading-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--gray-500);
+    }
+
+    .loading-spinner {
+      border: 4px solid var(--gray-200);
+      border-top: 4px solid var(--primary-navy);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Header Section */
+    .header-section {
+      text-align: center;
+      margin-bottom: 32px;
+      padding: 32px 24px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+    }
+
+    .header-section h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-navy);
+      letter-spacing: -0.025em;
+    }
+
+    .header-section p {
+      margin: 0;
+      color: var(--gray-500);
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* Enhanced Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+      text-align: center;
+      border-top: 4px solid var(--primary-navy);
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card .icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary-navy);
+      margin-bottom: 8px;
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      color: var(--gray-500);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Enhanced Tabs */
+    .tab-navigation {
+      display: flex;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 6px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--gray-500);
+      font-size: 0.875rem;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      background: var(--gray-50);
+      color: var(--gray-700);
+    }
+
+    .tab-btn.active {
+      background: var(--primary-navy);
+      color: var(--white);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Enhanced Controls */
+    .controls-section {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 24px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      align-items: end;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      color: var(--gray-700);
+      font-size: 0.875rem;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      transition: var(--transition);
+      background: var(--white);
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: var(--primary-navy);
+      box-shadow: 0 0 0 3px rgba(0, 48, 87, 0.1);
+    }
+
+    /* Enhanced Buttons */
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      line-height: 1.5;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: var(--primary-navy);
+      color: var(--white);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #002244;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: var(--white);
+    }
+
+    .btn-warning {
+      background: var(--warning);
+      color: var(--white);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: var(--white);
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--gray-200);
+    }
+
+    /* Enhanced Bulk Actions */
+    .bulk-actions-bar {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid var(--warning);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      box-shadow: var(--shadow);
+    }
+
+    .bulk-info {
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    .bulk-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Enhanced Data Cards */
+    .data-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: 1px solid var(--gray-200);
+    }
+
+    .data-card-header {
+      background: var(--primary-navy);
+      color: var(--white);
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .data-card-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .data-card-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Enhanced Tables */
+    .table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-700);
+      position: sticky;
+      top: 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tbody tr {
+      transition: var(--transition);
+    }
+
+    tbody tr:hover {
+      background: var(--gray-50);
+    }
+
+    .selected-row {
+      background: rgba(0, 48, 87, 0.1) !important;
+    }
+
+    /* Enhanced Status Indicators */
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    .status-step-0 { background: #dbeafe; color: #1e40af; }
+    .status-step-1 { background: #fef3c7; color: #92400e; }
+    .status-step-2 { background: #fed7aa; color: #c2410c; }
+    .status-step-3 { background: #fecaca; color: #dc2626; }
+    .status-step-4 { background: #fca5a5; color: #b91c1c; }
+    .status-step-5 { background: #f87171; color: #991b1b; }
+    .status-step-6 { background: #ef4444; color: var(--white); }
+
+    .email-sent {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .badge-primary { background: rgba(0, 48, 87, 0.1); color: var(--primary-navy); }
+    .badge-success { background: rgba(5, 150, 105, 0.1); color: var(--success); }
+    .badge-warning { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+    .badge-danger { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+
+    /* Enhanced Charts */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    .chart-card {
+      background: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-200);
+    }
+
+    .chart-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0 0 20px 0;
+      text-align: center;
+    }
+
+    .chart-card canvas {
+      width: 100% !important;
+      height: 250px !important;
+    }
+
+    .empty-chart-message {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--gray-500);
+      font-style: italic;
+      height: 250px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      margin: 1rem 0;
+    }
+
+    /* Enhanced Semester Controls */
+    .semester-controls {
+      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .semester-controls h4 {
+      margin: 0 0 8px 0;
+      color: var(--danger);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .semester-controls p {
+      margin: 0 0 16px 0;
+      font-size: 0.875rem;
+      color: #7f1d1d;
+    }
+
+    /* Enhanced Sortable Headers */
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .sortable:hover {
+      background: var(--gray-100);
+    }
+
+    .sortable::after {
+      content: '↕️';
+      font-size: 0.75rem;
+      margin-left: 6px;
+      opacity: 0.5;
+    }
+
+    .sortable.sort-asc::after {
+      content: '↑';
+      opacity: 1;
+    }
+
+    .sortable.sort-desc::after {
+      content: '↓';
+      opacity: 1;
+    }
+
+    /* Utilities */
+    .text-strong { font-weight: 600; color: var(--gray-900); }
+    .text-muted { color: var(--gray-500); font-size: 0.875rem; }
+    .empty-state { 
+      text-align: center; 
+      padding: 3rem 2rem; 
+      color: var(--gray-500); 
+      font-style: italic;
+    }
+
+    /* Enhanced Footer */
+    .footer {
+      margin-top: 80px;
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      padding-top: 32px;
+      border-top: 1px solid var(--gray-200);
+      text-align: center;
+    }
+
+    .footer a {
+      color: var(--primary-navy);
+      text-decoration: none;
+      margin: 0 8px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+      color: var(--primary-maroon);
+    }
+
+    /* Enhanced Responsive Design */
+    @media (max-width: 1024px) {
+      .container { padding: 20px; }
+      .charts-grid { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    }
+
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .controls-grid { grid-template-columns: 1fr; gap: 16px; }
+      .bulk-actions-bar { 
+        flex-direction: column; 
+        gap: 12px; 
+        text-align: center;
+      }
+      .charts-grid { grid-template-columns: 1fr; }
+      .chart-card canvas { height: 220px !important; }
+      .tab-navigation {
+        flex-wrap: wrap;
+      }
+      .tab-btn {
+        min-width: 120px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .tab-btn { 
+        font-size: 0.75rem; 
+        padding: 10px 12px; 
+        min-width: 100px;
+      }
+      .nav-bar { 
+        flex-direction: column; 
+        gap: 12px; 
+        padding: 16px;
+      }
+      .nav-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <div class="nav-left">
+      <img src="crest.png" class="nav-logo" alt="College Crest">
+      <div class="nav-title">📊 Admin Dashboard</div>
+    </div>
+    <div class="nav-links">
+      <span id="staffName">Loading...</span>
+      <div class="dropdown">
+        <button class="dropbtn">☰ Menu</button>
+        <div class="dropdown-content">
+          <a onclick="navigate('home.html')">🏠 Home</a>
+          <a onclick="navigate('staff.html')">📝 Infringement Tracker</a>
+          <a onclick="navigate('outofclass.html')">🏫 Out-of-Class Logger</a>
+          <a onclick="navigate('reengagementroom.html')">🔄 Re-Engagement Room</a>
+          <button onclick="adminSystem.logout()">🚪 Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-state">
+      <div class="loading-spinner"></div>
+      <h2>Initializing Admin Dashboard</h2>
+      <p>Loading system data and authenticating...</p>
+    </div>
+
+    <!-- Main Interface (Hidden until loaded) -->
+    <div id="mainInterface" style="display: none;">
+      
+      <!-- Header Section -->
+      <div class="header-section">
+        <h1>📊 Administrative Control Center</h1>
+        <p>Comprehensive management of student behavior tracking and communications</p>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="icon">📋</div>
+          <div class="number" id="totalInfringements">0</div>
+          <div class="label">Total Infringements</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">📧</div>
+          <div class="number" id="pendingEmails">0</div>
+          <div class="label">Pending Emails</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">🚽</div>
+          <div class="number" id="totalOutOfClass">0</div>
+          <div class="label">Out-of-Class</div>
+        </div>
+        <div class="stat-card">
+          <div class="icon">📈</div>
+          <div class="number" id="todayActivity">0</div>
+          <div class="label">Today's Activity</div>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button class="tab-btn active" onclick="switchTab('infringements', this)">
+          📋 Infringements
+        </button>
+        <button class="tab-btn" onclick="switchTab('emails', this)">
+          📧 Communications
+        </button>
+        <button class="tab-btn" onclick="switchTab('outofclass', this)">
+          🏫 Out-of-Class
+        </button>
+        <button class="tab-btn" onclick="switchTab('analytics', this)">
+          📊 Analytics
+        </button>
+      </div>
+
+      <!-- Infringements Tab -->
+      <div id="infringements-tab" class="tab-content active">
+        <div class="controls-section">
+          <div class="controls-grid">
+            <div class="control-group">
+              <label for="searchInfringements">🔍 Search Students</label>
+              <input type="text" id="searchInfringements" placeholder="Student name or ID...">
+            </div>
+            <div class="control-group">
+              <label for="houseFilterInfr">🏠 House Filter</label>
+              <select id="houseFilterInfr">
+                <option value="">All Houses</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="dateFilterInfr">📅 Date Filter</label>
+              <select id="dateFilterInfr">
+                <option value="">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>&nbsp;</label>
+              <button class="btn btn-secondary" onclick="exportInfringements()">
+                📥 Export Data
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="bulkActionsBar" class="bulk-actions-bar" style="display: none;">
+          <div class="bulk-info">
+            📊 <span id="selectedCount">0</span> items selected
+          </div>
+          <div class="bulk-buttons">
+            <button class="btn btn-secondary" onclick="selectAllInfringements()">Select All</button>
+            <button class="btn btn-secondary" onclick="clearSelectionInfringements()">Clear</button>
+            <button class="btn btn-warning" onclick="bulkEmailParents()">📧 Email Parents</button>
+            <button class="btn btn-danger" onclick="bulkDeleteInfringements()">🗑️ Delete</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-card-header">
+            <h3 class="data-card-title">📋 Infringement Records</h3>
+            <span class="data-card-badge" id="infringementsCount">Loading...</span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="selectAllInfr" onchange="toggleSelectAll('infringements')"></th>
+                  <th class="sortable" onclick="sortTable('infringements', 'date')">Date</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'name')">Student</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'house')">House</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'infringement')">Infringement</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'infractions')">Infractions</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'step')">Step</th>
+                  <th class="sortable" onclick="sortTable('infringements', 'staff')">Staff</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="infringementsTableBody">
+                <tr>
+                  <td colspan="9">
+                    <div class="empty-state">Loading infringement records...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Enhanced Semester Controls -->
+        <div class="semester-controls">
+          <h4>🗂️ Semester Management</h4>
+          <p>Export all data and prepare for new semester - this action cannot be undone</p>
+          <button class="btn btn-danger" onclick="showSemesterWipeWarning()">
+            📤 Export & Wipe Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Email Management Tab -->
+      <div id="emails-tab" class="tab-content">
+        <div class="data-card">
+          <div class="data-card-header">
+            <h3 class="data-card-title">📧 Communication Center</h3>
+            <span class="data-card-badge" id="emailTriggersCount">0 pending</span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>House</th>
+                  <th>Step</th>
+                  <th>Count</th>
+                  <th>Email Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="emailTriggersTableBody">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">Loading communication triggers...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Out of Class Tab -->
+      <div id="outofclass-tab" class="tab-content">
+        <div class="controls-section">
+          <div class="controls-grid">
+            <div class="control-group">
+              <label for="searchOutOfClass">🔍 Search Records</label>
+              <input type="text" id="searchOutOfClass" placeholder="Name or reason...">
+            </div>
+            <div class="control-group">
+              <label for="houseFilterOut">🏠 House Filter</label>
+              <select id="houseFilterOut">
+                <option value="">All Houses</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="reasonFilter">📝 Reason Filter</label>
+              <select id="reasonFilter">
+                <option value="">All Reasons</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="bulkActionsBarOut" class="bulk-actions-bar" style="display: none;">
+          <div class="bulk-info">
+            📊 <span id="selectedCountOut">0</span> items selected
+          </div>
+          <div class="bulk-buttons">
+            <button class="btn btn-secondary" onclick="selectAllOutOfClass()">Select All</button>
+            <button class="btn btn-secondary" onclick="clearSelectionOutOfClass()">Clear</button>
+            <button class="btn btn-danger" onclick="bulkDeleteOutOfClass()">🗑️ Delete</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="data-card-header">
+            <h3 class="data-card-title">🏫 Out-of-Class Records</h3>
+            <span class="data-card-badge" id="outOfClassCount">Loading...</span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="selectAllOut" onchange="toggleSelectAll('outofclass')"></th>
+                  <th>Date</th>
+                  <th>Student</th>
+                  <th>House</th>
+                  <th>Reason</th>
+                  <th>Details</th>
+                  <th>Staff</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="outOfClassTableBody">
+                <tr>
+                  <td colspan="8">
+                    <div class="empty-state">Loading out-of-class records...</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics Tab -->
+      <div id="analytics-tab" class="tab-content">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3 class="chart-title">📊 Infringements by House</h3>
+            <canvas id="houseChart"></canvas>
+          </div>
+          
+          <div class="chart-card">
+            <h3 class="chart-title">📋 Infringement Types</h3>
+            <canvas id="infrTypeChart"></canvas>
+          </div>
+          
+          <div class="chart-card">
+            <h3 class="chart-title">👥 Top Students</h3>
+            <canvas id="topStudentsChart"></canvas>
+          </div>
+          
+          <div class="chart-card">
+            <h3 class="chart-title">🚽 Out-of-Class Reasons</h3>
+            <canvas id="outReasonChart"></canvas>
+          </div>
+          
+          <div class="chart-card">
+            <h3 class="chart-title">🏠 Out-of-Class by House</h3>
+            <canvas id="outHouseChart"></canvas>
+          </div>
+          
+          <div class="chart-card">
+            <h3 class="chart-title">📈 Weekly Trends</h3>
+            <canvas id="trendsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Enhanced Footer -->
+  <footer class="footer">
+    <p>© 2025 Sophia College | 
+      <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+      <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
+      Version 2.0
+    </p>
+  </footer>
+
+  <script>
+    // Enhanced Admin Dashboard System using Unified Data Manager
+    class AdminDashboardSystem {
+      constructor() {
+        this.dataManager = null;
+        this.students = [];
+        this.parentEmails = {};
+        this.companions = {};
+        this.infraData = [];
+        this.outData = [];
+        this.filteredInfraData = [];
+        this.filteredOutData = [];
+        this.selectedInfringements = new Set();
+        this.selectedOutOfClass = new Set();
+        this.emailTemplates = {};
+        this.charts = {};
+        this.currentSort = { column: null, direction: null, table: null };
+      }
+
+      async initialize() {
+        try {
+          console.log('🚀 Initializing Admin Dashboard...');
+          
+          // Show loading state
+          this.showLoadingState(true);
+          
+          // Initialize unified data manager
+          this.dataManager = new SophiaDataManager();
+          
+          // Check authentication and admin access
+          await this.checkAdminAuthentication();
+          
+          // Load all system data using unified manager
+          await this.loadSystemData();
+          
+          // Load email templates
+          await this.loadEmailTemplates();
+          
+          // Setup Firebase subscriptions
+          this.setupDataSubscriptions();
+          
+          // Setup UI event listeners
+          this.setupEventListeners();
+          
+          // Show main interface
+          this.showLoadingState(false);
+          
+          this.dataManager.showToast('✅ Admin Dashboard ready!', 'success');
+          
+        } catch (error) {
+          console.error('❌ Admin Dashboard initialization failed:', error);
+          if (this.dataManager) {
+            this.dataManager.showToast(`❌ Initialization failed: ${error.message}`, 'error');
+          }
+          
+          // Handle authentication failures
+          if (error.message.includes('Authentication') || error.message.includes('Access denied')) {
+            setTimeout(() => {
+              if (error.message.includes('Access denied')) {
+                window.location.href = 'home.html';
+              } else {
+                window.location.href = 'index.html';
+              }
+            }, 2000);
+          }
+        }
+      }
+
+      async checkAdminAuthentication() {
+        const staff = await this.dataManager.checkAuthentication();
+        
+        if (staff.adminaccess !== 'Y') {
+          throw new Error('Access denied: Administrator privileges required');
+        }
+        
+        console.log('✅ Administrator access confirmed for:', staff['staff name']);
+        
+        // Update UI with staff name
+        const staffNameElement = document.getElementById('staffName');
+        if (staffNameElement) {
+          staffNameElement.textContent = staff['staff name'];
+        }
+        
+        return staff;
+      }
+
+      async loadSystemData() {
+        console.log('📚 Loading system data using unified manager...');
+        
+        // Load all data in parallel using the unified data manager
+        const [students, parentEmails, houseCompanions] = await Promise.all([
+          this.dataManager.loadStudents(),
+          this.dataManager.loadParentEmails(),
+          this.dataManager.loadHouseCompanions()
+        ]);
+
+        this.students = students;
+        this.parentEmails = parentEmails;
+        this.companions = houseCompanions;
+
+        // Setup filter dropdowns
+        this.populateHouseFilters();
+        
+        console.log(`✅ Loaded ${students.length} students, ${Object.keys(parentEmails).length} parent emails, ${Object.keys(houseCompanions).length} house companions`);
+      }
+
+      populateHouseFilters() {
+        const filters = this.dataManager.createFilterDropdowns(this.students);
+        
+        ['houseFilterInfr', 'houseFilterOut'].forEach(filterId => {
+          this.dataManager.populateSelect(filterId, filters.houses, 'All Houses');
+        });
+      }
+
+      async loadEmailTemplates() {
+        console.log('📧 Loading email templates...');
+        
+        try {
+          for (let step = 1; step <= 6; step++) {
+            const templatePath = `uniforminfringements/step${step}_uniform_infringement.txt`;
+            
+            try {
+              const response = await fetch(templatePath);
+              if (response.ok) {
+                const templateContent = await response.text();
+                this.emailTemplates[step] = templateContent;
+                console.log(`✅ Loaded template for step ${step}`);
+              } else {
+                console.warn(`⚠️ Could not load template for step ${step}:`, response.status);
+                this.emailTemplates[step] = this.generateFallbackTemplate(step);
+              }
+            } catch (fetchError) {
+              console.warn(`⚠️ Fetch error for step ${step}:`, fetchError);
+              this.emailTemplates[step] = this.generateFallbackTemplate(step);
+            }
+          }
+          
+          console.log('✅ Email templates loaded successfully');
+          
+        } catch (error) {
+          console.error('❌ Error loading email templates:', error);
+          
+          // Load fallback templates for all steps
+          for (let step = 1; step <= 6; step++) {
+            this.emailTemplates[step] = this.generateFallbackTemplate(step);
+          }
+        }
+      }
+
+      generateFallbackTemplate(step) {
+        const stepMessages = {
+          1: "five uniform infringements and has reached Step 1. As a result, they are required to attend the Re-Engagement Room during lunchtime.",
+          2: "ten uniform infringements and has progressed to Step 2. As a consequence, they are required to attend an after-school detention.",
+          3: "fifteen uniform infringements and has reached Step 3. As a result, they will be issued an internal suspension.",
+          4: "twenty uniform infringements and has reached Step 4. As a consequence, they will be issued a one-day external suspension.",
+          5: "twenty-five uniform infringements and has progressed to Step 5. An external suspension of two days will now be issued.",
+          6: "thirty uniform infringements and has reached Step 6. An external suspension of three days will be issued."
+        };
+
+        return `Subject: Uniform Infringement Notification – Step ${step}
+
+Dear {parentName},
+
+This email is to notify you that {studentName} has now received ${stepMessages[step]}
+
+Please contact me if you have any questions.
+
+Kind regards,
+{houseCompanion}
+House Companion
+Sophia College`;
+      }
+
+      setupDataSubscriptions() {
+        console.log('🔄 Setting up real-time data subscriptions...');
+        
+        // Subscribe to infringements using unified system
+        this.dataManager.subscribeToCollection('infringements', null, (snapshot) => {
+          this.handleInfringementsUpdate(snapshot);
+        });
+        
+        // Subscribe to out-of-class using unified system
+        this.dataManager.subscribeToCollection('outofclass', null, (snapshot) => {
+          this.handleOutOfClassUpdate(snapshot);
+        });
+      }
+
+      handleInfringementsUpdate(snapshot) {
+        this.infraData = [];
+        const summary = {};
+        
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const student = this.students.find(s => s.BCEID1 === data.student) || {};
+          
+          summary[data.student] = (summary[data.student] || 0) + 1;
+          const step = this.calculateStep(summary[data.student]);
+          
+          this.infraData.push({
+            id: doc.id,
+            student: data.student,
+            date: data.timestamp ? data.timestamp.toDate() : new Date(),
+            name: (student.FirstName || '') + ' ' + (student.LegalSurname1 || ''),
+            house: student.HouseName || 'Unknown',
+            infringement: data.infringement || 'Unknown',
+            staff: data.staff || 'Unknown',
+            step: step,
+            emailedSteps: data.emailedSteps || {}
+          });
+        });
+        
+        this.filteredInfraData = this.infraData.slice();
+        this.updateStats();
+        this.renderInfringementsTable();
+        this.renderEmailTriggers();
+        
+        // Update charts if analytics tab is active
+        const analyticsTab = document.getElementById('analytics-tab');
+        if (analyticsTab && analyticsTab.classList.contains('active')) {
+          this.renderCharts();
+        }
+      }
+
+      handleOutOfClassUpdate(snapshot) {
+        this.outData = [];
+        
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const student = this.students.find(s => s.BCEID1 === data.student) || {};
+          
+          this.outData.push({
+            id: doc.id,
+            date: data.timestamp ? data.timestamp.toDate() : new Date(),
+            student: data.student,
+            name: (student.FirstName || '') + ' ' + (student.LegalSurname1 || ''),
+            house: student.HouseName || 'Unknown',
+            reason: data.reason || 'Unknown',
+            details: data.details || '',
+            staff: data.staff || 'Unknown'
+          });
+        });
+        
+        this.filteredOutData = this.outData.slice();
+        this.updateStats();
+        this.renderOutOfClassTable();
+        this.populateReasonFilter();
+        
+        // Update charts if analytics tab is active
+        const analyticsTab = document.getElementById('analytics-tab');
+        if (analyticsTab && analyticsTab.classList.contains('active')) {
+          this.renderCharts();
+        }
+      }
+
+      setupEventListeners() {
+        // Filter listeners
+        document.getElementById('searchInfringements')?.addEventListener('input', () => this.filterInfringements());
+        document.getElementById('houseFilterInfr')?.addEventListener('change', () => this.filterInfringements());
+        document.getElementById('dateFilterInfr')?.addEventListener('change', () => this.filterInfringements());
+        
+        document.getElementById('searchOutOfClass')?.addEventListener('input', () => this.filterOutOfClass());
+        document.getElementById('houseFilterOut')?.addEventListener('change', () => this.filterOutOfClass());
+        document.getElementById('reasonFilter')?.addEventListener('change', () => this.filterOutOfClass());
+      }
+
+      // Calculate correct step based on exact infringement counts
+      calculateStep(count) {
+        if (count >= 30) return 6;      // Step 6: 30+ infringements
+        if (count >= 25) return 5;      // Step 5: 25+ infringements
+        if (count >= 20) return 4;      // Step 4: 20+ infringements
+        if (count >= 15) return 3;      // Step 3: 15+ infringements
+        if (count >= 10) return 2;      // Step 2: 10+ infringements
+        if (count >= 5) return 1;       // Step 1: 5+ infringements
+        return 0;                       // No step yet
+      }
+
+      updateStats() {
+        document.getElementById('totalInfringements').textContent = this.infraData.length;
+        document.getElementById('totalOutOfClass').textContent = this.outData.length;
+        
+        // Count pending emails (students who have reached a step but haven't been emailed)
+        const pendingEmails = this.infraData.filter(item => {
+          const parentEmail = this.parentEmails[item.student];
+          return item.step > 0 && !item.emailedSteps[item.step] && parentEmail && parentEmail.email;
+        }).length;
+        document.getElementById('pendingEmails').textContent = pendingEmails;
+        
+        // Today's activity
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayActivity = this.infraData.filter(item => item.date >= today).length + 
+                             this.outData.filter(item => item.date >= today).length;
+        document.getElementById('todayActivity').textContent = todayActivity;
+      }
+
+      showLoadingState(show) {
+        const loadingState = document.getElementById('loadingState');
+        const mainInterface = document.getElementById('mainInterface');
+        
+        if (show) {
+          loadingState.style.display = 'block';
+          mainInterface.style.display = 'none';
+        } else {
+          loadingState.style.display = 'none';
+          mainInterface.style.display = 'block';
+        }
+      }
+
+      logout() {
+        // Cleanup charts before logout
+        this.destroyCharts();
+        this.dataManager?.logout();
+      }
+
+      // Filter functions remain the same but use the unified data manager's debounce
+      filterInfringements = this.dataManager?.debounce(() => {
+        const searchTerm = document.getElementById('searchInfringements')?.value.toLowerCase() || '';
+        const houseFilter = document.getElementById('houseFilterInfr')?.value || '';
+        const dateFilter = document.getElementById('dateFilterInfr')?.value || '';
+        
+        this.filteredInfraData = this.infraData.filter(item => {
+          const matchesSearch = !searchTerm || 
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.infringement.toLowerCase().includes(searchTerm) ||
+            item.student.toLowerCase().includes(searchTerm);
+          
+          const matchesHouse = !houseFilter || item.house === houseFilter;
+          
+          let matchesDate = true;
+          if (dateFilter) {
+            const now = new Date();
+            const itemDate = item.date;
+            
+            if (dateFilter === 'today') {
+              matchesDate = itemDate.toDateString() === now.toDateString();
+            } else if (dateFilter === 'week') {
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              matchesDate = itemDate >= weekAgo;
+            } else if (dateFilter === 'month') {
+              const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+              matchesDate = itemDate >= monthAgo;
+            }
+          }
+          
+          return matchesSearch && matchesHouse && matchesDate;
+        });
+        
+        this.renderInfringementsTable();
+      }, 300) || (() => {});
+
+      filterOutOfClass = this.dataManager?.debounce(() => {
+        const searchTerm = document.getElementById('searchOutOfClass')?.value.toLowerCase() || '';
+        const houseFilter = document.getElementById('houseFilterOut')?.value || '';
+        const reasonFilter = document.getElementById('reasonFilter')?.value || '';
+        
+        this.filteredOutData = this.outData.filter(item => {
+          const matchesSearch = !searchTerm || 
+            item.name.toLowerCase().includes(searchTerm) ||
+            item.reason.toLowerCase().includes(searchTerm) ||
+            item.student.toLowerCase().includes(searchTerm) ||
+            (item.details && item.details.toLowerCase().includes(searchTerm));
+          
+          const matchesHouse = !houseFilter || item.house === houseFilter;
+          const matchesReason = !reasonFilter || item.reason === reasonFilter;
+          
+          return matchesSearch && matchesHouse && matchesReason;
+        });
+        
+        this.renderOutOfClassTable();
+      }, 300) || (() => {});
+
+      // Render functions (simplified versions focusing on core functionality)
+      renderInfringementsTable() {
+        const tbody = document.getElementById('infringementsTableBody');
+        const count = document.getElementById('infringementsCount');
+        
+        if (!tbody || !count) return;
+        
+        count.textContent = `${this.filteredInfraData.length} records`;
+        
+        if (this.filteredInfraData.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="9">
+                <div class="empty-state">No infringement records found</div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        // Calculate infractions count for each student
+        const studentCounts = {};
+        this.infraData.forEach(item => {
+          studentCounts[item.student] = (studentCounts[item.student] || 0) + 1;
+        });
+        
+        tbody.innerHTML = '';
+        this.filteredInfraData.forEach(item => {
+          const isSelected = this.selectedInfringements.has(item.id);
+          const row = document.createElement('tr');
+          if (isSelected) row.classList.add('selected-row');
+          
+          const totalInfractions = studentCounts[item.student] || 0;
+          
+          row.innerHTML = `
+            <td>
+              <input type="checkbox" name="infrCheckbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="adminSystem.handleRowSelection(this, 'infringements')">
+            </td>
+            <td>
+              <div class="text-strong">${this.dataManager.formatDate(item.date).split(',')[0]}</div>
+              <div class="text-muted">${item.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            </td>
+            <td>
+              <div class="text-strong">${this.dataManager.sanitizeHTML(item.name)}</div>
+              <div class="text-muted">${this.dataManager.sanitizeHTML(item.student)}</div>
+            </td>
+            <td>
+              <span class="badge badge-primary">${this.dataManager.sanitizeHTML(item.house)}</span>
+            </td>
+            <td>${this.dataManager.sanitizeHTML(item.infringement)}</td>
+            <td>
+              <div class="text-strong">${totalInfractions}</div>
+              <div class="text-muted">total</div>
+            </td>
+            <td>
+              <span class="status-indicator status-step-${item.step}">Step ${item.step}</span>
+            </td>
+            <td class="text-muted">${this.dataManager.sanitizeHTML(item.staff)}</td>
+            <td>
+              <button class="btn btn-danger" onclick="adminSystem.confirmDelete('infringement', () => adminSystem.deleteInfringement('${item.id}'))">
+                🗑️
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      renderOutOfClassTable() {
+        const tbody = document.getElementById('outOfClassTableBody');
+        const count = document.getElementById('outOfClassCount');
+        
+        if (!tbody || !count) return;
+        
+        count.textContent = `${this.filteredOutData.length} records`;
+        
+        if (this.filteredOutData.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">No out-of-class records found</div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        this.filteredOutData.forEach(item => {
+          const isSelected = this.selectedOutOfClass.has(item.id);
+          const row = document.createElement('tr');
+          if (isSelected) row.classList.add('selected-row');
+          
+          row.innerHTML = `
+            <td>
+              <input type="checkbox" name="outCheckbox" value="${item.id}" ${isSelected ? 'checked' : ''} onchange="adminSystem.handleRowSelection(this, 'outofclass')">
+            </td>
+            <td>
+              <div class="text-strong">${this.dataManager.formatDate(item.date).split(',')[0]}</div>
+              <div class="text-muted">${item.date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            </td>
+            <td>
+              <div class="text-strong">${this.dataManager.sanitizeHTML(item.name)}</div>
+              <div class="text-muted">${this.dataManager.sanitizeHTML(item.student)}</div>
+            </td>
+            <td>
+              <span class="badge badge-primary">${this.dataManager.sanitizeHTML(item.house)}</span>
+            </td>
+            <td>${this.dataManager.sanitizeHTML(item.reason)}</td>
+            <td class="text-muted">${this.dataManager.sanitizeHTML(item.details || '—')}</td>
+            <td class="text-muted">${this.dataManager.sanitizeHTML(item.staff)}</td>
+            <td>
+              <button class="btn btn-danger" onclick="adminSystem.confirmDelete('out-of-class log', () => adminSystem.deleteOutOfClass('${item.id}'))">
+                🗑️
+              </button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      renderEmailTriggers() {
+        const tbody = document.getElementById('emailTriggersTableBody');
+        const count = document.getElementById('emailTriggersCount');
+        
+        if (!tbody || !count) return;
+        
+        // Calculate student step levels
+        const studentCounts = {};
+        const sortedData = this.infraData.slice().sort((a, b) => a.date - b.date);
+        
+        sortedData.forEach(item => {
+          studentCounts[item.student] = (studentCounts[item.student] || 0) + 1;
+        });
+        
+        const triggers = [];
+        Object.entries(studentCounts).forEach(([studentId, count]) => {
+          const step = this.calculateStep(count);
+          if (step > 0) {
+            const student = this.students.find(s => s.BCEID1 === studentId) || {};
+            const latestRecord = this.infraData.find(item => item.student === studentId);
+            const emailSent = latestRecord && latestRecord.emailedSteps[step] ? latestRecord.emailedSteps[step] : false;
+            const parentData = this.parentEmails[studentId];
+            
+            triggers.push({
+              studentId: studentId,
+              name: (student.FirstName || '') + ' ' + (student.LegalSurname1 || ''),
+              house: student.HouseName || 'Unknown',
+              step: step,
+              count: count,
+              emailSent: emailSent,
+              email: parentData ? parentData.email : null
+            });
+          }
+        });
+        
+        const pendingCount = triggers.filter(t => !t.emailSent && t.email).length;
+        count.textContent = `${pendingCount} pending`;
+        
+        if (triggers.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">No email triggers found</div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        tbody.innerHTML = '';
+        triggers.forEach(trigger => {
+          const row = document.createElement('tr');
+          const emailStatus = trigger.emailSent ? 
+            '<span class="email-sent">✅ Sent</span>' : 
+            trigger.email ? 
+              '<span class="badge badge-warning">⏳ Pending</span>' :
+              '<span class="badge badge-danger">❌ No Email</span>';
+          
+          const actionButton = !trigger.emailSent && trigger.email ? 
+            `<button class="btn btn-success" onclick="adminSystem.sendStepEmail('${trigger.studentId}', ${trigger.step}, '${trigger.name.replace(/'/g, "\\'")}', '${trigger.house}')">📧 Send</button>` :
+            '<span class="text-muted">—</span>';
+          
+          row.innerHTML = `
+            <td>
+              <div class="text-strong">${this.dataManager.sanitizeHTML(trigger.name)}</div>
+              <div class="text-muted">${this.dataManager.sanitizeHTML(trigger.studentId)}</div>
+            </td>
+            <td>
+              <span class="badge badge-primary">${this.dataManager.sanitizeHTML(trigger.house)}</span>
+            </td>
+            <td>
+              <span class="status-indicator status-step-${trigger.step}">Step ${trigger.step}</span>
+            </td>
+            <td>
+              <div class="text-strong">${trigger.count}</div>
+            </td>
+            <td>${emailStatus}</td>
+            <td>${actionButton}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      populateReasonFilter() {
+        const reasons = [...new Set(this.outData.map(item => item.reason))].filter(Boolean).sort();
+        this.dataManager.populateSelect('reasonFilter', reasons, 'All Reasons');
+      }
+
+      // Utility methods
+      handleRowSelection(checkbox, type) {
+        const id = checkbox.value;
+        const row = checkbox.closest('tr');
+        
+        if (type === 'infringements') {
+          if (checkbox.checked) {
+            this.selectedInfringements.add(id);
+            row.classList.add('selected-row');
+          } else {
+            this.selectedInfringements.delete(id);
+            row.classList.remove('selected-row');
+          }
+          this.updateBulkActionsBar('infringements');
+        } else {
+          if (checkbox.checked) {
+            this.selectedOutOfClass.add(id);
+            row.classList.add('selected-row');
+          } else {
+            this.selectedOutOfClass.delete(id);
+            row.classList.remove('selected-row');
+          }
+          this.updateBulkActionsBar('outofclass');
+        }
+      }
+
+      updateBulkActionsBar(type) {
+        const selectedSet = type === 'infringements' ? this.selectedInfringements : this.selectedOutOfClass;
+        const bulkBar = document.getElementById(type === 'infringements' ? 'bulkActionsBar' : 'bulkActionsBarOut');
+        const countElement = document.getElementById(type === 'infringements' ? 'selectedCount' : 'selectedCountOut');
+        
+        if (selectedSet.size > 0) {
+          bulkBar.style.display = 'flex';
+          countElement.textContent = selectedSet.size;
+        } else {
+          bulkBar.style.display = 'none';
+        }
+      }
+
+      confirmDelete(type, callback) {
+        if (confirm(`Are you sure you want to delete this ${type}? This action cannot be undone.`)) {
+          callback();
+        }
+      }
+
+      async deleteInfringement(id) {
+        try {
+          await this.dataManager.db.collection('infringements').doc(id).delete();
+          this.dataManager.showToast('✅ Infringement deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting infringement:', error);
+          this.dataManager.showToast('❌ Error deleting infringement', 'error');
+        }
+      }
+
+      async deleteOutOfClass(id) {
+        try {
+          await this.dataManager.db.collection('outofclass').doc(id).delete();
+          this.dataManager.showToast('✅ Out-of-class log deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting out-of-class log:', error);
+          this.dataManager.showToast('❌ Error deleting out-of-class log', 'error');
+        }
+      }
+
+      // Email functionality
+      sendStepEmail(studentId, step, studentName, house) {
+        console.log(`📧 Preparing step ${step} email for ${studentName}`);
+        
+        if (!this.emailTemplates[step]) {
+          this.dataManager.showToast('📧 Email template not available for step ' + step, 'error');
+          return;
+        }
+        
+        const parentData = this.parentEmails[studentId];
+        if (!parentData || !parentData.email) {
+          this.dataManager.showToast('📧 No parent email found for this student', 'warning');
+          return;
+        }
+        
+        const houseCompanionData = this.companions[house];
+        const houseCompanionEmail = houseCompanionData && houseCompanionData.email ? houseCompanionData.email : '';
+        const parentName = parentData.name || 'Parent/Guardian';
+        const houseCompanionName = houseCompanionData ? houseCompanionData.name : house + ' House Companion';
+        
+        const templateVariables = {
+          parentName: parentName,
+          studentName: studentName,
+          houseCompanion: houseCompanionName,
+          date: this.getNextSchoolDay(),
+          startTime: '3:30 PM',
+          endTime: '4:30 PM'
+        };
+        
+        const processedEmail = this.processEmailTemplate(this.emailTemplates[step], templateVariables);
+        
+        // Extract subject and body
+        const lines = processedEmail.split('\n');
+        const subjectLine = lines.find(line => line.startsWith('Subject:'));
+        const subject = subjectLine ? subjectLine.replace('Subject: ', '') : `Uniform Infringement Step ${step} Notification`;
+        
+        // Get body (everything after subject line, excluding empty lines at start)
+        const subjectIndex = lines.findIndex(line => line.startsWith('Subject:'));
+        const bodyLines = lines.slice(subjectIndex + 1).filter((line, index) => {
+          if (index === 0 || index === 1) return line.trim() !== '';
+          return true;
+        });
+        const body = bodyLines.join('\n');
+        
+        this.showEmailConfirmationModal(studentName, step, subject, body, parentData.email, houseCompanionEmail, () => {
+          // Create mailto link
+          const encodedSubject = encodeURIComponent(subject);
+          const encodedBody = encodeURIComponent(body);
+          
+          let mailtoLink = `mailto:${parentData.email}?subject=${encodedSubject}&body=${encodedBody}`;
+          
+          if (houseCompanionEmail) {
+            mailtoLink += `&cc=${encodeURIComponent(houseCompanionEmail)}`;
+          }
+          
+          // Open email client
+          window.open(mailtoLink);
+          
+          // Mark email as sent in database
+          this.markEmailAsSent(studentId, step);
+          
+          this.dataManager.showToast(`📧 Step ${step} email sent for ${studentName}`, 'success');
+        });
+      }
+
+      processEmailTemplate(template, variables) {
+        let processedTemplate = template;
+        
+        Object.keys(variables).forEach(key => {
+          const regex = new RegExp(`{${key}}`, 'g');
+          processedTemplate = processedTemplate.replace(regex, variables[key] || '');
+        });
+        
+        return processedTemplate;
+      }
+
+      getNextSchoolDay() {
+        const today = new Date();
+        const nextDay = new Date(today);
+        nextDay.setDate(today.getDate() + 1);
+        
+        // Skip weekends
+        if (nextDay.getDay() === 0) { // Sunday
+          nextDay.setDate(nextDay.getDate() + 1);
+        } else if (nextDay.getDay() === 6) { // Saturday
+          nextDay.setDate(nextDay.getDate() + 2);
+        }
+        
+        return nextDay.toLocaleDateString('en-AU', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+
+      showEmailConfirmationModal(studentName, step, subject, body, parentEmail, houseCompanionEmail, onConfirm) {
+        // Remove any existing modal
+        const existingModal = document.getElementById('emailConfirmModal');
+        if (existingModal) {
+          existingModal.remove();
+        }
+        
+        const recipients = [`📧 TO: ${parentEmail}`];
+        if (houseCompanionEmail) {
+          recipients.push(`📬 CC: ${houseCompanionEmail}`);
+        }
+        
+        const modalHTML = `
+          <div id="emailConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10000;">
+            <div style="background: white; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: var(--shadow-lg);">
+              
+              <div style="background: var(--primary-navy); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 1.125rem; font-weight: 600;">📧 Email Confirmation</h2>
+                <button onclick="adminSystem.closeEmailConfirmModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 4px;">&times;</button>
+              </div>
+              
+              <div style="padding: 24px;">
+                <p style="margin: 0 0 20px 0; font-size: 1rem; font-weight: 500;">
+                  Send Step ${step} notification for <strong>${studentName}</strong>?
+                </p>
+                
+                <div style="background: var(--gray-50); border-left: 4px solid var(--primary-maroon); padding: 16px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                  <h4 style="margin: 0 0 12px 0; color: var(--primary-maroon); font-weight: 600; font-size: 0.875rem;">📬 Recipients</h4>
+                  ${recipients.map(recipient => `<div style="margin: 6px 0; font-size: 0.875rem; color: var(--gray-600);">${recipient}</div>`).join('')}
+                </div>
+                
+                <div style="border: 1px solid var(--gray-200); border-radius: 8px; margin: 20px 0; overflow: hidden;">
+                  <div style="background: var(--gray-50); padding: 16px; border-bottom: 1px solid var(--gray-200);">
+                    <strong style="color: var(--gray-900); font-size: 0.875rem;">📨 Subject:</strong> <span style="color: var(--gray-600); font-size: 0.875rem;">${subject}</span>
+                  </div>
+                  <div style="padding: 20px; font-family: Georgia, serif; line-height: 1.5; white-space: pre-line; max-height: 200px; overflow-y: auto; color: var(--gray-900); font-size: 0.875rem;">${body}</div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-200);">
+                  <button onclick="adminSystem.closeEmailConfirmModal()" class="btn btn-secondary">❌ Cancel</button>
+                  <button onclick="adminSystem.confirmSendStepEmail()" class="btn btn-primary">📧 Send Email</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        window.currentEmailCallback = onConfirm;
+      }
+
+      closeEmailConfirmModal() {
+        const modal = document.getElementById('emailConfirmModal');
+        if (modal) {
+          modal.remove();
+        }
+        window.currentEmailCallback = null;
+      }
+
+      confirmSendStepEmail() {
+        if (window.currentEmailCallback) {
+          window.currentEmailCallback();
+        }
+        this.closeEmailConfirmModal();
+      }
+
+      async markEmailAsSent(studentId, step) {
+        const latestRecord = this.infraData.find(item => item.student === studentId);
+        
+        if (latestRecord) {
+          const updateField = 'emailedSteps.' + step;
+          const updateObj = {};
+          updateObj[updateField] = true;
+          
+          try {
+            await this.dataManager.db.collection('infringements').doc(latestRecord.id).update(updateObj);
+            console.log(`✅ Marked step ${step} email as sent for ${studentId}`);
+          } catch (error) {
+            console.error('❌ Error marking email as sent:', error);
+            this.dataManager.showToast('✅ Email sent but failed to update database', 'warning');
+          }
+        }
+      }
+
+      // Enhanced Analytics and Chart Rendering
+      renderCharts() {
+        // Check if Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+          console.error('❌ Chart.js not loaded');
+          this.dataManager.showToast('❌ Chart library not available', 'error');
+          return;
+        }
+
+        if (this.infraData.length === 0 && this.outData.length === 0) {
+          console.log('📊 No data available for charts');
+          this.showEmptyChartsMessage();
+          return;
+        }
+
+        console.log('📊 Rendering analytics charts...');
+        
+        try {
+          // Destroy existing charts first
+          this.destroyCharts();
+          
+          // Small delay to ensure DOM is ready
+          setTimeout(() => {
+            this.renderHouseChart();
+            this.renderInfringementTypesChart();
+            this.renderTopStudentsChart();
+            this.renderOutOfClassReasonChart();
+            this.renderOutOfClassHouseChart();
+            this.renderTrendsChart();
+            
+            this.dataManager.showToast('📊 Analytics loaded successfully', 'success');
+          }, 100);
+          
+        } catch (error) {
+          console.error('❌ Error rendering charts:', error);
+          this.dataManager.showToast('❌ Error loading analytics', 'error');
+        }
+      }
+
+      showEmptyChartsMessage() {
+        const chartCards = document.querySelectorAll('.chart-card canvas');
+        chartCards.forEach(canvas => {
+          const container = canvas.parentElement;
+          canvas.style.display = 'none';
+          
+          if (!container.querySelector('.empty-chart-message')) {
+            const message = document.createElement('div');
+            message.className = 'empty-chart-message';
+            message.style.cssText = `
+              text-align: center;
+              padding: 3rem 1rem;
+              color: var(--gray-500);
+              font-style: italic;
+              height: 250px;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+            `;
+            message.innerHTML = `
+              <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+              <div>No data available</div>
+              <div style="font-size: 0.875rem; margin-top: 0.5rem;">Charts will appear when data is logged</div>
+            `;
+            container.appendChild(message);
+          }
+        });
+      }
+
+      renderHouseChart() {
+        const ctx = document.getElementById('houseChart');
+        if (!ctx) return;
+        
+        const houseCounts = {};
+        this.infraData.forEach(item => {
+          houseCounts[item.house] = (houseCounts[item.house] || 0) + 1;
+        });
+        
+        const labels = Object.keys(houseCounts).sort();
+        const data = labels.map(house => houseCounts[house]);
+        
+        if (this.charts.houseChart) {
+          this.charts.houseChart.destroy();
+        }
+        
+        // Show canvas and hide empty message
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.houseChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Infringements',
+              data: data,
+              backgroundColor: 'rgba(0, 48, 87, 0.8)',
+              borderColor: 'rgba(0, 48, 87, 1)',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  precision: 0
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+      }
+
+      renderInfringementTypesChart() {
+        const ctx = document.getElementById('infrTypeChart');
+        if (!ctx) return;
+        
+        const typeCounts = {};
+        this.infraData.forEach(item => {
+          typeCounts[item.infringement] = (typeCounts[item.infringement] || 0) + 1;
+        });
+        
+        const labels = Object.keys(typeCounts);
+        const data = labels.map(type => typeCounts[type]);
+        
+        const colors = this.getChartColors(labels.length);
+        
+        if (this.charts.typeChart) {
+          this.charts.typeChart.destroy();
+        }
+        
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.typeChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors.slice(0, labels.length),
+              borderColor: '#ffffff',
+              borderWidth: 3,
+              hoverBorderWidth: 4,
+              hoverOffset: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 15,
+                  font: {
+                    size: 11
+                  },
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+                callbacks: {
+                  label: function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                  }
+                }
+              }
+            },
+            cutout: '60%'
+          }
+        });
+      }
+
+      renderTopStudentsChart() {
+        const ctx = document.getElementById('topStudentsChart');
+        if (!ctx) return;
+        
+        const studentCounts = {};
+        this.infraData.forEach(item => {
+          studentCounts[item.name] = (studentCounts[item.name] || 0) + 1;
+        });
+        
+        const sorted = Object.entries(studentCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10);
+        
+        const labels = sorted.map(entry => {
+          // Truncate long names for better display
+          const name = entry[0];
+          return name.length > 15 ? name.substring(0, 12) + '...' : name;
+        });
+        const data = sorted.map(entry => entry[1]);
+        
+        if (this.charts.topStudentsChart) {
+          this.charts.topStudentsChart.destroy();
+        }
+        
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.topStudentsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Infringements',
+              data: data,
+              backgroundColor: 'rgba(102, 0, 0, 0.8)',
+              borderColor: 'rgba(102, 0, 0, 1)',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+                callbacks: {
+                  title: function(context) {
+                    // Show full name in tooltip
+                    const index = context[0].dataIndex;
+                    return sorted[index][0];
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  precision: 0
+                }
+              },
+              y: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+      }
+
+      renderOutOfClassReasonChart() {
+        const ctx = document.getElementById('outReasonChart');
+        if (!ctx) return;
+        
+        const reasonCounts = {};
+        this.outData.forEach(item => {
+          reasonCounts[item.reason] = (reasonCounts[item.reason] || 0) + 1;
+        });
+        
+        const labels = Object.keys(reasonCounts);
+        const data = labels.map(reason => reasonCounts[reason]);
+        
+        const colors = [
+          '#003057', '#660000', '#059669', '#d97706', '#dc2626',
+          '#0284c7', '#7c3aed', '#db2777', '#16a34a', '#ea580c'
+        ];
+        
+        if (this.charts.outReasonChart) {
+          this.charts.outReasonChart.destroy();
+        }
+        
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.outReasonChart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors.slice(0, labels.length),
+              borderColor: '#ffffff',
+              borderWidth: 3,
+              hoverBorderWidth: 4,
+              hoverOffset: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  padding: 15,
+                  font: {
+                    size: 11
+                  },
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+                callbacks: {
+                  label: function(context) {
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                    return `${context.label}: ${context.parsed} (${percentage}%)`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+
+      renderOutOfClassHouseChart() {
+        const ctx = document.getElementById('outHouseChart');
+        if (!ctx) return;
+        
+        const houseCounts = {};
+        this.outData.forEach(item => {
+          houseCounts[item.house] = (houseCounts[item.house] || 0) + 1;
+        });
+        
+        const labels = Object.keys(houseCounts).sort();
+        const data = labels.map(house => houseCounts[house]);
+        
+        if (this.charts.outHouseChart) {
+          this.charts.outHouseChart.destroy();
+        }
+        
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.outHouseChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Out-of-Class Logs',
+              data: data,
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: 'rgba(59, 130, 246, 1)',
+              borderWidth: 1,
+              borderRadius: 4,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  precision: 0
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+      }
+
+      renderTrendsChart() {
+        const ctx = document.getElementById('trendsChart');
+        if (!ctx) return;
+        
+        const weeks = [];
+        const infringementCounts = [];
+        const outOfClassCounts = [];
+        
+        // Generate last 8 weeks of data
+        for (let i = 7; i >= 0; i--) {
+          const weekStart = new Date();
+          weekStart.setDate(weekStart.getDate() - (i * 7));
+          weekStart.setHours(0, 0, 0, 0);
+          
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekEnd.getDate() + 6);
+          weekEnd.setHours(23, 59, 59, 999);
+          
+          const weekLabel = weekStart.toLocaleDateString('en-AU', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+          weeks.push(weekLabel);
+          
+          const infrCount = this.infraData.filter(item => 
+            item.date >= weekStart && item.date <= weekEnd
+          ).length;
+          
+          const outCount = this.outData.filter(item => 
+            item.date >= weekStart && item.date <= weekEnd
+          ).length;
+          
+          infringementCounts.push(infrCount);
+          outOfClassCounts.push(outCount);
+        }
+        
+        if (this.charts.trendsChart) {
+          this.charts.trendsChart.destroy();
+        }
+        
+        ctx.style.display = 'block';
+        const emptyMessage = ctx.parentElement.querySelector('.empty-chart-message');
+        if (emptyMessage) {
+          emptyMessage.remove();
+        }
+        
+        this.charts.trendsChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: weeks,
+            datasets: [{
+              label: 'Infringements',
+              data: infringementCounts,
+              borderColor: '#660000',
+              backgroundColor: 'rgba(102, 0, 0, 0.1)',
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: '#660000',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              fill: true
+            }, {
+              label: 'Out-of-Class',
+              data: outOfClassCounts,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              pointBackgroundColor: '#3b82f6',
+              pointBorderColor: '#ffffff',
+              pointBorderWidth: 2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                  padding: 20,
+                  font: {
+                    size: 12,
+                    weight: '500'
+                  },
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                cornerRadius: 6,
+                multiKeyBackground: 'transparent'
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(0, 0, 0, 0.1)'
+                },
+                ticks: {
+                  precision: 0
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Cleanup charts when component unmounts
+      destroyCharts() {
+        Object.values(this.charts).forEach(chart => {
+          if (chart && typeof chart.destroy === 'function') {
+            chart.destroy();
+          }
+        });
+        this.charts = {};
+      }
+
+      // Manual chart refresh for debugging
+      refreshCharts() {
+        console.log('🔄 Manually refreshing charts...');
+        this.renderCharts();
+      }
+
+      // Get dynamic colors for charts
+      getChartColors(count) {
+        const baseColors = [
+          '#660000', '#003057', '#059669', '#d97706', '#dc2626',
+          '#0284c7', '#7c3aed', '#db2777', '#16a34a', '#ea580c',
+          '#8b5cf6', '#06b6d4', '#84cc16', '#f59e0b', '#ef4444'
+        ];
+        
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+          colors.push(baseColors[i % baseColors.length]);
+        }
+        return colors;
+      }
+    }
+
+    // Global navigation and utility functions
+    function navigate(url) {
+      window.location.href = url;
+    }
+
+    function switchTab(tabName, buttonElement) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove active from all buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      // Show target tab
+      const targetTab = document.getElementById(tabName + '-tab');
+      if (targetTab) {
+        targetTab.classList.add('active');
+      }
+      
+      // Activate button
+      if (buttonElement) {
+        buttonElement.classList.add('active');
+      }
+
+      // Load charts if analytics tab
+      if (tabName === 'analytics') {
+        setTimeout(() => {
+          if (adminSystem) {
+            adminSystem.renderCharts();
+          }
+        }, 100);
+      }
+    }
+
+    // Bulk operation functions (simplified for brevity)
+    function toggleSelectAll(type) {
+      const checkbox = document.getElementById(type === 'infringements' ? 'selectAllInfr' : 'selectAllOut');
+      const isChecked = checkbox.checked;
+      
+      if (type === 'infringements') {
+        const checkboxes = document.querySelectorAll('input[name="infrCheckbox"]');
+        checkboxes.forEach(cb => {
+          cb.checked = isChecked;
+          if (isChecked) {
+            adminSystem.selectedInfringements.add(cb.value);
+            cb.closest('tr').classList.add('selected-row');
+          } else {
+            adminSystem.selectedInfringements.delete(cb.value);
+            cb.closest('tr').classList.remove('selected-row');
+          }
+        });
+        adminSystem.updateBulkActionsBar('infringements');
+      } else {
+        const checkboxes = document.querySelectorAll('input[name="outCheckbox"]');
+        checkboxes.forEach(cb => {
+          cb.checked = isChecked;
+          if (isChecked) {
+            adminSystem.selectedOutOfClass.add(cb.value);
+            cb.closest('tr').classList.add('selected-row');
+          } else {
+            adminSystem.selectedOutOfClass.delete(cb.value);
+            cb.closest('tr').classList.remove('selected-row');
+          }
+        });
+        adminSystem.updateBulkActionsBar('outofclass');
+      }
+    }
+
+    function selectAllInfringements() {
+      document.getElementById('selectAllInfr').checked = true;
+      toggleSelectAll('infringements');
+    }
+
+    function clearSelectionInfringements() {
+      document.getElementById('selectAllInfr').checked = false;
+      adminSystem.selectedInfringements.clear();
+      document.querySelectorAll('input[name="infrCheckbox"]').forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('selected-row');
+      });
+      adminSystem.updateBulkActionsBar('infringements');
+    }
+
+    function selectAllOutOfClass() {
+      document.getElementById('selectAllOut').checked = true;
+      toggleSelectAll('outofclass');
+    }
+
+    function clearSelectionOutOfClass() {
+      document.getElementById('selectAllOut').checked = false;
+      adminSystem.selectedOutOfClass.clear();
+      document.querySelectorAll('input[name="outCheckbox"]').forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('selected-row');
+      });
+      adminSystem.updateBulkActionsBar('outofclass');
+    }
+
+    async function bulkDeleteInfringements() {
+      if (adminSystem.selectedInfringements.size === 0) {
+        adminSystem.dataManager.showToast('⚠️ No items selected for deletion', 'warning');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to delete ${adminSystem.selectedInfringements.size} selected infringement(s)? This action cannot be undone.`)) return;
+      
+      adminSystem.dataManager.showToast('🗑️ Deleting selected infringements...', 'info');
+      
+      try {
+        const deletePromises = Array.from(adminSystem.selectedInfringements).map(id => 
+          adminSystem.dataManager.db.collection('infringements').doc(id).delete()
+        );
+        
+        await Promise.all(deletePromises);
+        adminSystem.dataManager.showToast(`✅ ${adminSystem.selectedInfringements.size} infringements deleted successfully`, 'success');
+        clearSelectionInfringements();
+      } catch (error) {
+        console.error('Error bulk deleting:', error);
+        adminSystem.dataManager.showToast('❌ Error deleting some infringements', 'error');
+      }
+    }
+
+    async function bulkDeleteOutOfClass() {
+      if (adminSystem.selectedOutOfClass.size === 0) {
+        adminSystem.dataManager.showToast('⚠️ No items selected for deletion', 'warning');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to delete ${adminSystem.selectedOutOfClass.size} selected out-of-class log(s)? This action cannot be undone.`)) return;
+      
+      adminSystem.dataManager.showToast('🗑️ Deleting selected logs...', 'info');
+      
+      try {
+        const deletePromises = Array.from(adminSystem.selectedOutOfClass).map(id => 
+          adminSystem.dataManager.db.collection('outofclass').doc(id).delete()
+        );
+        
+        await Promise.all(deletePromises);
+        adminSystem.dataManager.showToast(`✅ ${adminSystem.selectedOutOfClass.size} logs deleted successfully`, 'success');
+        clearSelectionOutOfClass();
+      } catch (error) {
+        console.error('Error bulk deleting:', error);
+        adminSystem.dataManager.showToast('❌ Error deleting some logs', 'error');
+      }
+    }
+
+    function bulkEmailParents() {
+      if (adminSystem.selectedInfringements.size === 0) {
+        adminSystem.dataManager.showToast('⚠️ No items selected for email notifications', 'warning');
+        return;
+      }
+      
+      const selectedRecords = adminSystem.infraData.filter(item => 
+        adminSystem.selectedInfringements.has(item.id)
+      );
+      
+      // Group by student to get their step level
+      const studentSteps = {};
+      selectedRecords.forEach(record => {
+        if (!studentSteps[record.student]) {
+          const parentData = adminSystem.parentEmails[record.student];
+          studentSteps[record.student] = {
+            name: record.name,
+            house: record.house,
+            step: record.step,
+            email: parentData ? parentData.email : null
+          };
+        }
+      });
+      
+      const eligibleStudents = Object.values(studentSteps).filter(student => 
+        student.step > 0 && student.email
+      );
+      
+      if (eligibleStudents.length === 0) {
+        adminSystem.dataManager.showToast('⚠️ No eligible students for step emails found', 'warning');
+        return;
+      }
+      
+      const confirmMessage = `Send step notification emails to ${eligibleStudents.length} student(s)?\n\n` +
+        eligibleStudents.map(s => `• ${s.name} (Step ${s.step})`).join('\n');
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+      
+      // Send emails with delay to avoid overwhelming the system
+      eligibleStudents.forEach((student, index) => {
+        setTimeout(() => {
+          const studentId = Object.keys(studentSteps).find(id => 
+            studentSteps[id] === student
+          );
+          adminSystem.sendStepEmail(studentId, student.step, student.name, student.house);
+        }, 500 * index);
+      });
+      
+      adminSystem.dataManager.showToast(`📧 Initiating step emails for ${eligibleStudents.length} students`, 'info');
+    }
+
+    function exportInfringements() {
+      const csvContent = "data:text/csv;charset=utf-8," + 
+        "Date,Student,House,Infringement,Step,Staff\n" +
+        adminSystem.filteredInfraData.map(item => 
+          `"${item.date.toLocaleDateString()}","${item.name}","${item.house}","${item.infringement}",${item.step},"${item.staff}"`
+        ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `infringements_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      adminSystem.dataManager.showToast('📥 Data exported successfully', 'success');
+    }
+
+    function showSemesterWipeWarning() {
+      const warningMessage = `⚠️ CRITICAL WARNING ⚠️
+
+🚨 SEMESTER WIPE OPERATION 🚨
+
+This action will:
+✅ Export ALL current data to CSV
+❌ PERMANENTLY DELETE all infringement records
+❌ PERMANENTLY DELETE all out-of-class records
+🔄 Reset system for new semester
+
+⚠️ THIS ACTION CANNOT BE UNDONE ⚠️
+
+Are you absolutely certain you want to proceed?
+
+This should only be done at the end of a semester when you need to start fresh with new data.`;
+
+      if (confirm(warningMessage)) {
+        exportAndWipeData();
+      }
+    }
+
+    function exportAndWipeData() {
+      const confirmMessage = `🚨 SEMESTER WIPE CONFIRMATION 🚨
+
+This action will:
+1. Export ALL data to a CSV file
+2. PERMANENTLY DELETE all infringement records
+3. PERMANENTLY DELETE all out-of-class records
+4. Clear the system for a new semester
+
+⚠️ THIS CANNOT BE UNDONE ⚠️
+
+Are you absolutely sure you want to proceed?
+
+Type "CONFIRM WIPE" in the prompt that follows if you're certain.`;
+      
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+      
+      const confirmText = prompt('Type "CONFIRM WIPE" to proceed with semester wipe:');
+      if (confirmText !== 'CONFIRM WIPE') {
+        adminSystem.dataManager.showToast('❌ Semester wipe cancelled', 'warning');
+        return;
+      }
+      
+      adminSystem.dataManager.showToast('📤 Exporting data and preparing for semester wipe...', 'info');
+      
+      // Calculate steps for export
+      const studentCounts = {};
+      adminSystem.infraData.forEach(item => {
+        studentCounts[item.student] = (studentCounts[item.student] || 0) + 1;
+      });
+      
+      // Prepare comprehensive export data
+      const exportData = [];
+      
+      // Add infringement data with steps
+      adminSystem.infraData.forEach(item => {
+        const totalCount = studentCounts[item.student];
+        const step = adminSystem.calculateStep(totalCount);
+        
+        exportData.push({
+          Type: 'Infringement',
+          Date: item.date.toLocaleDateString(),
+          Time: item.date.toLocaleTimeString(),
+          StudentID: item.student,
+          StudentName: item.name,
+          House: item.house,
+          Details: item.infringement,
+          Staff: item.staff,
+          TotalCount: totalCount,
+          Step: step,
+          StepDescription: step > 0 ? `Step ${step} (${totalCount} infringements)` : 'No step reached'
+        });
+      });
+      
+      // Add out-of-class data
+      adminSystem.outData.forEach(item => {
+        exportData.push({
+          Type: 'Out-of-Class',
+          Date: item.date.toLocaleDateString(),
+          Time: item.date.toLocaleTimeString(),
+          StudentID: item.student,
+          StudentName: item.name,
+          House: item.house,
+          Details: item.reason + (item.details ? ' - ' + item.details : ''),
+          Staff: item.staff,
+          TotalCount: '',
+          Step: '',
+          StepDescription: ''
+        });
+      });
+      
+      // Create CSV content
+      const headers = ['Type', 'Date', 'Time', 'StudentID', 'StudentName', 'House', 'Details', 'Staff', 'TotalCount', 'Step', 'StepDescription'];
+      const csvContent = "data:text/csv;charset=utf-8," + 
+        headers.join(',') + '\n' +
+        exportData.map(row => 
+          headers.map(header => {
+            const value = row[header] || '';
+            return `"${value.toString().replace(/"/g, '""')}"`;
+          }).join(',')
+        ).join('\n');
+      
+      // Download the export
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `semester_export_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      adminSystem.dataManager.showToast('📥 Data exported successfully! Starting system wipe...', 'success');
+      
+      // Now delete all data
+      setTimeout(async () => {
+        try {
+          const deleteInfringements = adminSystem.dataManager.db.collection('infringements').get().then(snapshot => {
+            const batch = adminSystem.dataManager.db.batch();
+            snapshot.docs.forEach(doc => {
+              batch.delete(doc.ref);
+            });
+            return batch.commit();
+          });
+          
+          const deleteOutOfClass = adminSystem.dataManager.db.collection('outofclass').get().then(snapshot => {
+            const batch = adminSystem.dataManager.db.batch();
+            snapshot.docs.forEach(doc => {
+              batch.delete(doc.ref);
+            });
+            return batch.commit();
+          });
+          
+          await Promise.all([deleteInfringements, deleteOutOfClass]);
+          
+          adminSystem.dataManager.showToast('🎉 Semester wipe completed! System ready for new semester.', 'success');
+          
+          // Reset local data
+          adminSystem.infraData = [];
+          adminSystem.outData = [];
+          adminSystem.filteredInfraData = [];
+          adminSystem.filteredOutData = [];
+          adminSystem.selectedInfringements.clear();
+          adminSystem.selectedOutOfClass.clear();
+          adminSystem.updateStats();
+          adminSystem.renderInfringementsTable();
+          adminSystem.renderOutOfClassTable();
+          adminSystem.renderEmailTriggers();
+          
+        } catch (error) {
+          console.error('Error during semester wipe:', error);
+          adminSystem.dataManager.showToast('❌ Error during semester wipe. Some data may remain.', 'error');
+        }
+      }, 2000);
+    }
+
+    // Table sorting functionality
+    function sortTable(tableType, column) {
+      // Update sort indicators
+      document.querySelectorAll('.sortable').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
+      
+      let direction = 'asc';
+      if (adminSystem.currentSort.column === column && adminSystem.currentSort.table === tableType && adminSystem.currentSort.direction === 'asc') {
+        direction = 'desc';
+      }
+      
+      adminSystem.currentSort = { column: column, direction: direction, table: tableType };
+      
+      // Add sort indicator to clicked header
+      event.target.classList.add(direction === 'asc' ? 'sort-asc' : 'sort-desc');
+      
+      // Sort the data
+      if (tableType === 'infringements') {
+        sortInfringements(column, direction);
+      }
+    }
+
+    function sortInfringements(column, direction) {
+      // Calculate infractions count for each record
+      const studentCounts = {};
+      adminSystem.infraData.forEach(item => {
+        studentCounts[item.student] = (studentCounts[item.student] || 0) + 1;
+      });
+      
+      adminSystem.filteredInfraData.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(column) {
+          case 'date':
+            aVal = a.date.getTime();
+            bVal = b.date.getTime();
+            break;
+          case 'name':
+            aVal = a.name.toLowerCase();
+            bVal = b.name.toLowerCase();
+            break;
+          case 'house':
+            aVal = a.house.toLowerCase();
+            bVal = b.house.toLowerCase();
+            break;
+          case 'infringement':
+            aVal = a.infringement.toLowerCase();
+            bVal = b.infringement.toLowerCase();
+            break;
+          case 'infractions':
+            aVal = studentCounts[a.student] || 0;
+            bVal = studentCounts[b.student] || 0;
+            break;
+          case 'step':
+            aVal = a.step;
+            bVal = b.step;
+            break;
+          case 'staff':
+            aVal = a.staff.toLowerCase();
+            bVal = b.staff.toLowerCase();
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+      
+      adminSystem.renderInfringementsTable();
+    }
+
+    // Global admin system instance
+    let adminSystem;
+
+    // Handle window resize for chart responsiveness
+    window.addEventListener('resize', () => {
+      if (adminSystem && adminSystem.charts) {
+        // Debounce resize events
+        clearTimeout(window.resizeTimeout);
+        window.resizeTimeout = setTimeout(() => {
+          Object.values(adminSystem.charts).forEach(chart => {
+            if (chart && typeof chart.resize === 'function') {
+              chart.resize();
+            }
+          });
+        }, 250);
+      }
+    });
+
+    // Initialize the system when DOM is loaded
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('🚀 Initializing Enhanced Admin Dashboard...');
+      
+      adminSystem = new AdminDashboardSystem();
+      await adminSystem.initialize();
+      
+      // Make system globally accessible
+      window.adminSystem = adminSystem;
+    });
+
+    // Error handling
+    window.addEventListener('error', (event) => {
+      console.error('Global error:', event.error);
+      if (adminSystem && adminSystem.dataManager) {
+        adminSystem.dataManager.showToast('An error occurred. Please refresh if issues persist.', 'error');
+      }
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      if (adminSystem && adminSystem.dataManager) {
+        adminSystem.dataManager.showToast('An unexpected error occurred.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

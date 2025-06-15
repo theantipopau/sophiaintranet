@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sophia College Staff Intranet - Login</title>
+  <meta name="description" content="Secure staff portal for Sophia College intranet systems">
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  
+  <!-- Preload critical assets -->
+  <link rel="preload" href="crest.png" as="image">
+  <link rel="preload" href="sophia-logo.png" as="image">
+  <link rel="preload" href="staffid.csv" as="fetch" crossorigin>
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" as="script">
+
+  <style>
+    :root {
+      --nav-bg: #003057;
+      --nav-fg: #fff;
+      --bg: linear-gradient(135deg, #fbecec 0%, #f0f4f8 100%);
+      --card-bg: #fff;
+      --accent: #660000;
+      --text: #2c2c2c;
+      --shadow: 0 4px 20px rgba(0,0,0,0.1);
+      --border-radius: 12px;
+      --success: #28a745;
+      --warning: #ffc107;
+      --error: #dc3545;
+      --info: #17a2b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      background: var(--nav-bg);
+      color: var(--nav-fg);
+      padding: 12px 24px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      height: 42px;
+      margin-right: 16px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+      transition: transform 0.3s ease;
+    }
+
+    .nav-logo:hover {
+      transform: scale(1.05);
+    }
+
+    .nav-title {
+      font-size: 1.4em;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--nav-fg);
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Main Container */
+    .login-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 70px);
+      padding: 40px 20px;
+      animation: fadeIn 0.8s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Login Card */
+    .login-card {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--nav-bg) 100%);
+    }
+
+    .login-logo {
+      max-width: 280px;
+      margin-bottom: 32px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .greeting {
+      font-size: 1.4em;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 600;
+      animation: fadeInUp 0.6s ease 0.4s both;
+    }
+
+    .welcome-text {
+      font-size: 1.1em;
+      color: #666;
+      margin-bottom: 40px;
+      line-height: 1.5;
+      animation: fadeInUp 0.6s ease 0.6s both;
+    }
+
+    /* Form Elements */
+    .form-section {
+      animation: fadeInUp 0.6s ease 0.8s both;
+    }
+
+    .form-group {
+      position: relative;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--nav-bg);
+      font-size: 0.95em;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 16px 48px 16px 16px;
+      font-size: 1em;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      background: #fafafa;
+      font-family: inherit;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(102,0,0,0.1);
+      transform: translateY(-1px);
+    }
+
+    .form-group input:disabled {
+      background: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    .eye-toggle {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 1.3em;
+      color: #666;
+      padding: 4px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .eye-toggle:hover {
+      color: var(--nav-bg);
+      background: rgba(0,0,0,0.05);
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      margin-bottom: 24px;
+      font-size: 0.9em;
+      color: var(--info);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      animation: fadeInUp 0.6s ease 1s both;
+    }
+
+    .forgot-link:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* Status Messages */
+    .status-container {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .status-msg {
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .status-msg.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-msg.error {
+      background: #ffe6e6;
+      color: var(--error);
+      border: 1px solid #ffcccc;
+    }
+
+    .status-msg.success {
+      background: #e6ffe6;
+      color: var(--success);
+      border: 1px solid #ccffcc;
+    }
+
+    .status-msg.info {
+      background: #e6f3ff;
+      color: var(--info);
+      border: 1px solid #cce7ff;
+    }
+
+    .status-msg.warning {
+      background: #fff8e6;
+      color: #856404;
+      border: 1px solid #ffe066;
+    }
+
+    /* Remember Me */
+    .remember-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      font-size: 0.95em;
+      color: var(--nav-bg);
+      animation: fadeInUp 0.6s ease 1.2s both;
+    }
+
+    .remember-section input[type="checkbox"] {
+      margin-right: 8px;
+      transform: scale(1.1);
+      accent-color: var(--accent);
+    }
+
+    /* Login Button */
+    .login-btn {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 1.1em;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease 1.4s both;
+      font-family: inherit;
+    }
+
+    .login-btn:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102,0,0,0.3);
+      background: linear-gradient(135deg, #880000 0%, var(--accent) 100%);
+    }
+
+    .login-btn:not(:disabled):active {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .login-btn .btn-text {
+      transition: opacity 0.3s ease;
+    }
+
+    .login-btn.loading .btn-text {
+      opacity: 0.7;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top: 2px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    .login-btn.loading .spinner {
+      display: block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 48px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+      animation: fadeInUp 0.6s ease 1.6s both;
+      line-height: 1.8;
+    }
+
+    .footer a {
+      color: var(--nav-bg);
+      text-decoration: none;
+      font-weight: 500;
+      margin: 0 8px;
+      transition: color 0.2s ease;
+    }
+
+    .footer a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* Security Badge */
+    .security-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 32px;
+      padding: 12px 20px;
+      background: rgba(0,48,87,0.05);
+      border-radius: 8px;
+      font-size: 0.85em;
+      color: #666;
+      animation: fadeInUp 0.6s ease 1.8s both;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-overlay.visible {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-bar {
+        padding: 10px 16px;
+      }
+
+      .nav-title {
+        font-size: 1.2em;
+      }
+
+      .login-container {
+        padding: 20px 16px;
+      }
+
+      .login-card {
+        padding: 32px 24px;
+        margin: 0 16px;
+      }
+
+      .login-logo {
+        max-width: 240px;
+      }
+
+      .greeting {
+        font-size: 1.2em;
+      }
+
+      .welcome-text {
+        font-size: 1em;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 24px 20px;
+      }
+
+      .form-group input {
+        padding: 14px 44px 14px 14px;
+      }
+
+      .login-btn {
+        padding: 14px 20px;
+        font-size: 1em;
+      }
+    }
+
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+      body.auto-theme {
+        --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        --card-bg: #2d2d2d;
+        --text: #e0e0e0;
+      }
+    }
+
+    .dark-mode {
+      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      --card-bg: #2d2d2d;
+      --text: #e0e0e0;
+    }
+
+    .dark-mode .form-group input {
+      background: #404040;
+      border-color: #555;
+      color: #e0e0e0;
+    }
+
+    .dark-mode .form-group input:focus {
+      background: #4a4a4a;
+    }
+
+    /* Accessibility Improvements */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Focus styles for better accessibility */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .login-card {
+        border: 2px solid var(--text);
+      }
+      
+      .form-group input {
+        border-width: 3px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <img src="crest.png" alt="Sophia College Crest" class="nav-logo">
+    <div class="nav-title">Sophia College Staff Intranet</div>
+    <div class="nav-links">
+      <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        🌓
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="login-container" role="main">
+    <div class="login-card">
+      <img src="sophia-logo.png" alt="Sophia College Logo and Motto" class="login-logo">
+      
+      <h1 class="greeting" id="timeGreeting" aria-live="polite"></h1>
+      
+      <p class="welcome-text">
+        Welcome to the Sophia College Staff Intranet<br>
+        Please enter your Staff ID to access the system
+      </p>
+
+      <form class="form-section" id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="staffID">Staff ID</label>
+          <input 
+            type="password" 
+            id="staffID" 
+            name="staffID"
+            placeholder="Enter your 6-digit Staff ID"
+            autocomplete="username"
+            disabled
+            required
+            aria-describedby="staffID-help"
+            pattern="[0-9]{6}"
+            maxlength="6"
+          >
+          <button type="button" class="eye-toggle" id="toggleEye" title="Toggle password visibility" aria-label="Toggle password visibility">
+            👁️
+          </button>
+          <div id="staffID-help" class="visually-hidden">Enter your 6-digit staff identification number</div>
+        </div>
+
+        <a href="#" class="forgot-link" id="forgotID" role="button" tabindex="0">
+          Forgot Staff ID?
+        </a>
+
+        <div class="status-container">
+          <div class="status-msg" id="statusMsg" role="alert" aria-live="assertive"></div>
+        </div>
+
+        <div class="remember-section">
+          <label>
+            <input type="checkbox" id="rememberMe" name="rememberMe">
+            Remember me for 48 hours
+          </label>
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn" disabled>
+          <span class="btn-text">🔐 Secure Login</span>
+          <div class="spinner" aria-hidden="true"></div>
+        </button>
+      </form>
+
+      <div class="security-badge">
+        🔒 Secure authentication via encrypted connection
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div>
+        © 2025 Sophia College | 
+        <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+        <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a>
+      </div>
+      <div>Version 2.0 | Staff Portal</div>
+    </footer>
+  </main>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p>Authenticating your credentials...</p>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    'use strict';
+
+    // Constants
+    const THEME_KEY = 'sophia_theme';
+    const STAFF_KEY = 'loggedInStaff';
+    const TIMESTAMP_KEY = 'loginTimestamp';
+    const REMEMBER_KEY = 'rememberMe';
+    const SESSION_DURATION = 48 * 60 * 60 * 1000; // 48 hours
+
+    // DOM Elements
+    let elements = {};
+
+    // Application State
+    const appState = {
+      isLoading: false,
+      csvLoaded: false,
+      staffData: [],
+      loginAttempts: 0,
+      maxAttempts: 5
+    };
+
+    // Initialize Application
+    document.addEventListener('DOMContentLoaded', initializeApp);
+
+    function initializeApp() {
+      console.log('🚀 Initializing Sophia College Login System v2.0');
+      
+      // Cache DOM elements
+      cacheElements();
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Initialize theme
+      initializeTheme();
+      
+      // Set greeting
+      setTimeGreeting();
+      
+      // Check for existing session
+      checkExistingSession();
+      
+      // Load staff data
+      loadStaffData();
+      
+      console.log('✅ Application initialized successfully');
+    }
+
+    function cacheElements() {
+      const elementIds = [
+        'themeToggle', 'timeGreeting', 'loginForm', 'staffID', 
+        'toggleEye', 'forgotID', 'statusMsg', 'rememberMe', 
+        'loginBtn', 'loadingOverlay'
+      ];
+      
+      elementIds.forEach(id => {
+        elements[id] = document.getElementById(id);
+        if (!elements[id]) {
+          console.warn(`⚠️ Element not found: ${id}`);
+        }
+      });
+    }
+
+    function setupEventListeners() {
+      // Theme toggle
+      elements.themeToggle?.addEventListener('click', toggleTheme);
+      
+      // Password visibility toggle
+      elements.toggleEye?.addEventListener('click', togglePasswordVisibility);
+      
+      // Forgot ID link
+      elements.forgotID?.addEventListener('click', handleForgotId);
+      elements.forgotID?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleForgotId();
+        }
+      });
+      
+      // Form submission
+      elements.loginForm?.addEventListener('submit', handleLogin);
+      
+      // Staff ID input validation
+      elements.staffID?.addEventListener('input', validateStaffInput);
+      elements.staffID?.addEventListener('keydown', handleStaffInputKeydown);
+      elements.staffID?.addEventListener('paste', handleStaffInputPaste);
+      
+      // Remember me persistence
+      elements.rememberMe?.addEventListener('change', () => {
+        localStorage.setItem(REMEMBER_KEY, elements.rememberMe.checked);
+      });
+    }
+
+    function initializeTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-mode');
+      }
+      
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem(THEME_KEY)) {
+          document.body.classList.toggle('dark-mode', e.matches);
+        }
+      });
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+      
+      // Animate the toggle button
+      elements.themeToggle.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        elements.themeToggle.style.transform = 'scale(1)';
+      }, 150);
+    }
+
+    function setTimeGreeting() {
+      const hour = new Date().getHours();
+      let greeting;
+      
+      if (hour < 12) greeting = 'Good morning';
+      else if (hour < 18) greeting = 'Good afternoon';
+      else greeting = 'Good evening';
+      
+      if (elements.timeGreeting) {
+        elements.timeGreeting.textContent = greeting;
+      }
+    }
+
+    function checkExistingSession() {
+      const stored = JSON.parse(localStorage.getItem(STAFF_KEY) || 'null');
+      const timestamp = parseInt(localStorage.getItem(TIMESTAMP_KEY) || '0', 10);
+      const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
+      
+      if (stored && (rememberMe || (Date.now() - timestamp < SESSION_DURATION))) {
+        const timeLeft = Math.round((SESSION_DURATION - (Date.now() - timestamp)) / (1000 * 60));
+        
+        if (timeLeft > 0) {
+          const message = `Continue as ${stored['staff name']}?\n\nSession expires in ${timeLeft} minutes.`;
+          
+          if (confirm(message)) {
+            showStatus('Redirecting to dashboard...', 'success');
+            setTimeout(() => {
+              window.location.href = 'home.html';
+            }, 1000);
+            return;
+          }
+        }
+        
+        // Clear expired session
+        clearSession();
+      }
+      
+      // Restore remember me setting
+      if (elements.rememberMe) {
+        elements.rememberMe.checked = rememberMe;
+      }
+    }
+
+    function clearSession() {
+      localStorage.removeItem(STAFF_KEY);
+      localStorage.removeItem(TIMESTAMP_KEY);
+    }
+
+    async function loadStaffData() {
+      try {
+        showLoading(true);
+        showStatus('Loading authentication system...', 'info');
+        
+        const data = await parseCSV('staffid.csv');
+        appState.staffData = data;
+        appState.csvLoaded = true;
+        
+        // Enable form
+        if (elements.staffID) {
+          elements.staffID.disabled = false;
+          elements.staffID.focus();
+        }
+        
+        if (elements.loginBtn) {
+          elements.loginBtn.disabled = false;
+        }
+        
+        showStatus('System ready - please enter your Staff ID', 'success');
+        
+        console.log(`✅ Loaded ${data.length} staff records`);
+        
+      } catch (error) {
+        console.error('❌ Failed to load staff data:', error);
+        showStatus('System error - please contact IT support', 'error');
+        
+        // Enable form anyway for basic functionality
+        if (elements.staffID) elements.staffID.disabled = false;
+        if (elements.loginBtn) elements.loginBtn.disabled = false;
+        
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function parseCSV(filename) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(filename, {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            if (results.errors.length > 0) {
+              console.warn('⚠️ CSV parsing warnings:', results.errors);
+            }
+            resolve(results.data);
+          },
+          error: reject
+        });
+      });
+    }
+
+    function validateStaffInput(event) {
+      const input = event.target;
+      let value = input.value.replace(/\D/g, ''); // Remove non-digits
+      
+      // Limit to 6 digits
+      if (value.length > 6) {
+        value = value.substring(0, 6);
+      }
+      
+      input.value = value;
+      
+      // Update button state
+      updateLoginButtonState();
+      
+      // Clear any error messages when user starts typing
+      if (value.length > 0) {
+        clearStatus();
+      }
+    }
+
+    function handleStaffInputKeydown(event) {
+      // Allow: backspace, delete, tab, escape, enter
+      if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
+          // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+          (event.keyCode === 65 && event.ctrlKey === true) ||
+          (event.keyCode === 67 && event.ctrlKey === true) ||
+          (event.keyCode === 86 && event.ctrlKey === true) ||
+          (event.keyCode === 88 && event.ctrlKey === true)) {
+        return;
+      }
+      
+      // Ensure that it is a number and stop the keypress
+      if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
+        event.preventDefault();
+      }
+    }
+
+    function handleStaffInputPaste(event) {
+      setTimeout(() => {
+        validateStaffInput(event);
+      }, 0);
+    }
+
+    function updateLoginButtonState() {
+      const isValid = elements.staffID?.value.length === 6 && appState.csvLoaded;
+      
+      if (elements.loginBtn) {
+        elements.loginBtn.disabled = !isValid || appState.isLoading;
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const input = elements.staffID;
+      if (!input) return;
+      
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      
+      // Update icon (you could use different icons here)
+      if (elements.toggleEye) {
+        elements.toggleEye.textContent = isPassword ? '🙈' : '👁️';
+        elements.toggleEye.title = isPassword ? 'Hide Staff ID' : 'Show Staff ID';
+      }
+      
+      // Animate the toggle
+      elements.toggleEye.style.transform = 'scale(0.8)';
+      setTimeout(() => {
+        elements.toggleEye.style.transform = 'scale(1)';
+      }, 150);
+    }
+
+    function handleForgotId() {
+      const message = `To recover your Staff ID, please contact:\n\n` +
+                     `📧 Email: splaittech@bne.catholic.edu.au\n` +
+                     `📞 Phone: College Reception\n\n` +
+                     `Please have your employee details ready for verification.`;
+      
+      alert(message);
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      
+      if (appState.isLoading) return;
+      
+      const staffId = elements.staffID?.value.trim();
+      
+      // Validation
+      if (!staffId) {
+        showStatus('Please enter your Staff ID', 'error');
+        elements.staffID?.focus();
+        return;
+      }
+      
+      if (staffId.length !== 6) {
+        showStatus('Staff ID must be exactly 6 digits', 'error');
+        elements.staffID?.focus();
+        return;
+      }
+      
+      // Check rate limiting
+      if (appState.loginAttempts >= appState.maxAttempts) {
+        showStatus('Too many failed attempts. Please wait before trying again.', 'error');
+        return;
+      }
+      
+      try {
+        await performLogin(staffId);
+      } catch (error) {
+        console.error('❌ Login error:', error);
+        showStatus('Login failed. Please try again.', 'error');
+      }
+    }
+
+    async function performLogin(staffId) {
+      appState.isLoading = true;
+      updateLoginButtonState();
+      
+      // Show loading state
+      if (elements.loginBtn) {
+        elements.loginBtn.classList.add('loading');
+      }
+      
+      showStatus('Authenticating...', 'info');
+      
+      try {
+        // Simulate network delay for better UX
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Find staff member
+        const staff = appState.staffData.find(s => s.staffid?.trim() === staffId);
+        
+        if (staff) {
+          // Successful login
+          appState.loginAttempts = 0; // Reset attempts
+          
+          // Store session data
+          localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+          localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
+          localStorage.setItem(REMEMBER_KEY, elements.rememberMe?.checked || false);
+          
+          showStatus(`Welcome, ${staff['staff name']}! Redirecting...`, 'success');
+          
+          // Animate success
+          if (elements.loginBtn) {
+            elements.loginBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+          }
+          
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = 'home.html';
+          }, 1500);
+          
+          console.log(`✅ Login successful for: ${staff['staff name']}`);
+          
+        } else {
+          // Failed login
+          appState.loginAttempts++;
+          const remainingAttempts = appState.maxAttempts - appState.loginAttempts;
+          
+          let message = 'Invalid Staff ID. Please check and try again.';
+          if (remainingAttempts > 0) {
+            message += ` (${remainingAttempts} attempts remaining)`;
+          }
+          
+          showStatus(message, 'error');
+          
+          // Clear input and focus
+          if (elements.staffID) {
+            elements.staffID.value = '';
+            elements.staffID.focus();
+          }
+          
+          // Add shake animation
+          if (elements.loginBtn) {
+            elements.loginBtn.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+              elements.loginBtn.style.animation = '';
+            }, 500);
+          }
+          
+          console.log(`❌ Login failed for Staff ID: ${staffId}`);
+        }
+        
+      } finally {
+        appState.isLoading = false;
+        
+        // Reset loading state
+        if (elements.loginBtn) {
+          elements.loginBtn.classList.remove('loading');
+        }
+        
+        updateLoginButtonState();
+      }
+    }
+
+    function showStatus(message, type = 'info') {
+      if (!elements.statusMsg) return;
+      
+      elements.statusMsg.textContent = message;
+      elements.statusMsg.className = `status-msg ${type} visible`;
+      
+      console.log(`📱 Status (${type}): ${message}`);
+    }
+
+    function clearStatus() {
+      if (elements.statusMsg) {
+        elements.statusMsg.classList.remove('visible');
+      }
+    }
+
+    function showLoading(show) {
+      if (elements.loadingOverlay) {
+        elements.loadingOverlay.classList.toggle('visible', show);
+      }
+    }
+
+    // Add shake animation for failed login
+    const shakeKeyframes = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+    `;
+    
+    const style = document.createElement('style');
+    style.textContent = shakeKeyframes;
+    document.head.appendChild(style);
+
+    // Error handling
+    window.addEventListener('error', (event) => {
+      console.error('🚨 Application error:', event.error);
+      showStatus('System error occurred. Please refresh the page.', 'error');
+    });
+
+    // Prevent form resubmission on page refresh
+    if (window.history.replaceState) {
+      window.history.replaceState(null, null, window.location.href);
+    }
+
+    console.log('✅ Login system loaded successfully');
+  </script>
+</body>
+</html>

@@ -1,0 +1,2387 @@
+<!DOCTYPE html>
+<html lang="en" aria-label="Sophia College Out-of-Class Tracker">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sophia College Out-of-Class Tracker</title>
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  
+  <!-- Preload critical assets for better performance -->
+  <link rel="preload" href="crest.png" as="image">
+  <link rel="preload" href="sophia-logo.png" as="image">
+  <link rel="preload" href="/shared/sophia-unified-system.js" as="script">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <!-- PapaParse CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Unified Sophia System -->
+  <script src="/shared/sophia-unified-system.js"></script>
+  
+  <style>
+    :root {
+      --nav-bg: #003057;
+      --nav-fg: #fff;
+      --bg: linear-gradient(135deg, #fbecec 0%, #f0f4f8 100%);
+      --card-bg: #fff;
+      --accent: #660000;
+      --text: #2c2c2c;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 25px rgba(0,0,0,0.15);
+      --border-radius: 12px;
+      --success: #28a745;
+      --warning: #ffc107;
+      --error: #dc3545;
+      --info: #17a2b8;
+      --orange: #fd7e14;
+      --purple: #6f42c1;
+      --transition: all 0.3s ease;
+      --max-width: 1200px;
+      --content-padding: 32px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Optimized Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes alertGlow {
+      0%, 100% { box-shadow: 0 0 5px rgba(220, 53, 69, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.8); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Loading State */
+    .loading-state {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid var(--nav-bg);
+      border-top: 4px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      font-size: 1.1em;
+      color: var(--nav-bg);
+      font-weight: 500;
+    }
+
+    /* Navigation - Optimized */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--nav-bg);
+      color: var(--nav-fg);
+      padding: 12px var(--content-padding);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow);
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-logo {
+      height: 40px;
+      margin-right: 16px;
+      transition: var(--transition);
+    }
+
+    .nav-logo:hover {
+      transform: scale(1.05);
+    }
+
+    .nav-title {
+      font-size: 1.3em;
+      font-weight: 600;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    #staffName {
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      font-size: 0.95em;
+    }
+
+    .nav-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--nav-fg);
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: var(--error);
+      color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      font-size: 0.7em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    .dropdown {
+      position: relative;
+    }
+
+    .dropbtn {
+      background: rgba(255,255,255,0.1);
+      color: var(--nav-fg);
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dropbtn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: var(--card-bg);
+      min-width: 220px;
+      box-shadow: var(--shadow);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.1);
+      animation: fadeInUp 0.2s ease;
+    }
+
+    .dropdown-content a,
+    .dropdown-content button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      text-decoration: none;
+      color: var(--nav-bg);
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.95em;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .dropdown-content a:hover,
+    .dropdown-content button:hover {
+      background: rgba(0,48,87,0.08);
+      transform: translateX(4px);
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--content-padding);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Sections */
+    .section {
+      width: 100%;
+      max-width: 1000px;
+      margin-bottom: 32px;
+    }
+
+    /* Header Section */
+    .header-section {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      animation: fadeInUp 0.6s ease;
+    }
+
+    .logo-center {
+      max-width: 200px;
+      margin: 0 auto 20px;
+      display: block;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+      transition: var(--transition);
+    }
+
+    .logo-center:hover {
+      transform: scale(1.02);
+    }
+
+    h2 {
+      color: var(--nav-bg);
+      margin: 0 0 12px 0;
+      font-size: 2em;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 1.1em;
+      margin: 0;
+    }
+
+    /* Enhanced Banners */
+    .banner {
+      padding: 16px 24px;
+      border-radius: var(--border-radius);
+      margin-bottom: 24px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+
+    .loading-banner {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+      border: 1px solid #90caf9;
+      color: var(--nav-bg);
+    }
+
+    .active-incidents-banner {
+      background: linear-gradient(135deg, var(--error) 0%, #e57373 100%);
+      color: white;
+      animation: alertGlow 2s infinite;
+    }
+
+    .active-incidents-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .view-active-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .view-active-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* Enhanced Grid Layouts */
+    .grid {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+      justify-items: center;
+    }
+
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .grid-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+    /* Enhanced Stats Cards */
+    .stat-card {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 220px;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent);
+    }
+
+    .stat-card.warning::before { background: var(--warning); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.info::before { background: var(--info); }
+    .stat-card.purple::before { background: var(--purple); }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .stat-number {
+      font-size: 2em;
+      font-weight: 700;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      font-size: 1.5em;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+
+    /* Form Section */
+    .form-section {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .form-title {
+      font-size: 1.4em;
+      font-weight: 600;
+      color: var(--nav-bg);
+      margin-bottom: 32px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-bottom: 32px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+
+    .control-group label {
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--nav-bg);
+      font-size: 0.95em;
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: var(--transition);
+      background: #fafafa;
+      font-family: inherit;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      outline: none;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(102,0,0,0.1);
+    }
+
+    .form-input.textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Student Search */
+    .student-search-container {
+      position: relative;
+    }
+
+    .student-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      box-shadow: var(--shadow);
+    }
+
+    .student-option {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .student-option:hover {
+      background: #f8f9fa;
+    }
+
+    .student-option:last-child {
+      border-bottom: none;
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 auto;
+      padding: 16px 32px;
+      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
+      color: #fff;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1.2em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: var(--shadow);
+      min-width: 200px;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #880000 0%, var(--accent) 100%);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top: 2px solid #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    .submit-btn.loading .btn-spinner {
+      display: block;
+    }
+
+    .submit-btn.loading .btn-text {
+      display: none;
+    }
+
+    /* Student Profile */
+    .student-profile {
+      background: var(--card-bg);
+      padding: 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      display: none;
+      text-align: center;
+    }
+
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .profile-photo img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: var(--border-radius);
+      border: 3px solid #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .profile-details h3 {
+      margin: 0 0 20px 0;
+      color: var(--nav-bg);
+      font-size: 1.5em;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .profile-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .profile-item .icon {
+      font-size: 1.2em;
+      width: 24px;
+    }
+
+    .profile-item .label {
+      font-weight: 600;
+      color: #666;
+    }
+
+    .profile-item .value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Insights Cards */
+    .insights-card {
+      background: var(--card-bg);
+      padding: 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+    }
+
+    .insights-title {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: var(--nav-bg);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    /* Active Incidents */
+    .active-incidents-section {
+      background: var(--card-bg);
+      padding: 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      display: none;
+      text-align: center;
+    }
+
+    .active-incidents-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .active-incidents-title {
+      font-size: 1.3em;
+      font-weight: 600;
+      color: var(--error);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .refresh-btn {
+      background: var(--info);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .refresh-btn:hover {
+      background: #138496;
+      transform: translateY(-1px);
+    }
+
+    .active-incidents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      justify-items: center;
+    }
+
+    .active-incident-card {
+      background: #fff5f5;
+      border: 1px solid #ffebee;
+      border-left: 4px solid var(--error);
+      padding: 20px;
+      border-radius: 8px;
+      transition: var(--transition);
+      width: 100%;
+      max-width: 350px;
+      text-align: left;
+    }
+
+    .active-incident-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+    }
+
+    /* History Section */
+    .history-section {
+      background: var(--card-bg);
+      padding: 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      display: none;
+      text-align: center;
+    }
+
+    .history-list {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: #fafafa;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .history-item {
+      padding: 16px;
+      border-bottom: 1px solid #e0e0e0;
+      transition: var(--transition);
+      text-align: left;
+    }
+
+    .history-item:hover {
+      background: #f0f0f0;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Toast notifications handled by unified system - with better positioning */
+    .custom-toast {
+      position: fixed;
+      top: 80px; /* Lower position to avoid covering dropdown */
+      right: 24px;
+      padding: 16px 24px;
+      background: var(--success);
+      color: #fff;
+      border-radius: var(--border-radius);
+      z-index: 5000; /* Lower than dropdown */
+      box-shadow: var(--shadow);
+      font-weight: 500;
+      max-width: 350px;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      word-wrap: break-word;
+    }
+
+    .custom-toast.show {
+      transform: translateX(0);
+    }
+
+    .custom-toast.success { background: var(--success); }
+    .custom-toast.error { background: var(--error); }
+    .custom-toast.warning { background: var(--warning); color: #333; }
+    .custom-toast.info { background: var(--info); }
+
+    .custom-toast .close-btn {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0.7;
+      line-height: 1;
+    }
+
+    .custom-toast .close-btn:hover {
+      opacity: 1;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 0.9em;
+      color: #666;
+      margin-top: 40px;
+      padding: 24px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .footer a {
+      color: var(--nav-bg);
+      text-decoration: none;
+      font-weight: 500;
+      margin: 0 8px;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* Dark Mode */
+    .dark-mode {
+      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+      --card-bg: #2d2d2d;
+      --text: #e0e0e0;
+      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+      --shadow-hover: 0 8px 25px rgba(0,0,0,0.4);
+    }
+
+    .dark-mode .form-input {
+      background: #404040;
+      border-color: #555;
+      color: #e0e0e0;
+    }
+
+    .dark-mode .form-input:focus {
+      background: #4a4a4a;
+    }
+
+    .dark-mode .student-dropdown {
+      background: #404040;
+      border-color: #555;
+    }
+
+    .dark-mode .student-option:hover {
+      background: #4a4a4a;
+    }
+
+    .dark-mode .profile-item {
+      background: #404040;
+    }
+
+    .dark-mode .history-list {
+      background: #404040;
+      border-color: #555;
+    }
+
+    .dark-mode .history-item {
+      border-color: #555;
+    }
+
+    .dark-mode .history-item:hover {
+      background: #4a4a4a;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      :root {
+        --content-padding: 16px;
+      }
+
+      .nav-bar {
+        padding: 10px 16px;
+      }
+
+      .nav-title {
+        font-size: 1.1em;
+      }
+
+      .container {
+        padding: 16px;
+      }
+
+      .header-section,
+      .form-section,
+      .student-profile,
+      .history-section,
+      .active-incidents-section,
+      .insights-card {
+        padding: 24px 20px;
+      }
+
+      h2 {
+        font-size: 1.5em;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .profile-header {
+        gap: 16px;
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .active-incidents-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .active-incidents-content {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .active-incidents-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      #staffName {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .submit-btn {
+        width: 100%;
+        max-width: 300px;
+      }
+
+      .stat-card {
+        max-width: none;
+      }
+    }
+
+    /* Accessibility */
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* High contrast support */
+    @media (prefers-contrast: high) {
+      .stat-card,
+      .insights-card,
+      .form-section,
+      .student-profile,
+      .history-section {
+        border: 2px solid var(--text);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Loading State -->
+  <div id="loadingState" class="loading-state">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Out-of-Class Tracker...</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation" style="display: none;" id="navBar">
+    <div class="nav-left">
+      <img src="crest.png" class="nav-logo" alt="Sophia College Crest">
+      <div class="nav-title">🏫 Out-of-Class Tracker Pro</div>
+    </div>
+    <div class="nav-links">
+      <span id="staffName"></span>
+      <button class="nav-btn" id="notificationBtn" title="Notifications" aria-label="View notifications">
+        🔔
+        <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+      </button>
+      <button class="nav-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+        🌓
+      </button>
+      <div class="dropdown">
+        <button class="dropbtn" aria-label="Navigation menu">
+          ☰ Menu
+        </button>
+        <div class="dropdown-content">
+          <a href="home.html" onclick="navigate('home.html'); return false;">🏠 Home</a>
+          <a href="staff.html" onclick="navigate('staff.html'); return false;">📝 Infringement Tracker</a>
+          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;">🔄 Re-Engagement Room</a>
+          <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;">👥 Admin Dashboard</a>
+          <button onclick="logout(); return false;">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="container" role="main" style="display: none;" id="mainContainer">
+    
+    <!-- Loading Banner -->
+    <div id="loadingBanner" class="banner loading-banner">
+      📚 Loading tracker data...
+    </div>
+
+    <!-- Active Incidents Alert Banner -->
+    <div id="activeIncidentsBanner" class="banner active-incidents-banner">
+      <div class="active-incidents-content">
+        <div class="active-incidents-text">
+          ⚠️ <span id="activeCount">0</span> students currently out of class
+        </div>
+        <button class="view-active-btn" onclick="OutOfClassSystem.toggleActiveIncidents()">View Details</button>
+      </div>
+    </div>
+
+    <!-- Header Section -->
+    <section class="section">
+      <div class="header-section">
+        <img src="sophia-logo.png" alt="Sophia College Logo" class="logo-center">
+        <h2>Out-of-Class Tracker Pro</h2>
+        <p class="subtitle">Advanced monitoring with real-time tracking and pattern detection</p>
+      </div>
+    </section>
+
+    <!-- Quick Stats -->
+    <section class="section">
+      <div class="grid grid-stats" id="quickStats" style="display:none;">
+        <div class="stat-card">
+          <div class="stat-icon">📊</div>
+          <span class="stat-number" id="todayCount">-</span>
+          <span class="stat-label">Today's Logs</span>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon">⏱️</div>
+          <span class="stat-number" id="activeIncidentsCount">-</span>
+          <span class="stat-label">Currently Out</span>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon">⏰</div>
+          <span class="stat-number" id="avgDuration">-</span>
+          <span class="stat-label">Avg Duration</span>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon">📅</div>
+          <span class="stat-number" id="weekCount">-</span>
+          <span class="stat-label">This Week</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🚽</div>
+          <span class="stat-number" id="toiletCount">-</span>
+          <span class="stat-label">Toilet Breaks</span>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon">📚</div>
+          <span class="stat-number" id="libraryCount">-</span>
+          <span class="stat-label">Library Visits</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Insights Section -->
+    <section class="section">
+      <div class="grid grid-2" id="insightsSection" style="display:none;">
+        <div class="insights-card">
+          <h3 class="insights-title">🔥 Frequent Flyers</h3>
+          <div class="frequent-flyers-list" id="frequentFlyersList">
+            <div style="text-align: center; color: #666; padding: 20px;">Loading patterns...</div>
+          </div>
+        </div>
+        <div class="insights-card">
+          <h3 class="insights-title">⚡ Pattern Alerts</h3>
+          <div class="patterns-list" id="patternsList">
+            <div style="text-align: center; color: #666; padding: 20px;">Analyzing behavior...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Incidents Section -->
+    <section class="section">
+      <div class="active-incidents-section" id="activeIncidentsSection">
+        <div class="active-incidents-header">
+          <h3 class="active-incidents-title">
+            🚨 Active Incidents
+          </h3>
+          <button class="refresh-btn" onclick="OutOfClassSystem.refreshActiveIncidents()">🔄 Refresh</button>
+        </div>
+        <div class="active-incidents-grid" id="activeIncidentsGrid">
+          <div style="text-align: center; color: #666; padding: 40px;">No active incidents</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Form Section -->
+    <section class="section">
+      <div class="form-section">
+        <h3 class="form-title">📝 Log New Incident</h3>
+        <form id="incidentForm">
+          <div class="form-grid">
+            <div class="control-group student-search-container">
+              <label for="searchInput">🔍 Search Student</label>
+              <input id="searchInput" type="text" class="form-input" placeholder="Type student name or ID..." autocomplete="off">
+              <div id="studentDropdown" class="student-dropdown"></div>
+              <input type="hidden" id="selectedStudentId">
+            </div>
+
+            <div class="control-group">
+              <label for="reasonSelect">📋 Reason for Leaving</label>
+              <select id="reasonSelect" class="form-input" aria-label="Select reason" required>
+                <option value="">Select reason...</option>
+              </select>
+            </div>
+
+            <div class="control-group">
+              <label for="detailsInput">📝 Additional Details</label>
+              <textarea id="detailsInput" class="form-input textarea" placeholder="Add any additional notes or context..." aria-label="Additional details"></textarea>
+            </div>
+          </div>
+
+          <button type="submit" id="logBtn" class="submit-btn" disabled>
+            <span class="btn-text">📥 Log Incident</span>
+            <div class="btn-spinner"></div>
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Student Profile -->
+    <section class="section">
+      <div class="student-profile" id="studentProfile" aria-labelledby="profile-title">
+        <div class="profile-header">
+          <div class="profile-photo">
+            <img id="studentPhoto" alt="Student Photo" src="">
+          </div>
+          <div class="profile-details">
+            <h3 id="profile-title">Student Profile</h3>
+            <div class="profile-grid">
+              <div class="profile-item">
+                <span class="icon">👤</span>
+                <span class="label">Name:</span>
+                <span class="value" id="studentNameDetail">-</span>
+              </div>
+              <div class="profile-item">
+                <span class="icon">🆔</span>
+                <span class="label">BCE ID:</span>
+                <span class="value" id="studentBCE">-</span>
+              </div>
+              <div class="profile-item">
+                <span class="icon">🏠</span>
+                <span class="label">House:</span>
+                <span class="value" id="studentHouse">-</span>
+              </div>
+              <div class="profile-item">
+                <span class="icon">🏫</span>
+                <span class="label">Home Group:</span>
+                <span class="value" id="studentHomeGroup">-</span>
+              </div>
+              <div class="profile-item">
+                <span class="icon">📊</span>
+                <span class="label">Year Level:</span>
+                <span class="value" id="studentYear">-</span>
+              </div>
+              <div class="profile-item">
+                <span class="icon">📈</span>
+                <span class="label">Total Logs:</span>
+                <span class="value" id="studentLogCount">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History Section -->
+    <section class="section">
+      <div class="history-section" id="historySection" aria-labelledby="history-title">
+        <div class="history-header">
+          <h3 class="history-title" id="history-title">
+            📜 Previous Incidents
+          </h3>
+          <span class="history-count" id="historyCount">0</span>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">
+            No previous incidents recorded
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div>
+        © 2025 Sophia College | 
+        <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+        <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a>
+      </div>
+      <div>Enhanced Out-of-Class Tracker Pro v3.1 with Unified System</div>
+    </footer>
+
+  </main>
+
+  <script>
+    'use strict';
+
+    // Out-of-Class Tracker System using Unified Sophia System
+    class OutOfClassTrackerSystem {
+      constructor() {
+        this.dataManager = null;
+        this.selectedStudent = null;
+        this.activeIncidents = [];
+        this.realtimeListeners = [];
+        this.constants = {
+          THEME_KEY: 'sophia_theme',
+          LAST_STUDENT_KEY: 'lastOutOfClassStudent',
+          NOTIFICATION_THRESHOLD: 15, // minutes
+          LONG_DURATION_THRESHOLD: 30, // minutes
+          VERY_LONG_DURATION_THRESHOLD: 60, // minutes
+        };
+        
+        this.reasonEmoji = {
+          'Library': '📚', 'Recess': '☀️', 'Other': '❓', 'Toilet': '🚽',
+          'Drink': '🥤', 'Locker': '🗄️', 'IT': '💻', 'Learning Common': '📖',
+          'Student Reception': '🛎️', 'Mentoring': '🤝', 'House Companion': '👥',
+          'Re-Engagement Room': '🔄'
+        };
+      }
+
+      async initialize() {
+        console.log('🚀 Initializing Out-of-Class Tracker Pro v3.1');
+        
+        try {
+          // Wait for unified system to be available
+          if (typeof SophiaDataManager === 'undefined') {
+            throw new Error('Unified system not loaded');
+          }
+
+          // Initialize unified data manager
+          this.dataManager = new SophiaDataManager({
+            retryCount: 3,
+            retryDelay: 1000,
+            cacheTimeout: 20 * 60 * 1000 // 20 minutes for out-of-class tracker
+          });
+
+          // Check authentication
+          await this.dataManager.checkAuthentication();
+
+          // Setup UI components
+          this.setupEventListeners();
+          this.initializeTheme();
+
+          // Load data
+          await this.loadSystemData();
+
+          // Request notification permission
+          await this.requestNotificationPermission();
+
+          // Show interface first
+          this.showInterface();
+
+          // Setup real-time monitoring after interface is shown
+          await this.setupRealtimeMonitoring();
+
+          // Load analytics
+          await this.loadAnalytics();
+
+          // Restore last selected student
+          this.restoreLastStudent();
+
+          // Show success notification (positioned lower) after everything is loaded
+          setTimeout(() => {
+            this.showToast('✅ Out-of-Class Tracker ready! All features active.', 'success', 4000);
+          }, 1000);
+
+          // Show index info if needed (only on first successful load)
+          if (!localStorage.getItem('indexInfoShown')) {
+            setTimeout(() => {
+              this.showFirebaseIndexInfo();
+              localStorage.setItem('indexInfoShown', 'true');
+            }, 2000);
+          }
+
+        } catch (error) {
+          console.error('❌ Initialization failed:', error);
+          
+          // Show detailed error information
+          this.showToast(`❌ Initialization failed: ${error.message}`, 'error', 8000);
+          
+          // Show error state
+          const loadingState = document.getElementById('loadingState');
+          if (loadingState) {
+            loadingState.innerHTML = `
+              <div style="text-align: center; color: var(--error);">
+                <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
+                <div style="font-size: 1.2em; margin-bottom: 10px;">System Initialization Failed</div>
+                <div style="color: #666; margin-bottom: 20px;">${error.message}</div>
+                <div style="font-size: 0.9em; color: #888; margin-bottom: 20px;">
+                  Check console for detailed error information
+                </div>
+                <button onclick="location.reload()" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px;">
+                  🔄 Retry
+                </button>
+                <button onclick="this.parentElement.parentElement.style.display='none'; document.getElementById('navBar').style.display='flex'; document.getElementById('mainContainer').style.display='flex';" style="padding: 12px 24px; background: var(--info); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                  🚀 Continue Anyway
+                </button>
+              </div>
+            `;
+          }
+          
+          // Redirect to login on auth failure
+          if (error.message === 'Authentication required') {
+            setTimeout(() => window.location.href = 'index.html', 3000);
+          }
+        }
+      }
+
+      async loadSystemData() {
+        console.log('📚 Loading system data...');
+        
+        try {
+          console.log('🔍 Checking unified system availability...');
+          console.log('SophiaDataManager available:', typeof SophiaDataManager !== 'undefined');
+          console.log('DataManager instance:', this.dataManager);
+          console.log('Firebase available:', typeof firebase !== 'undefined');
+          
+          // Load students and out-of-class reasons in parallel
+          const [students, reasons] = await Promise.all([
+            this.dataManager.loadStudents(),
+            this.loadOutOfClassReasonsWithFallback()
+          ]);
+
+          this.students = students;
+          console.log(`📊 Students loaded: ${students.length}`);
+          
+          // Setup student search
+          this.dataManager.createStudentSearch('searchInput', 'studentDropdown', (student) => {
+            this.selectStudent(student);
+          });
+
+          // Populate reason dropdown
+          this.populateReasonSelect(reasons);
+          console.log(`📋 Reasons loaded: ${reasons.length}`);
+
+          console.log(`✅ System data loaded successfully`);
+
+        } catch (error) {
+          console.error('❌ Error loading system data:', error);
+          console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          });
+          throw error;
+        }
+      }
+
+      async loadOutOfClassReasonsWithFallback() {
+        try {
+          // Try to load from unified system first
+          return await this.dataManager.loadOutOfClassReasons();
+        } catch (error) {
+          console.warn('⚠️ Error loading reasons from unified system, using fallback:', error);
+          
+          try {
+            // Fallback: try to load CSV directly with better error handling
+            const response = await fetch('outofclass.csv');
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const csvText = await response.text();
+            
+            const parsed = Papa.parse(csvText, {
+              header: true,
+              skipEmptyLines: true,
+              trimHeaders: true,
+              dynamicTyping: false, // Keep as strings to avoid type issues
+              transform: (value) => value ? value.trim() : '', // Clean up values
+              transformHeader: (header) => header.trim(), // Clean up headers
+              error: (error) => {
+                console.warn('CSV parsing error:', error);
+              },
+              complete: (results) => {
+                if (results.errors && results.errors.length > 0) {
+                  console.warn('CSV parsing completed with warnings:', results.errors);
+                  // Filter out only critical errors
+                  const criticalErrors = results.errors.filter(error => 
+                    error.type === 'FieldMismatch' || error.type === 'Delimiter'
+                  );
+                  if (criticalErrors.length > 0) {
+                    console.error('Critical CSV errors:', criticalErrors);
+                  }
+                }
+              }
+            });
+            
+            // Handle parsing warnings gracefully
+            if (parsed.errors && parsed.errors.length > 0) {
+              const warningCount = parsed.errors.length;
+              console.warn(`📋 CSV parsed with ${warningCount} non-critical warnings`);
+              
+              // Only show user notification for critical errors
+              const criticalErrors = parsed.errors.filter(error => 
+                error.type === 'FieldMismatch' || error.type === 'Delimiter'
+              );
+              
+              if (criticalErrors.length > 0) {
+                this.showToast(`⚠️ CSV format issues detected (${criticalErrors.length})`, 'warning', 3000);
+              }
+            }
+            
+            // Get the first field as the reason field, or use column header
+            const firstField = parsed.meta.fields?.[0] || 'reason';
+            const reasons = [...new Set(
+              parsed.data
+                .map(row => row[firstField])
+                .filter(Boolean)
+                .filter(reason => reason.length > 0)
+            )];
+            
+            console.log(`📋 Reasons loaded from CSV fallback: ${reasons.length}`);
+            return reasons;
+            
+          } catch (csvError) {
+            console.error('❌ CSV fallback also failed:', csvError);
+            
+            // Ultimate fallback: use default reasons
+            const defaultReasons = Object.keys(this.reasonEmoji);
+            console.log(`📋 Using default reasons: ${defaultReasons.length}`);
+            return defaultReasons;
+          }
+        }
+      }
+
+      populateReasonSelect(reasons) {
+        const select = document.getElementById('reasonSelect');
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Select reason...</option>';
+        
+        reasons.forEach(reason => {
+          const emoji = this.reasonEmoji[reason] || '📝';
+          const option = new Option(`${emoji} ${reason}`, reason);
+          select.add(option);
+        });
+      }
+
+      setupEventListeners() {
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+          themeToggle.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Notification button
+        const notificationBtn = document.getElementById('notificationBtn');
+        if (notificationBtn) {
+          notificationBtn.addEventListener('click', () => this.toggleActiveIncidents());
+        }
+
+        // Form elements
+        const reasonSelect = document.getElementById('reasonSelect');
+        if (reasonSelect) {
+          reasonSelect.addEventListener('change', () => this.validateForm());
+        }
+
+        const detailsInput = document.getElementById('detailsInput');
+        if (detailsInput) {
+          detailsInput.addEventListener('input', () => this.validateForm());
+        }
+
+        // Form submission
+        const incidentForm = document.getElementById('incidentForm');
+        if (incidentForm) {
+          incidentForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
+        }
+
+        // Page visibility change for notifications
+        document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
+      }
+
+      initializeTheme() {
+        const savedTheme = localStorage.getItem(this.constants.THEME_KEY);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.body.classList.add('dark-mode');
+        }
+      }
+
+      toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem(this.constants.THEME_KEY, isDark ? 'dark' : 'light');
+        this.showToast(`🎨 Switched to ${isDark ? 'dark' : 'light'} mode`, 'info');
+      }
+
+      async requestNotificationPermission() {
+        if ('Notification' in window && Notification.permission === 'default') {
+          try {
+            const permission = await Notification.requestPermission();
+            this.notificationPermission = permission === 'granted';
+            if (this.notificationPermission) {
+              this.showToast('🔔 Notifications enabled for overdue students', 'info');
+            }
+          } catch (error) {
+            console.warn('Notification permission error:', error);
+          }
+        } else {
+          this.notificationPermission = Notification.permission === 'granted';
+        }
+      }
+
+      setupRealtimeMonitoring() {
+        console.log('🔴 Setting up real-time monitoring...');
+        console.log('DataManager DB available:', !!this.dataManager?.db);
+        console.log('Firebase SDK available:', typeof firebase !== 'undefined');
+        
+        // Check if Firebase is properly initialized
+        if (!this.dataManager || !this.dataManager.db) {
+          console.warn('⚠️ Firebase not available via unified system, initializing manually...');
+          try {
+            // Manual Firebase initialization as fallback
+            if (typeof firebase !== 'undefined') {
+              // Check if already initialized
+              if (firebase.apps.length === 0) {
+                firebase.initializeApp({
+                  apiKey: 'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU',
+                  authDomain: 'sophia-infringements.firebaseapp.com',
+                  projectId: 'sophia-infringements'
+                });
+              }
+              this.db = firebase.firestore();
+              console.log('✅ Firebase manually initialized');
+              console.log('Firestore instance:', this.db);
+            } else {
+              console.error('❌ Firebase SDK not loaded');
+              this.showToast('❌ Firebase SDK not available', 'error');
+              return;
+            }
+          } catch (error) {
+            console.error('❌ Firebase initialization failed:', error);
+            this.showToast('❌ Firebase initialization failed', 'error');
+            return;
+          }
+        } else {
+          this.db = this.dataManager.db;
+          console.log('✅ Using unified system Firebase connection');
+        }
+
+        try {
+          console.log('🔗 Setting up Firestore listeners...');
+          
+          // Monitor active incidents (students currently out)
+          const activeListener = this.db.collection('outofclass')
+            .where('status', '==', 'out')
+            .onSnapshot(snapshot => {
+              console.log(`📊 Active incidents update: ${snapshot.size} students out`);
+              this.updateActiveIncidents(snapshot);
+              this.checkForOverdueStudents();
+            }, error => {
+              console.error('❌ Active incidents listener error:', error);
+              this.showToast('❌ Real-time monitoring failed', 'error');
+            });
+
+          // Monitor today's incidents for live stats
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          console.log('📅 Setting up today listener for date:', today);
+          
+          const todayListener = this.db.collection('outofclass')
+            .where('timestamp', '>=', today)
+            .onSnapshot(snapshot => {
+              console.log(`📈 Today's stats update: ${snapshot.size} total incidents`);
+              this.updateTodayStats(snapshot);
+            }, error => {
+              console.warn('⚠️ Today listener error:', error);
+            });
+
+          this.realtimeListeners.push(activeListener, todayListener);
+          console.log('✅ Real-time monitoring active with', this.realtimeListeners.length, 'listeners');
+
+          // Load initial data
+          this.loadInitialFirebaseData();
+
+        } catch (error) {
+          console.error('❌ Real-time monitoring setup failed:', error);
+          this.showToast('⚠️ Real-time monitoring unavailable', 'warning');
+        }
+      }
+
+      async loadInitialFirebaseData() {
+        console.log('🔍 Loading initial Firebase data...');
+        
+        try {
+          // Load today's stats
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          console.log('📅 Querying incidents since:', today);
+          
+          const todaySnapshot = await this.db.collection('outofclass')
+            .where('timestamp', '>=', today)
+            .get();
+            
+          console.log(`📊 Today's incidents found: ${todaySnapshot.size}`);
+          this.updateTodayStats(todaySnapshot);
+          
+          // Load active incidents
+          console.log('🔍 Querying active incidents...');
+          const activeSnapshot = await this.db.collection('outofclass')
+            .where('status', '==', 'out')
+            .get();
+            
+          console.log(`🚨 Active incidents found: ${activeSnapshot.size}`);
+          this.updateActiveIncidents(activeSnapshot);
+          
+          console.log('✅ Initial Firebase data loaded successfully');
+          
+          // Don't show success toast here - will be shown later to avoid dropdown conflict
+          
+        } catch (error) {
+          console.error('❌ Error loading initial Firebase data:', error);
+          console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            code: error.code
+          });
+          
+          // Show user-friendly error message
+          let errorMessage = 'Error loading Firebase data';
+          if (error.code === 'permission-denied') {
+            errorMessage = 'Permission denied - check Firebase security rules';
+          } else if (error.code === 'unavailable') {
+            errorMessage = 'Firebase service temporarily unavailable';
+          }
+          
+          this.showToast(`⚠️ ${errorMessage}`, 'warning');
+        }
+      }
+
+      showFirebaseIndexInfo() {
+        // Show helpful information about Firebase indexing
+        const indexInfo = document.createElement('div');
+        indexInfo.style.cssText = `
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 30px;
+          border-radius: 12px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+          max-width: 500px;
+          z-index: 10000;
+          border: 1px solid #e0e0e0;
+        `;
+        
+        indexInfo.innerHTML = `
+          <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
+            <h3 style="margin: 0; color: var(--nav-bg);">Firebase Index Optional</h3>
+          </div>
+          
+          <p style="margin-bottom: 15px; line-height: 1.5;">
+            The system is working perfectly! For even faster student history loading, 
+            you can optionally create a Firebase index.
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <strong>Current Status:</strong><br>
+            ✅ Data loading works<br>
+            ✅ Real-time monitoring active<br>
+            ✅ All features functional<br>
+            ⚡ History sorting happens client-side
+          </div>
+          
+          <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="this.parentElement.parentElement.remove()" 
+              style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer;">
+              ✅ Continue As-Is
+            </button>
+            <button onclick="window.open('https://console.firebase.google.com/v1/r/project/sophia-infringements/firestore/indexes?create_composite=Cldwcm9qZWN0cy9zb3BoaWEtaW5mcmluZ2VtZW50cy9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvb3V0b2ZjbGFzcy9pbmRleGVzL18QARoLCgdzdHVkZW50EAEaDQoJdGltZXN0YW1wEAIaDAoIX19uYW1lX18QAg', '_blank'); this.parentElement.parentElement.remove();" 
+              style="padding: 10px 20px; background: var(--info); color: white; border: none; border-radius: 6px; cursor: pointer;">
+              🚀 Create Index
+            </button>
+          </div>
+        `;
+        
+        document.body.appendChild(indexInfo);
+        
+        // Auto-close after 30 seconds
+        setTimeout(() => {
+          if (indexInfo.parentElement) {
+            indexInfo.remove();
+          }
+        }, 30000);
+      }
+
+      updateActiveIncidents(snapshot) {
+        this.activeIncidents = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const student = this.students.find(s => s.BCEID1 === data.student);
+          
+          if (student) {
+            const incident = {
+              id: doc.id,
+              ...data,
+              studentData: student,
+              duration: this.calculateDuration(data.timestamp)
+            };
+            
+            this.activeIncidents.push(incident);
+          }
+        });
+        
+        // Update UI
+        this.updateActiveIncidentsDisplay();
+        this.updateActiveIncidentsBanner();
+        this.updateNotificationBadge();
+        
+        // Update stats
+        const activeCountElement = document.getElementById('activeIncidentsCount');
+        if (activeCountElement) {
+          activeCountElement.textContent = this.activeIncidents.length;
+        }
+      }
+
+      updateActiveIncidentsDisplay() {
+        const grid = document.getElementById('activeIncidentsGrid');
+        if (!grid) return;
+        
+        if (this.activeIncidents.length === 0) {
+          grid.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No active incidents</div>';
+          return;
+        }
+        
+        grid.innerHTML = '';
+        
+        this.activeIncidents.forEach(incident => {
+          const card = this.createActiveIncidentCard(incident);
+          grid.appendChild(card);
+        });
+      }
+
+      createActiveIncidentCard(incident) {
+        const card = document.createElement('div');
+        card.className = 'active-incident-card';
+        
+        const duration = incident.duration;
+        const isOverdue = duration.minutes > this.constants.NOTIFICATION_THRESHOLD;
+        const isVeryOverdue = duration.minutes > this.constants.VERY_LONG_DURATION_THRESHOLD;
+        
+        if (isVeryOverdue) {
+          card.style.borderLeftColor = 'var(--error)';
+          card.style.animation = 'alertGlow 2s infinite';
+        } else if (isOverdue) {
+          card.style.borderLeftColor = 'var(--warning)';
+        }
+        
+        const emoji = this.reasonEmoji[incident.reason] || '📝';
+        
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <div style="font-weight: 600; font-size: 1.1em;">${incident.studentData.FirstName} ${incident.studentData.LegalSurname1}</div>
+            <div style="text-align: right;">
+              <div style="font-size: 0.85em; color: #666;">${incident.timestamp?.toDate?.()?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || 'Unknown'}</div>
+              <div style="font-weight: 600; color: var(--error);">${duration.text}</div>
+            </div>
+          </div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(102,0,0,0.1); padding: 6px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 500; color: var(--accent); margin-bottom: 12px;">
+            <span>${emoji}</span>
+            <span>${incident.reason}</span>
+          </div>
+          ${incident.details ? `<div style="color: #666; font-size: 0.9em; margin-bottom: 16px; font-style: italic;">"${incident.details}"</div>` : ''}
+          <button onclick="OutOfClassSystem.markStudentReturned('${incident.id}', '${incident.student}')" style="background: var(--success); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; transition: var(--transition);">
+            ✅ Mark as Returned
+          </button>
+        `;
+        
+        return card;
+      }
+
+      updateActiveIncidentsBanner() {
+        const banner = document.getElementById('activeIncidentsBanner');
+        const activeCount = document.getElementById('activeCount');
+        
+        if (!banner || !activeCount) return;
+        
+        const count = this.activeIncidents.length;
+        
+        if (count > 0) {
+          activeCount.textContent = count;
+          banner.style.display = 'block';
+        } else {
+          banner.style.display = 'none';
+        }
+      }
+
+      updateNotificationBadge() {
+        const notificationBadge = document.getElementById('notificationBadge');
+        if (!notificationBadge) return;
+        
+        const overdueCount = this.activeIncidents.filter(incident => 
+          incident.duration.minutes > this.constants.NOTIFICATION_THRESHOLD
+        ).length;
+        
+        if (overdueCount > 0) {
+          notificationBadge.textContent = overdueCount;
+          notificationBadge.style.display = 'block';
+        } else {
+          notificationBadge.style.display = 'none';
+        }
+      }
+
+      checkForOverdueStudents() {
+        if (!this.notificationPermission) return;
+        
+        this.activeIncidents.forEach(incident => {
+          const duration = incident.duration;
+          
+          if (duration.minutes === this.constants.NOTIFICATION_THRESHOLD || 
+              duration.minutes === this.constants.VERY_LONG_DURATION_THRESHOLD) {
+            
+            const title = duration.minutes === this.constants.NOTIFICATION_THRESHOLD ? 
+              '⚠️ Student Overdue' : '🚨 Student Very Overdue';
+            
+            const message = `${incident.studentData.FirstName} ${incident.studentData.LegalSurname1} has been out for ${duration.text} (${incident.reason})`;
+            
+            this.showBrowserNotification(title, message);
+          }
+        });
+      }
+
+      showBrowserNotification(title, message) {
+        if (!this.notificationPermission) return;
+        
+        try {
+          const notification = new Notification(title, {
+            body: message,
+            icon: 'crest.png',
+            badge: 'crest.png',
+            tag: 'overdue-student',
+            requireInteraction: true
+          });
+          
+          notification.onclick = () => {
+            window.focus();
+            this.toggleActiveIncidents(true);
+            notification.close();
+          };
+          
+          setTimeout(() => notification.close(), 10000);
+          
+        } catch (error) {
+          console.warn('Notification error:', error);
+        }
+      }
+
+      calculateDuration(timestamp) {
+        if (!timestamp) return { minutes: 0, text: 'Unknown' };
+        
+        const startTime = timestamp.toDate();
+        const now = new Date();
+        const diffMs = now - startTime;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        if (diffMins < 1) return { minutes: 0, text: 'Just now' };
+        if (diffMins < 60) return { minutes: diffMins, text: `${diffMins}m` };
+        
+        const hours = Math.floor(diffMins / 60);
+        const mins = diffMins % 60;
+        return { 
+          minutes: diffMins, 
+          text: mins > 0 ? `${hours}h ${mins}m` : `${hours}h` 
+        };
+      }
+
+      selectStudent(student) {
+        this.selectedStudent = student;
+        this.showStudentProfile(student);
+        this.loadStudentHistory(student.BCEID1);
+        this.validateForm();
+        
+        // Store for restoration
+        localStorage.setItem(this.constants.LAST_STUDENT_KEY, student.BCEID1);
+      }
+
+      showStudentProfile(student) {
+        const profile = document.getElementById('studentProfile');
+        if (!profile) return;
+        
+        // Update profile information
+        this.updateElement('studentNameDetail', `${student.LegalSurname1}, ${student.FirstName}`);
+        this.updateElement('studentBCE', student.BCEID1);
+        this.updateElement('studentHouse', student.HouseName || 'N/A');
+        this.updateElement('studentHomeGroup', student.HomeGroup || 'N/A');
+        this.updateElement('studentYear', student.YearLevelName || 'N/A');
+        
+        // Update photo with fallback
+        const photo = document.getElementById('studentPhoto');
+        if (photo) {
+          photo.src = `students/${student.BCEID1}.jpg`;
+          photo.onerror = function() {
+            this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" fill="%23f0f0f0"/><text x="60" y="65" text-anchor="middle" fill="%23666" font-size="14">No Photo</text></svg>';
+          };
+        }
+        
+        profile.style.display = 'block';
+      }
+
+      updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.textContent = value;
+        }
+      }
+
+      async loadStudentHistory(studentId) {
+        const historySection = document.getElementById('historySection');
+        const historyList = document.getElementById('historyList');
+        
+        if (!historySection || !historyList) return;
+        
+        try {
+          historySection.style.display = 'block';
+          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">Loading history...</div>';
+          
+          // Use unified system's Firebase utilities
+          if (this.dataManager.db) {
+            const snapshot = await this.dataManager.db.collection('outofclass')
+              .where('student', '==', studentId)
+              .orderBy('timestamp', 'desc')
+              .limit(20)
+              .get();
+            
+            this.displayStudentHistory(snapshot);
+          } else {
+            historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">History unavailable (Firebase not connected)</div>';
+          }
+          
+        } catch (error) {
+          console.warn('❌ Error loading history:', error);
+          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--error);">Error loading history</div>';
+        }
+      }
+
+      displayStudentHistory(snapshot) {
+        const historyList = document.getElementById('historyList');
+        const historyCount = document.getElementById('historyCount');
+        const studentLogCount = document.getElementById('studentLogCount');
+        
+        if (!historyList) return;
+        
+        if (historyCount) historyCount.textContent = snapshot.size;
+        if (studentLogCount) studentLogCount.textContent = snapshot.size;
+        
+        if (snapshot.empty) {
+          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">No previous incidents recorded</div>';
+          return;
+        }
+        
+        historyList.innerHTML = '';
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const item = this.createHistoryItem(data);
+          historyList.appendChild(item);
+        });
+      }
+
+      createHistoryItem(data) {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        
+        const date = data.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown Date';
+        const time = data.timestamp?.toDate?.()?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '';
+        const emoji = this.reasonEmoji[data.reason] || '📝';
+        
+        // Calculate duration if returned
+        let durationDisplay = '';
+        if (data.returnedAt && data.timestamp) {
+          const duration = data.returnedAt.toDate() - data.timestamp.toDate();
+          const minutes = Math.floor(duration / 60000);
+          
+          let durationClass = '';
+          if (minutes > this.constants.VERY_LONG_DURATION_THRESHOLD) {
+            durationClass = 'very-long';
+          } else if (minutes > this.constants.LONG_DURATION_THRESHOLD) {
+            durationClass = 'long';
+          }
+          
+          durationDisplay = `<div style="position: absolute; top: 16px; right: 16px; background: var(--info); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;" class="${durationClass}">${minutes}m</div>`;
+          item.classList.add('completed');
+        } else if (data.status === 'out') {
+          // Still out - calculate current duration
+          const currentDuration = this.calculateDuration(data.timestamp);
+          if (currentDuration.minutes > this.constants.NOTIFICATION_THRESHOLD) {
+            item.classList.add('overdue');
+            durationDisplay = `<div style="position: absolute; top: 16px; right: 16px; background: var(--error); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">⏰ ${currentDuration.text}</div>`;
+          }
+        }
+        
+        item.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: var(--nav-bg);">${date} ${time}</div>
+            <div style="display: flex; align-items: center; gap: 8px; background: rgba(102,0,0,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 500; color: var(--accent);">
+              <span>${emoji}</span>
+              <span>${data.reason || 'Unknown'}</span>
+            </div>
+          </div>
+          ${durationDisplay}
+          ${data.details ? `<div style="color: #666; font-style: italic; margin-top: 8px;">"${data.details}"</div>` : ''}
+          <div style="font-size: 0.85em; color: #888; margin-top: 4px;">Logged by: ${data.staff || 'Unknown'}</div>
+        `;
+        
+        return item;
+      }
+
+      restoreLastStudent() {
+        const lastStudentId = localStorage.getItem(this.constants.LAST_STUDENT_KEY);
+        if (lastStudentId && this.students) {
+          const student = this.students.find(s => s.BCEID1 === lastStudentId);
+          if (student) {
+            this.selectStudent(student);
+          }
+        }
+      }
+
+      validateForm() {
+        const studentId = this.selectedStudent?.BCEID1;
+        const reason = document.getElementById('reasonSelect')?.value;
+        
+        const isValid = studentId && reason;
+        
+        const logBtn = document.getElementById('logBtn');
+        if (logBtn) {
+          logBtn.disabled = !isValid;
+        }
+      }
+
+      async handleFormSubmit(event) {
+        event.preventDefault();
+        
+        if (!this.selectedStudent) {
+          this.showToast('❌ Please select a student', 'error');
+          return;
+        }
+
+        const reason = document.getElementById('reasonSelect')?.value;
+        const details = document.getElementById('detailsInput')?.value || '';
+
+        if (!reason) {
+          this.showToast('❌ Please select a reason', 'error');
+          return;
+        }
+
+        try {
+          // Show loading state
+          const logBtn = document.getElementById('logBtn');
+          if (logBtn) {
+            logBtn.classList.add('loading');
+            logBtn.disabled = true;
+          }
+
+          // Get database reference
+          const db = this.db || this.dataManager?.db;
+          if (!db) {
+            throw new Error('Database not available');
+          }
+
+          // Get staff info
+          const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+          if (!staff) {
+            throw new Error('Staff information not found');
+          }
+
+          // Submit incident
+          const incidentData = {
+            student: this.selectedStudent.BCEID1,
+            reason,
+            details,
+            staff: staff['staff name'],
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            status: 'out',
+            returnedAt: null
+          };
+
+          await db.collection('outofclass').add(incidentData);
+
+          this.showToast('✅ Incident logged successfully!', 'success');
+
+          // Reset form
+          document.getElementById('reasonSelect').value = '';
+          document.getElementById('detailsInput').value = '';
+
+          // Refresh history
+          this.loadStudentHistory(this.selectedStudent.BCEID1);
+
+          // Refresh analytics
+          setTimeout(() => this.loadAnalytics(), 1000);
+
+        } catch (error) {
+          console.error('❌ Error logging incident:', error);
+          this.showToast(`❌ Error logging incident: ${error.message}`, 'error');
+        } finally {
+          // Reset submit button
+          const logBtn = document.getElementById('logBtn');
+          if (logBtn) {
+            logBtn.classList.remove('loading');
+            this.validateForm();
+          }
+        }
+      }
+
+      showToast(message, type = 'info', duration = 4000) {
+        // Use custom toast with better positioning to avoid dropdown conflicts
+        const existingToast = document.querySelector('.custom-toast');
+        if (existingToast) {
+          existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `custom-toast ${type}`;
+        toast.innerHTML = `
+          ${message}
+          <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Show toast
+        requestAnimationFrame(() => {
+          toast.classList.add('show');
+        });
+
+        // Auto remove
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => {
+            if (toast.parentElement) {
+              toast.remove();
+            }
+          }, 300);
+        }, duration);
+      }
+
+      async markStudentReturned(incidentId, studentId) {
+        try {
+          const db = this.db || this.dataManager?.db;
+          if (!db) {
+            throw new Error('Database not available');
+          }
+
+          await db.collection('outofclass').doc(incidentId).update({
+            status: 'returned',
+            returnedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          this.showToast('✅ Student marked as returned', 'success');
+
+          // Refresh student history if same student is selected
+          if (this.selectedStudent && this.selectedStudent.BCEID1 === studentId) {
+            this.loadStudentHistory(studentId);
+          }
+
+        } catch (error) {
+          console.error('❌ Error marking student as returned:', error);
+          this.showToast('❌ Error updating status. Please try again.', 'error');
+        }
+      }
+
+      toggleActiveIncidents(forceShow = false) {
+        const activeIncidentsSection = document.getElementById('activeIncidentsSection');
+        if (!activeIncidentsSection) return;
+        
+        const isVisible = activeIncidentsSection.style.display === 'block';
+        
+        if (forceShow || !isVisible) {
+          activeIncidentsSection.style.display = 'block';
+          this.refreshActiveIncidents();
+        } else {
+          activeIncidentsSection.style.display = 'none';
+        }
+      }
+
+      refreshActiveIncidents() {
+        if (!this.dataManager.db) return;
+        
+        this.dataManager.db.collection('outofclass')
+          .where('status', '==', 'out')
+          .get()
+          .then(snapshot => {
+            this.updateActiveIncidents(snapshot);
+            this.dataManager.showToast('🔄 Active incidents refreshed', 'info');
+          })
+          .catch(error => {
+            console.error('Error refreshing active incidents:', error);
+            this.dataManager.showToast('❌ Error refreshing data', 'error');
+          });
+      }
+
+      async loadAnalytics() {
+        try {
+          // Show stats section
+          const quickStats = document.getElementById('quickStats');
+          if (quickStats) {
+            quickStats.style.display = 'grid';
+          }
+
+          const insightsSection = document.getElementById('insightsSection');
+          if (insightsSection) {
+            insightsSection.style.display = 'grid';
+          }
+
+          // TODO: Implement advanced analytics using unified system
+          
+        } catch (error) {
+          console.warn('Analytics loading error:', error);
+        }
+      }
+
+      updateTodayStats(snapshot) {
+        const todayCount = document.getElementById('todayCount');
+        if (todayCount) {
+          todayCount.textContent = snapshot.size;
+        }
+      }
+
+      handleVisibilityChange() {
+        if (!document.hidden) {
+          this.updateNotificationBadge();
+        }
+      }
+
+      showInterface() {
+        // Hide loading state
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+          loadingState.style.display = 'none';
+        }
+
+        // Show main interface
+        const navBar = document.getElementById('navBar');
+        const mainContainer = document.getElementById('mainContainer');
+        
+        if (navBar) {
+          navBar.style.display = 'flex';
+          navBar.style.animation = 'fadeIn 0.5s ease';
+        }
+        
+        if (mainContainer) {
+          mainContainer.style.display = 'flex';
+          mainContainer.style.animation = 'fadeInUp 0.6s ease';
+        }
+
+        // Hide loading banner
+        const loadingBanner = document.getElementById('loadingBanner');
+        if (loadingBanner) {
+          loadingBanner.style.display = 'none';
+        }
+      }
+
+      cleanup() {
+        // Clean up listeners
+        this.realtimeListeners.forEach(listenerId => {
+          if (this.dataManager && this.dataManager.listeners.has(listenerId)) {
+            const unsubscribe = this.dataManager.listeners.get(listenerId);
+            if (typeof unsubscribe === 'function') {
+              unsubscribe();
+            }
+          }
+        });
+
+        // Clean up data manager
+        if (this.dataManager) {
+          this.dataManager.cleanup();
+        }
+
+        console.log('🧹 Out-of-Class system cleanup completed');
+      }
+    }
+
+    // Navigation functions
+    function navigate(url) {
+      window.location.href = url;
+    }
+
+    function logout() {
+      // Clean up system if available
+      if (window.OutOfClassSystem) {
+        OutOfClassSystem.cleanup();
+      }
+      
+      // Clear authentication
+      localStorage.removeItem('loggedInStaff');
+      
+      // Show logout message and redirect
+      if (window.OutOfClassSystem) {
+        OutOfClassSystem.showToast('👋 Logged out successfully', 'info');
+      }
+      
+      setTimeout(() => navigate('index.html'), 1000);
+    }
+
+    // Initialize the system when DOM is loaded
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Create global instance
+      window.OutOfClassSystem = new OutOfClassTrackerSystem();
+      
+      try {
+        await OutOfClassSystem.initialize();
+      } catch (error) {
+        console.error('🚨 System initialization failed:', error);
+        
+        // Show error state
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+          loadingState.innerHTML = `
+            <div style="text-align: center; color: var(--error);">
+              <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
+              <div style="font-size: 1.2em; margin-bottom: 10px;">System Initialization Failed</div>
+              <div style="color: #666; margin-bottom: 20px;">${error.message}</div>
+              <button onclick="location.reload()" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                🔄 Retry
+              </button>
+            </div>
+          `;
+        }
+      }
+    });
+
+    // Global navigation functions - available immediately
+    window.navigate = navigate;
+    window.logout = logout;
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      if (window.OutOfClassSystem) {
+        OutOfClassSystem.cleanup();
+      }
+    });
+
+    // Error handling
+    window.addEventListener('error', (event) => {
+      console.error('🚨 Application error:', event.error);
+      if (window.OutOfClassSystem && window.OutOfClassSystem.dataManager) {
+        OutOfClassSystem.dataManager.showToast('❌ An error occurred. Please refresh the page.', 'error');
+      }
+    });
+
+    console.log('✅ Out-of-Class Tracker Pro v3.1 script loaded');
+  </script>
+</body>
+</html>

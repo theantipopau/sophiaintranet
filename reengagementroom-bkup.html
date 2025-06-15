@@ -1,0 +1,4078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sophia College - Re-Engagement Room</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="../logo.ico" type="image/x-icon">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <!-- PapaParse CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Chart.js for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Unified System -->
+  <script src="/shared/sophia-unified-system.js"></script>
+  <style>
+    :root { 
+      --nav-bg: #003057; 
+      --nav-fg: #fff; 
+      --bg: linear-gradient(135deg, #fbecec 0%, #f8fafc 100%); 
+      --card: #ffffff; 
+      --accent: #660000; 
+      --text: #2c2c2c;
+      --text-light: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --border-radius: 12px;
+      --border-radius-lg: 16px;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --info: #0284c7;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      --nav-height: 64px;
+    }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    
+    body { 
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: var(--bg); 
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+    
+    /* Enhanced Navigation */
+    .nav-bar { 
+      display: flex; 
+      align-items: center; 
+      background: var(--nav-bg); 
+      color: var(--nav-fg); 
+      padding: var(--spacing-md) var(--spacing-lg); 
+      position: sticky; 
+      top: 0; 
+      z-index: 1000;
+      box-shadow: var(--shadow-lg);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      height: var(--nav-height);
+    }
+    
+    .nav-logo { 
+      height: 36px; 
+      margin-right: var(--spacing-md);
+      transition: transform 0.2s ease;
+    }
+    
+    .nav-logo:hover { transform: scale(1.05); }
+    
+    .nav-title { 
+      font-size: 1.25rem; 
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+    
+    .nav-links { 
+      margin-left: auto; 
+      display: flex; 
+      align-items: center; 
+      gap: var(--spacing-md); 
+    }
+    
+    #staffName { 
+      font-weight: 500; 
+      color: rgba(255,255,255,0.9);
+      font-size: 0.875rem;
+    }
+    
+    .dropdown { 
+      position: relative; 
+    }
+    
+    .dropbtn { 
+      background: rgba(255,255,255,0.1); 
+      color: var(--nav-fg); 
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: var(--spacing-sm) var(--spacing-md); 
+      border-radius: var(--spacing-sm); 
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+    
+    .dropbtn:hover { 
+      background: rgba(255,255,255,0.2); 
+      transform: translateY(-1px);
+    }
+    
+    .dropdown-content { 
+      display: none; 
+      position: absolute; 
+      right: 0; 
+      background: var(--card); 
+      min-width: 200px; 
+      box-shadow: var(--shadow-lg); 
+      border-radius: var(--border-radius); 
+      overflow: hidden;
+      z-index: 10001;
+      border: 1px solid var(--border);
+      margin-top: var(--spacing-xs);
+    }
+    
+    .dropdown-content a, .dropdown-content button { 
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md); 
+      text-decoration: none; 
+      color: var(--text); 
+      background: none; 
+      border: none; 
+      width: 100%; 
+      text-align: left; 
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background 0.15s ease;
+      border-bottom: 1px solid var(--border-light);
+    }
+    
+    .dropdown-content a:last-child, .dropdown-content button:last-child {
+      border-bottom: none;
+    }
+    
+    .dropdown-content a:hover, .dropdown-content button:hover { 
+      background: var(--border-light);
+    }
+    
+    .dropdown:hover .dropdown-content { display: block; }
+    
+    /* Enhanced Container */
+    .container { 
+      max-width: 1400px; 
+      margin: var(--spacing-lg) auto; 
+      background: var(--card); 
+      border-radius: var(--border-radius-lg); 
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    
+    /* Enhanced Header */
+    .header-section {
+      background: linear-gradient(135deg, var(--nav-bg) 0%, #004a73 100%);
+      color: white;
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      text-align: center;
+    }
+    
+    .logo-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .logo-center { 
+      height: 60px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+    }
+    
+    .triple-r-logo {
+      height: 60px;
+      width: 60px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      padding: var(--spacing-sm);
+    }
+    
+    .header-title { 
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 var(--spacing-sm) 0;
+      letter-spacing: -0.025em;
+    }
+    
+    .header-subtitle {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin: 0;
+      font-weight: 400;
+    }
+    
+    /* Enhanced Loading Status */
+    .loading-status { 
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); 
+      border: 1px solid #90caf9; 
+      margin: var(--spacing-lg); 
+      padding: var(--spacing-lg); 
+      border-radius: var(--border-radius); 
+      text-align: center;
+      color: var(--nav-bg);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--nav-bg);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Enhanced Tab Navigation */
+    .tab-navigation {
+      display: flex;
+      background: var(--border-light);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: var(--spacing-lg) var(--spacing-md);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-light);
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .tab-btn:hover {
+      background: rgba(102,0,0,0.05);
+      color: var(--accent);
+    }
+    
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    
+    /* Enhanced Tab Content */
+    .tab-content {
+      display: none;
+      padding: var(--spacing-xl);
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Enhanced Form Styles */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .form-group label {
+      margin-bottom: var(--spacing-sm);
+      font-weight: 600;
+      color: var(--text);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .form-input,
+    .form-select {
+      padding: var(--spacing-md);
+      border: 1px solid var(--border);
+      border-radius: var(--spacing-sm);
+      font-size: 0.875rem;
+      transition: all 0.15s ease;
+      background: var(--card);
+      color: var(--text);
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus,
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(102, 0, 0, 0.1);
+    }
+    
+    .form-group input::placeholder,
+    .form-group textarea::placeholder,
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    /* Enhanced Student Search */
+    .student-search {
+      grid-column: 1/-1;
+      position: relative;
+    }
+    
+    .student-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--spacing-sm) var(--spacing-sm);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .student-option {
+      padding: var(--spacing-md);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .student-option:hover {
+      background: var(--border-light);
+    }
+    
+    .student-id {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--border-light);
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: var(--spacing-xs);
+    }
+    
+    /* Enhanced Type Selection */
+    .type-selection {
+      grid-column: 1/-1;
+      margin: var(--spacing-lg) 0;
+    }
+    
+    .type-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-lg);
+      max-width: 600px;
+      margin: var(--spacing-lg) auto 0;
+    }
+    
+    .type-option {
+      padding: var(--spacing-xl);
+      border: 2px solid var(--border);
+      border-radius: var(--border-radius);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--card);
+    }
+    
+    .type-option:hover {
+      border-color: var(--accent);
+      background: #fff5f5;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .type-option.selected {
+      border-color: var(--accent);
+      background: #fff5f5;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .type-option h4 {
+      margin: 0 0 var(--spacing-sm) 0;
+      color: var(--text);
+      font-size: 1.125rem;
+    }
+    
+    .type-option p {
+      margin: 0;
+      color: var(--text-light);
+      font-size: 0.875rem;
+    }
+    
+    /* Enhanced Submit Button */
+    .submit-btn {
+      display: flex;
+      margin: var(--spacing-2xl) auto;
+      padding: var(--spacing-lg) var(--spacing-2xl);
+      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
+      color: white;
+      border: none;
+      border-radius: var(--spacing-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow);
+      min-width: 200px;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .submit-btn:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    /* Enhanced Student Profile */
+    .student-info {
+      display: flex;
+      gap: var(--spacing-lg);
+      margin: var(--spacing-xl) 0;
+      padding: var(--spacing-lg);
+      background: var(--border-light);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+    }
+    
+    .student-photo img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: var(--border-radius);
+      border: 2px solid var(--card);
+      box-shadow: var(--shadow);
+    }
+    
+    .student-details h3 {
+      color: var(--text);
+      margin-bottom: var(--spacing-md);
+      font-size: 1.25rem;
+    }
+    
+    .student-details p {
+      margin: var(--spacing-sm) 0;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .student-details strong {
+      color: var(--text);
+      font-weight: 600;
+      min-width: 100px;
+    }
+    
+    /* Step Indicator */
+    .step-indicator {
+      margin-top: var(--spacing-md);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      border: 2px solid var(--info);
+      background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
+    }
+    
+    .step-indicator.step-warning {
+      border-color: var(--warning);
+      background: linear-gradient(135deg, #fff3e0 0%, #fef7e3 100%);
+    }
+    
+    .step-indicator.step-danger {
+      border-color: var(--danger);
+      background: linear-gradient(135deg, #ffeaea 0%, #fff1f1 100%);
+    }
+    
+    .step-indicator h4 {
+      margin: 0 0 var(--spacing-sm) 0;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .step-indicator p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-light);
+    }
+    
+    /* Enhanced History */
+    .history {
+      margin-top: var(--spacing-xl);
+      background: var(--card);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    
+    .history h3 {
+      background: var(--accent);
+      color: white;
+      margin: 0;
+      padding: var(--spacing-lg);
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .history-item {
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s ease;
+    }
+    
+    .history-item:hover {
+      background: var(--border-light);
+    }
+    
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    
+    /* Analytics Section */
+    .stats-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      text-align: center;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: var(--spacing-sm) 0;
+    }
+    
+    .stat-label {
+      color: var(--text-light);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: var(--spacing-xl);
+      margin-bottom: var(--spacing-xl);
+    }
+    
+    .analytics-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow);
+    }
+    
+    .analytics-card h3 {
+      color: var(--text);
+      margin: 0 0 var(--spacing-lg) 0;
+      font-size: 1.125rem;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-weight: 600;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+    
+    /* Enhanced Manage Referrals */
+    .manage-controls {
+      display: grid;
+      grid-template-columns: 2fr auto auto;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      align-items: end;
+    }
+    
+    .referrals-list {
+      background: var(--card);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    
+    .referrals-header {
+      background: var(--nav-bg);
+      color: white;
+      padding: var(--spacing-lg);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .referrals-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .referral-item {
+      border-bottom: 1px solid var(--border);
+      padding: var(--spacing-lg);
+      transition: background 0.15s ease;
+      display: grid;
+      grid-template-columns: 120px 1fr 120px 80px auto;
+      gap: var(--spacing-lg);
+      align-items: center;
+    }
+    
+    .referral-item:hover {
+      background: var(--border-light);
+    }
+    
+    .referral-number {
+      background: var(--nav-bg);
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .action-btn {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: none;
+      border-radius: var(--spacing-sm);
+      font-size: 0.75rem;
+      cursor: pointer;
+      margin-right: var(--spacing-xs);
+      transition: all 0.15s ease;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+    
+    .action-btn.pdf { background: var(--info); color: white; }
+    .action-btn.view { background: #007bff; color: white; }
+    .action-btn.upload { background: var(--accent); color: white; }
+    .action-btn.delete { background: var(--danger); color: white; }
+    
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+    
+    /* Master List Styles */
+    .master-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      background: var(--card);
+    }
+    
+    .master-list-table th {
+      background: var(--nav-bg);
+      color: white;
+      padding: var(--spacing-md);
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease;
+    }
+    
+    .master-list-table th:hover {
+      background: #004a73;
+    }
+    
+    .master-list-table th.sorted-asc::after {
+      content: ' ↑';
+      color: #90caf9;
+    }
+    
+    .master-list-table th.sorted-desc::after {
+      content: ' ↓';
+      color: #90caf9;
+    }
+    
+    .master-list-table td {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    
+    .master-list-table tr:hover {
+      background: var(--border-light);
+    }
+    
+    .master-list-table tr:nth-child(even) {
+      background: #fafafa;
+    }
+    
+    .master-list-table tr:nth-child(even):hover {
+      background: var(--border-light);
+    }
+    
+    .master-controls {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      align-items: end;
+    }
+    
+    .master-count {
+      background: var(--info);
+      color: white;
+      padding: var(--spacing-xs) var(--spacing-sm);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    /* Enhanced Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 20000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .modal-content {
+      background: var(--card);
+      border-radius: var(--border-radius);
+      max-width: 600px;
+      width: 95%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      background: var(--nav-bg);
+      color: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: var(--spacing-xs);
+      border-radius: var(--spacing-xs);
+      transition: background 0.15s ease;
+    }
+    
+    .modal-close:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .modal-body {
+      padding: var(--spacing-xl);
+    }
+    
+    .modal-footer {
+      padding: var(--spacing-lg) var(--spacing-xl);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: flex-end;
+    }
+    
+    /* Drop Zone */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-2xl);
+      text-align: center;
+      margin-bottom: var(--spacing-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--border-light);
+    }
+    
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--accent);
+      background: #fff5f5;
+    }
+    
+    .drop-zone-icon {
+      font-size: 2rem;
+      margin-bottom: var(--spacing-md);
+      color: var(--text-muted);
+    }
+    
+    .drop-zone-text {
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+      color: var(--text);
+    }
+    
+    .drop-zone-subtext {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    /* Enhanced Button Styles */
+    .btn {
+      padding: var(--spacing-sm) var(--spacing-md);
+      border: 1px solid var(--border);
+      border-radius: var(--spacing-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      text-decoration: none;
+    }
+    
+    .btn-secondary {
+      background: var(--card);
+      color: var(--text);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--border-light);
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+    
+    .btn-primary:hover {
+      background: #5a0000;
+      border-color: #5a0000;
+    }
+    
+    .btn-primary:disabled {
+      background: var(--border);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      border-color: var(--border);
+    }
+    
+    /* Fixed Toast Notifications - HIGHER Z-INDEX */
+    .toast {
+      position: fixed;
+      top: calc(var(--nav-height) + 20px);
+      right: var(--spacing-lg);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md) var(--spacing-lg);
+      box-shadow: var(--shadow-lg);
+      display: none;
+      z-index: 50000;
+      max-width: 400px;
+      transform: translateX(450px);
+      transition: transform 0.3s ease;
+    }
+    
+    .toast.show {
+      display: block;
+      transform: translateX(0);
+    }
+    
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.info { border-left: 4px solid var(--info); }
+    .toast.warning { border-left: 4px solid var(--warning); }
+    
+    /* Footer */
+    .footer { 
+      margin-top: var(--spacing-2xl); 
+      text-align: center; 
+      font-size: 0.875rem; 
+      color: var(--text-muted);
+      padding: var(--spacing-xl);
+      border-top: 1px solid var(--border);
+    }
+    
+    .footer a { 
+      color: var(--nav-bg); 
+      text-decoration: none; 
+      margin: 0 var(--spacing-sm);
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+    
+    .footer a:hover { 
+      text-decoration: underline; 
+      color: var(--accent);
+    }
+    
+    /* Admin Section Styles */
+    .admin-section {
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .admin-section-header {
+      background: var(--nav-bg);
+      color: white;
+      padding: var(--spacing-lg);
+      border-radius: var(--border-radius) var(--border-radius) 0 0;
+      margin-bottom: 0;
+      font-size: 1.125rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .admin-section-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--border-radius) var(--border-radius);
+      padding: var(--spacing-xl);
+    }
+
+    /* Step Email Table Styles */
+    .step-email-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .step-email-table th {
+      background: var(--border-light);
+      padding: var(--spacing-md);
+      text-align: left;
+      border-bottom: 2px solid var(--border);
+      font-weight: 600;
+      color: var(--text);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .step-email-table td {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .step-email-table tr:hover {
+      background: var(--border-light);
+    }
+
+    .step-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      min-width: 60px;
+    }
+
+    .step-badge.step-1 { background: #17a2b8; }
+    .step-badge.step-2 { background: #ffc107; color: #333; }
+    .step-badge.step-3 { background: #fd7e14; }
+    .step-badge.step-4 { background: #dc3545; }
+    .step-badge.step-5 { background: #6f42c1; }
+    .step-badge.step-6 { background: #e83e8c; }
+
+    .email-status {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .email-status-sent {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .email-status-pending {
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    .email-status-missing {
+      color: var(--danger);
+      font-weight: 600;
+    }
+
+    /* Warning banners */
+    .warning-banner {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border: 1px solid var(--warning);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .warning-banner.danger {
+      background: linear-gradient(135deg, #f8d7da 0%, #f1b2b7 100%);
+      border-color: var(--danger);
+    }
+    
+    /* Responsive Design */
+    @media(max-width: 1024px) {
+      .manage-controls, .master-controls {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+      }
+      
+      .referral-item {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+        text-align: left;
+      }
+      
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media(max-width: 768px) {
+      .container {
+        margin: var(--spacing-md);
+        border-radius: var(--border-radius);
+      }
+      
+      .header-section {
+        padding: var(--spacing-lg);
+      }
+      
+      .logo-container {
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+      
+      .tab-content {
+        padding: var(--spacing-lg);
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .type-options {
+        grid-template-columns: 1fr;
+      }
+      
+      .student-info {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .stats-overview {
+        grid-template-columns: 1fr;
+      }
+      
+      #staffName {
+        display: none;
+      }
+      
+      .toast {
+        right: var(--spacing-md);
+        left: var(--spacing-md);
+        max-width: none;
+        transform: translateY(-100px);
+      }
+      
+      .toast.show {
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav-bar">
+    <img src="crest.png" class="nav-logo" alt="College Crest">
+    <div class="nav-title">🔄 Re-Engagement Room</div>
+    <div class="nav-links">
+      <span id="staffName"></span>
+      <div class="dropdown">
+        <button class="dropbtn">☰ Menu</button>
+        <div class="dropdown-content">
+          <a href="home.html" onclick="navigate('home.html'); return false;">🏠 Home</a>
+          <a href="staff.html" onclick="navigate('staff.html'); return false;">📝 Infringement Tracker</a>
+          <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;">🏫 Out-of-Class Logger</a>
+          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;">🔄 Re-Engagement Room</a>
+          <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;">👥 Admin Dashboard</a>
+          <button onclick="logout(); return false;">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header-section">
+      <div class="logo-container">
+        <img src="sophia-logo.png" class="logo-center" alt="Sophia College">
+        <img src="triplerlogo.png" class="triple-r-logo" alt="Triple R Process">
+      </div>
+      <h1 class="header-title">Re-Engagement Room System</h1>
+      <p class="header-subtitle">Part of the Triple R Process - Reset, Rethink, Rebuild</p>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      <button class="tab-btn active" onclick="switchTab('submit')">📝 Submit Referral</button>
+      <button class="tab-btn" onclick="switchTab('analytics')">📊 Analytics</button>
+      <button class="tab-btn" onclick="switchTab('manage')">📋 Manage Referrals</button>
+      <button class="tab-btn" onclick="switchTab('masterlist')">📋 Master List</button>
+      <button class="tab-btn admin-only" onclick="switchTab('admin')" style="display:none;">⚙️ Admin</button>
+    </div>
+
+    <!-- Loading Status -->
+    <div id="loadingStatus" class="loading-status">
+      <div class="loading-spinner"></div>
+      📚 Loading system data...
+    </div>
+
+    <!-- Submit Referral Tab -->
+    <div id="submit-tab" class="tab-content active">
+      <form id="referralForm">
+        <!-- Student Search -->
+        <div class="form-grid">
+          <div class="form-group student-search">
+            <label for="studentSearch">🔍 Search Student</label>
+            <input id="studentSearch" type="text" placeholder="Type student name or ID...">
+            <div id="studentDropdown" class="student-dropdown"></div>
+            <input type="hidden" id="selectedStudentId">
+          </div>
+        </div>
+
+        <!-- Incident Details -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="lessonSelect">📅 Lesson Period</label>
+            <select id="lessonSelect">
+              <option value="">Select Lesson</option>
+              <option value="1">Lesson 1</option>
+              <option value="2">Lesson 2</option>
+              <option value="3">Lesson 3</option>
+              <option value="4">Lesson 4</option>
+              <option value="5">Lesson 5</option>
+              <option value="6">Lesson 6</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="classroomSelect">🏫 Classroom</label>
+            <select id="classroomSelect">
+              <option value="">Select Classroom</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="teacherSelect">👩‍🏫 Teacher</label>
+            <select id="teacherSelect">
+              <option value="">Select Teacher</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="learningAreaSelect">📖 Subject Area</label>
+            <select id="learningAreaSelect">
+              <option value="">Select Subject</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="behaviorTypeSelect">⚠️ Behavior Category</label>
+            <select id="behaviorTypeSelect">
+              <option value="">Select Behavior Type</option>
+              <option value="Minor - Disrespect/non-compliance">Minor - Disrespect/non-compliance</option>
+              <option value="Minor - Disruption">Minor - Disruption</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Referral Type -->
+        <div class="type-selection">
+          <label style="display: block; margin-bottom: var(--spacing-md); font-weight: 600; color: var(--text); text-align: center; font-size: 0.875rem;">📋 Referral Type</label>
+          <div class="type-options">
+            <div class="type-option" onclick="selectReferralType('warning', this)">
+              <h4>⚠️ Warning Referral</h4>
+              <p>Student received Triple R disc but continued disrupting</p>
+            </div>
+            <div class="type-option" onclick="selectReferralType('automatic', this)">
+              <h4>🔄 Automatic Referral</h4>
+              <p>Direct referral for immediate behavioral concerns</p>
+            </div>
+          </div>
+          <input type="hidden" id="referralType">
+        </div>
+
+        <!-- Incident Description -->
+        <div class="form-grid">
+          <div class="form-group" style="grid-column: 1/-1;">
+            <label for="detailsInput">📝 Incident Details</label>
+            <textarea id="detailsInput" placeholder="Provide a detailed description of the incident..."></textarea>
+          </div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn" disabled>📨 Submit Referral</button>
+      </form>
+
+      <!-- Student Profile -->
+      <div class="student-info" id="studentProfile" style="display:none;">
+        <div class="student-photo">
+          <img id="studentPhoto" alt="Student Photo">
+        </div>
+        <div class="student-details">
+          <h3 id="studentName"></h3>
+          <p><strong>Student ID:</strong> <span id="studentBCEID"></span></p>
+          <p><strong>House:</strong> <span id="studentHouse"></span></p>
+          <p><strong>Home Group:</strong> <span id="studentHomeGroup"></span></p>
+          <p><strong>Year Level:</strong> <span id="studentYearLevel"></span></p>
+          <p><strong>Current Referrals:</strong> <span id="referralCount">0</span></p>
+          
+          <!-- Step Indicator -->
+          <div id="stepIndicator" class="step-indicator" style="display:none;">
+            <h4 id="stepTitle">🎯 Step Progress</h4>
+            <p id="stepDescription">Student progress information</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="history" id="historySection" style="display:none;">
+        <h3>📜 Previous Referrals</h3>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div id="analytics-tab" class="tab-content">
+      <!-- Statistics Overview -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-value" id="totalReferrals">-</div>
+          <div class="stat-label">Total Referrals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="weeklyReferrals">-</div>
+          <div class="stat-label">This Week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="topHouse">-</div>
+          <div class="stat-label">Most Active House</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="avgDaily">-</div>
+          <div class="stat-label">Daily Average</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="analytics-grid">
+        <div class="analytics-card">
+          <h3>📊 Referrals by House</h3>
+          <div class="chart-container">
+            <canvas id="houseChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3>⚠️ Behavior Types</h3>
+          <div class="chart-container">
+            <canvas id="behaviorChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3>📅 Weekly Trends</h3>
+          <div class="chart-container">
+            <canvas id="trendsChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="analytics-card">
+          <h3>🔄 Referral Types</h3>
+          <div class="chart-container">
+            <canvas id="typeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manage Referrals Tab -->
+    <div id="manage-tab" class="tab-content">
+      <!-- Search and Filter Controls -->
+      <div class="manage-controls">
+        <div class="form-group">
+          <label>🔍 Search Referrals</label>
+          <input type="text" id="manageSearch" class="form-input" placeholder="Search by student, teacher, subject...">
+        </div>
+        <div class="form-group">
+          <label>🏠 House Filter</label>
+          <select id="houseFilter" class="form-select">
+            <option value="">All Houses</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📅 Date Range</label>
+          <select id="dateFilter" class="form-select">
+            <option value="">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Referrals List -->
+      <div class="referrals-list">
+        <div class="referrals-header">
+          <span>📋 Referral Records</span>
+          <span id="referralsCount">Loading...</span>
+        </div>
+        <div id="referralsContainer" class="referrals-container">
+          <div style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);">
+            <div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>
+            📚 Loading referrals...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Master List Tab -->
+    <div id="masterlist-tab" class="tab-content">
+      <!-- Master List Controls -->
+      <div class="master-controls">
+        <div class="form-group">
+          <label>🔍 Quick Search</label>
+          <input type="text" id="masterSearch" class="form-input" placeholder="Search student name, house, subject...">
+        </div>
+        <div class="form-group">
+          <label>🏠 House Filter</label>
+          <select id="masterHouseFilter" class="form-select">
+            <option value="">All Houses</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>📖 Subject Filter</label>
+          <select id="masterSubjectFilter" class="form-select">
+            <option value="">All Subjects</option>
+          </select>
+        </div>
+        <button onclick="exportMasterList()" class="btn btn-secondary">📊 Export CSV</button>
+      </div>
+      
+      <!-- Master List Table -->
+      <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--border-radius); overflow: hidden;">
+        <div style="background: var(--nav-bg); color: white; padding: var(--spacing-md) var(--spacing-lg); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+          <span>📋 Referral Master List</span>
+          <span id="masterListCount" class="master-count">Loading...</span>
+        </div>
+        <div style="max-height: 600px; overflow-y: auto;">
+          <table class="master-list-table">
+            <thead>
+              <tr>
+                <th onclick="sortMasterList('referralNumber')" data-column="referralNumber">#</th>
+                <th onclick="sortMasterList('studentName')" data-column="studentName">Student Name</th>
+                <th onclick="sortMasterList('house')" data-column="house">House</th>
+                <th onclick="sortMasterList('subject')" data-column="subject">Subject</th>
+                <th onclick="sortMasterList('teacher')" data-column="teacher">Teacher</th>
+                <th onclick="sortMasterList('behaviorType')" data-column="behaviorType">Behavior</th>
+                <th onclick="sortMasterList('date')" data-column="date">Date</th>
+                <th onclick="sortMasterList('referralType')" data-column="referralType">Type</th>
+              </tr>
+            </thead>
+            <tbody id="masterListTableBody">
+              <tr>
+                <td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);">
+                  <div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>
+                  Loading master list...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Tab -->
+    <div id="admin-tab" class="tab-content">
+      
+      <!-- Step Email Management Section -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          📧 Step Email Management
+        </div>
+        <div class="admin-section-content">
+          
+          <!-- Step Email Controls -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+            <div>
+              <p style="margin: 0; color: var(--text-light); font-size: 0.875rem;">
+                Manage and track Triple R step notification emails
+              </p>
+            </div>
+            <button onclick="refreshStepEmails()" class="btn btn-secondary">
+              🔄 Refresh
+            </button>
+          </div>
+
+          <!-- Step Email Table -->
+          <div style="background: var(--card); border: 1px solid var(--border); border-radius: var(--border-radius); overflow: hidden;">
+            <div style="background: var(--nav-bg); color: white; padding: var(--spacing-md) var(--spacing-lg); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+              <span>📋 Step Email Status</span>
+              <span id="stepEmailCount">Loading...</span>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead style="background: var(--border-light); position: sticky; top: 0;">
+                  <tr>
+                    <th style="padding: var(--spacing-md); text-align: left; border-bottom: 1px solid var(--border); font-weight: 600;">Student</th>
+                    <th style="padding: var(--spacing-md); text-align: left; border-bottom: 1px solid var(--border); font-weight: 600;">House</th>
+                    <th style="padding: var(--spacing-md); text-align: center; border-bottom: 1px solid var(--border); font-weight: 600;">Referrals</th>
+                    <th style="padding: var(--spacing-md); text-align: center; border-bottom: 1px solid var(--border); font-weight: 600;">Current Step</th>
+                    <th style="padding: var(--spacing-md); text-align: center; border-bottom: 1px solid var(--border); font-weight: 600;">Email Status</th>
+                    <th style="padding: var(--spacing-md); text-align: center; border-bottom: 1px solid var(--border); font-weight: 600;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="stepEmailTableBody">
+                  <tr>
+                    <td colspan="6" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);">
+                      <div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>
+                      Loading step email data...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Semester Management Section -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          📅 Semester Management
+        </div>
+        <div class="admin-section-content">
+          
+          <!-- Current Semester Info -->
+          <div id="currentSemesterInfo" class="warning-banner">
+            <span style="font-size: 1.2em;">📅</span>
+            <div>
+              <strong>Current Semester:</strong> Loading semester information...
+            </div>
+          </div>
+
+          <!-- Semester Controls -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--spacing-lg); align-items: end; margin-bottom: var(--spacing-lg);">
+            <div class="form-group">
+              <label>🗓️ Semester Start Date</label>
+              <input type="date" id="semesterStartDate" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>🏁 Semester End Date</label>
+              <input type="date" id="semesterEndDate" class="form-input">
+            </div>
+            <button onclick="createNewSemester()" class="btn btn-primary">
+              ➕ Create New Semester
+            </button>
+          </div>
+
+          <!-- Semester History -->
+          <div id="semesterHistory" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--spacing-lg);">
+            <!-- Dynamically populated -->
+          </div>
+
+          <div class="warning-banner danger" style="margin-top: var(--spacing-lg);">
+            <span style="font-size: 1.2em;">⚠️</span>
+            <div>
+              <strong>Warning:</strong> Creating a new semester will reset all student referral counts to zero. This action cannot be undone.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>© 2025 Sophia College | 
+      <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+      <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
+      Version 2.2
+    </p>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Firebase initialization
+    firebase.initializeApp({ 
+      apiKey:'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU', 
+      authDomain:'sophia-infringements.firebaseapp.com', 
+      projectId:'sophia-infringements' 
+    });
+    const db = firebase.firestore();
+
+    // Global variables
+    let unifiedSystem = null;
+    let dataManager = null;
+    let studentsData = [];
+    let parentEmails = {};
+    let houseCompanions = {};
+    let teacherEmails = {};
+    let selectedStudent = null;
+    let selectedType = '';
+    let dataLoaded = false;
+    let analyticsCharts = {};
+    let currentSemester = null;
+    let allSemesters = [];
+    let allReferrals = [];
+    let filteredReferrals = [];
+    let currentUploadReferral = null;
+    let stepEmailTemplates = {};
+    let masterListData = [];
+    let masterListSortColumn = 'referralNumber';
+    let masterListSortOrder = 'desc';
+
+    // Step thresholds and configuration
+    const STEP_THRESHOLDS = {
+      1: 5,   // Step 1: 5 referrals
+      2: 10,  // Step 2: 10 referrals
+      3: 15,  // Step 3: 15 referrals
+      4: 20,  // Step 4: 20 referrals
+      5: 25,  // Step 5: 25 referrals
+      6: 30   // Step 6: 30 referrals
+    };
+
+    // DOM elements
+    let studentSearch, studentDropdown, selectedStudentId, lessonSelect, classroomSelect, 
+        teacherSelect, learningAreaSelect, behaviorTypeSelect, detailsInput, submitBtn, referralForm,
+        studentProfile, historySection, historyList, loadingStatus;
+
+    // ===== GLOBAL FUNCTION DECLARATIONS =====
+    
+    window.switchTab = switchTab;
+    window.selectReferralType = selectReferralType;
+    window.navigate = navigate;
+    window.logout = logout;
+    window.openEmailClient = openEmailClient;
+    window.closeEmailModal = closeEmailModal;
+    window.downloadReferralPDF = downloadReferralPDF;
+    window.openUploadModal = openUploadModal;
+    window.closeUploadModal = closeUploadModal;
+    window.uploadReflection = uploadReflection;
+    window.handleFileSelect = handleFileSelect;
+    window.viewReferralDetails = viewReferralDetails;
+    window.closeViewModal = closeViewModal;
+    window.downloadReflection = downloadReflection;
+    window.deleteReferral = deleteReferral;
+    window.createNewSemester = createNewSemester;
+    window.sortMasterList = sortMasterList;
+    window.exportMasterList = exportMasterList;
+    window.refreshStepEmails = refreshStepEmails;
+    window.sendStepEmailManual = sendStepEmailManual;
+    window.resendStepEmail = resendStepEmail;
+    window.openStepEmailClientAndRecord = openStepEmailClientAndRecord;
+
+    // ===== UNIFIED SYSTEM INTEGRATION =====
+
+    async function initializeUnifiedSystem() {
+      console.log('🔄 Initializing Unified System...');
+      
+      try {
+        if (typeof SophiaSystem !== 'undefined') {
+          unifiedSystem = new SophiaSystem();
+          await unifiedSystem.initialize();
+          dataManager = unifiedSystem.dataManager;
+          console.log('✅ Unified System initialized successfully');
+          return true;
+        } else {
+          console.warn('⚠️ Unified System not available, using fallback methods');
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Error initializing Unified System:', error);
+        return false;
+      }
+    }
+
+    // ===== TRIPLE R STEP PROCESS IMPLEMENTATION =====
+
+    async function loadStepEmailTemplates() {
+      console.log('📧 Loading Triple R step email templates...');
+      
+      try {
+        for (let step = 1; step <= 6; step++) {
+          const templatePath = `/triplertemplates/triple_r_step${step}.txt`;
+          
+          try {
+            const response = await fetch(templatePath);
+            if (response.ok) {
+              const templateContent = await response.text();
+              stepEmailTemplates[step] = templateContent;
+              console.log(`✅ Loaded step ${step} template`);
+            } else {
+              console.warn(`⚠️ Could not load template for step ${step}:`, response.status);
+              stepEmailTemplates[step] = generateFallbackStepTemplate(step);
+            }
+          } catch (fetchError) {
+            console.warn(`⚠️ Fetch error for step ${step}:`, fetchError);
+            stepEmailTemplates[step] = generateFallbackStepTemplate(step);
+          }
+        }
+        
+        console.log('✅ Step email templates loaded successfully');
+        
+      } catch (error) {
+        console.error('❌ Error loading step email templates:', error);
+        
+        // Load fallback templates for all steps
+        for (let step = 1; step <= 6; step++) {
+          stepEmailTemplates[step] = generateFallbackStepTemplate(step);
+        }
+      }
+    }
+
+    function generateFallbackStepTemplate(step) {
+      const stepMessages = {
+        1: "five times to the Re-Engagement Room as part of the College's Triple R process. At this stage, we request that you contact the College via phone call to discuss these referrals with the House Companion.",
+        2: "ten times to the re-engagement room and to make contact with the college via phone call to organise a face-to-face meeting with the HC. HC can proactively reach out to the parent to organise this meeting.",
+        3: "fifteen times to the re-engagement room and to make contact with the college via phone call to organise a meeting with the HC and LIFE.",
+        4: "twenty times to the re-engagement room and to make contact with the college via phone call to organise a meeting with the HC and AP:E.",
+        5: "twenty-five times to the re-engagement room and to make contact with the college via phone call to organise a meeting with the HC, AP:E & DP.",
+        6: "thirty times to the re-engagement room and to make contact with the college via phone call to organise a meeting with the HC, AP:E, DP and Principal."
+      };
+
+      return `Subject: Triple R Process – ${STEP_THRESHOLDS[step]} Referrals Notification
+
+Dear {parentName},
+
+This is a courtesy email to inform you that {studentName} has now been referred ${stepMessages[step]}
+
+Please let us know if you have any questions or concerns.
+
+Kind regards,  
+{houseCompanion}  
+House Companion  
+Sophia College`;
+    }
+
+    function calculateCurrentStep(referralCount) {
+      if (referralCount >= STEP_THRESHOLDS[6]) return 6;
+      if (referralCount >= STEP_THRESHOLDS[5]) return 5;
+      if (referralCount >= STEP_THRESHOLDS[4]) return 4;
+      if (referralCount >= STEP_THRESHOLDS[3]) return 3;
+      if (referralCount >= STEP_THRESHOLDS[2]) return 2;
+      if (referralCount >= STEP_THRESHOLDS[1]) return 1;
+      return 0;
+    }
+
+    function getNextStep(referralCount) {
+      const currentStep = calculateCurrentStep(referralCount);
+      if (currentStep >= 6) return null;
+      return currentStep + 1;
+    }
+
+    function getReferralsUntilNextStep(referralCount) {
+      const nextStep = getNextStep(referralCount);
+      if (!nextStep) return 0;
+      return STEP_THRESHOLDS[nextStep] - referralCount;
+    }
+
+    // ENHANCED: Fixed step process triggering with better debugging
+    async function checkAndTriggerStepProcess(studentId, newReferralCount) {
+      console.log('🎯 Checking step process for student:', studentId, 'Count:', newReferralCount);
+      
+      try {
+        // Add delay to ensure database is updated
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Double-check referral count from database
+        const actualCount = await getActualReferralCount(studentId);
+        console.log(`📊 Actual count from DB: ${actualCount}, provided count: ${newReferralCount}`);
+        
+        const referralCount = Math.max(actualCount, newReferralCount);
+        const currentStep = calculateCurrentStep(referralCount);
+        
+        console.log(`📊 Final referral count: ${referralCount}, current step: ${currentStep}`);
+        
+        if (currentStep > 0) {
+          console.log(`📊 Student ${studentId} is at Step ${currentStep} with ${referralCount} referrals`);
+          
+          // Check if this step email has already been sent
+          const stepAlreadySent = await checkIfStepEmailSent(studentId, currentStep);
+          
+          if (!stepAlreadySent) {
+            console.log(`📧 Step ${currentStep} email not yet sent for ${studentId} - triggering now`);
+            
+            // Add additional delay before sending step email
+            setTimeout(async () => {
+              await sendStepEmail(studentId, currentStep);
+            }, 1000);
+          } else {
+            console.log(`📧 Step ${currentStep} email already sent for ${studentId}`);
+          }
+        } else {
+          console.log(`📊 Student ${studentId} has not reached any step threshold yet (${referralCount} referrals)`);
+        }
+      } catch (error) {
+        console.error('❌ Error in step process check:', error);
+        showToast('⚠️ Error checking step process - please check admin panel', 'warning');
+      }
+    }
+
+    async function checkIfStepEmailSent(studentId, step) {
+      try {
+        const snapshot = await db.collection('stepEmailsLog')
+          .where('studentId', '==', studentId)
+          .where('step', '==', step)
+          .where('semester', '==', currentSemester ? currentSemester.id : 'default')
+          .get();
+        
+        return !snapshot.empty;
+      } catch (error) {
+        console.error('❌ Error checking step email log:', error);
+        return false;
+      }
+    }
+
+    async function recordStepEmailSent(studentId, step) {
+      try {
+        const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+        
+        await db.collection('stepEmailsLog').add({
+          studentId: studentId,
+          step: step,
+          semester: currentSemester ? currentSemester.id : 'default',
+          sentAt: firebase.firestore.FieldValue.serverTimestamp(),
+          sentBy: staff ? staff['staff name'] : 'Unknown'
+        });
+        
+        console.log(`✅ Recorded step ${step} email sent for student ${studentId}`);
+      } catch (error) {
+        console.error('❌ Error recording step email:', error);
+      }
+    }
+
+    async function sendStepEmail(studentId, step) {
+      console.log(`📧 Preparing step ${step} email for student ${studentId}`);
+      
+      try {
+        const student = studentsData.find(s => s.BCEID1 === studentId);
+        if (!student) {
+          console.error('❌ Student not found:', studentId);
+          return;
+        }
+        
+        const parentInfo = parentEmails[studentId];
+        if (!parentInfo || !parentInfo.email) {
+          console.warn('⚠️ No parent email found for student:', studentId);
+          showToast(`⚠️ No parent email found for ${student.FirstName} ${student.LegalSurname1} - Step ${step}`, 'warning', 8000);
+          return;
+        }
+        
+        const houseCompanionData = houseCompanions[student.HouseName];
+        if (!houseCompanionData) {
+          console.warn('⚠️ No house companion found for house:', student.HouseName);
+          showToast(`⚠️ No house companion found for ${student.HouseName} - Step ${step}`, 'warning', 8000);
+          return;
+        }
+        
+        // Process email template
+        const template = stepEmailTemplates[step];
+        const emailContent = processEmailTemplate(template, {
+          parentName: parentInfo.name || 'Parent/Guardian',
+          studentName: `${student.FirstName} ${student.LegalSurname1}`,
+          houseCompanion: houseCompanionData.name || `${student.HouseName} House Companion`
+        });
+        
+        // Show email modal for step emails (automatic trigger)
+        showStepEmailModal(emailContent, parentInfo, houseCompanionData, student, step, false);
+        
+        console.log(`✅ Step ${step} email modal shown for ${student.FirstName} ${student.LegalSurname1}`);
+        showToast(`🎯 Step ${step} reached: ${student.FirstName} ${student.LegalSurname1} - Email ready to send`, 'info', 10000);
+        
+      } catch (error) {
+        console.error('❌ Error sending step email:', error);
+        showToast('❌ Error preparing step email', 'error');
+      }
+    }
+
+    function showStepEmailModal(emailContent, parentInfo, houseCompanionData, student, step, isManual = false) {
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'stepEmailModal';
+      
+      const recipients = [];
+      recipients.push(`📧 TO: ${parentInfo.name} <${parentInfo.email}>`);
+      if (houseCompanionData && houseCompanionData.email) {
+        recipients.push(`📬 CC: ${houseCompanionData.name} <${houseCompanionData.email}>`);
+      }
+      
+      const modalTitle = isManual ? 
+        `📧 Manual Step ${step} Email` : 
+        `🎯 Triple R Step ${step} Email`;
+      
+      const modalDescription = isManual ?
+        `Manually sending Step ${step} notification for ${student.FirstName} ${student.LegalSurname1}` :
+        `${student.FirstName} ${student.LegalSurname1} has reached ${STEP_THRESHOLDS[step]} referrals`;
+      
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>${modalTitle}</h3>
+            <button class="modal-close" onclick="closeStepEmailModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div style="background: var(--border-light); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); border-radius: var(--spacing-sm);">
+              <h4 style="margin: 0 0 var(--spacing-sm) 0; color: var(--danger);">⚠️ Step ${step} ${isManual ? 'Manual Send' : 'Reached'}</h4>
+              <p style="margin: 0;">${modalDescription}</p>
+            </div>
+            
+            <div style="background: var(--border-light); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); border-radius: var(--spacing-sm);">
+              <h4 style="margin: 0 0 var(--spacing-sm) 0;">📬 Recipients:</h4>
+              ${recipients.map(r => `<div style="margin: var(--spacing-xs) 0;">${r}</div>`).join('')}
+            </div>
+            
+            <div style="border: 1px solid var(--border); border-radius: var(--spacing-sm); margin-bottom: var(--spacing-lg);">
+              <div style="background: var(--border-light); padding: var(--spacing-md); border-bottom: 1px solid var(--border); font-weight: 600;">Email Preview</div>
+              <div style="padding: var(--spacing-lg); font-family: Georgia, serif; line-height: 1.6; white-space: pre-line; max-height: 200px; overflow-y: auto;">${emailContent}</div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button onclick="closeStepEmailModal()" class="btn btn-secondary">Cancel</button>
+            <button onclick="openStepEmailClientAndRecord('${parentInfo.email}', '${houseCompanionData?.email || ''}', '${emailContent.split('\n')[0]}', '${emailContent.replace(/'/g, "\\'").replace(/\n/g, "\\n")}', '${student.BCEID1}', ${step}); closeStepEmailModal();" class="btn btn-primary">📧 Send Email</button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+
+    function closeStepEmailModal() {
+      const modal = document.getElementById('stepEmailModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    async function openStepEmailClientAndRecord(toEmail, ccEmail, subject, body, studentId, step) {
+      // Open email client
+      let mailto = 'mailto:' + encodeURIComponent(toEmail);
+      mailto += '?subject=' + encodeURIComponent(subject);
+      if (ccEmail) mailto += '&cc=' + encodeURIComponent(ccEmail);
+      mailto += '&body=' + encodeURIComponent(body);
+      window.location.href = mailto;
+      
+      // Record that the email was sent
+      try {
+        await recordStepEmailSent(studentId, step);
+        showToast('📧 Email client opened and step email logged!', 'success');
+        
+        // Refresh the step email table if admin tab is active
+        if (document.getElementById('admin-tab').classList.contains('active')) {
+          setTimeout(loadStepEmailData, 1000);
+        }
+      } catch (error) {
+        console.error('❌ Error recording step email:', error);
+        showToast('📧 Email opened but failed to log - please check admin panel', 'warning');
+      }
+    }
+
+    function processEmailTemplate(template, variables) {
+      let processedTemplate = template;
+      
+      Object.keys(variables).forEach(key => {
+        const regex = new RegExp(`{${key}}`, 'g');
+        processedTemplate = processedTemplate.replace(regex, variables[key] || '');
+      });
+      
+      return processedTemplate;
+    }
+
+    function updateStepIndicator(student, referralCount) {
+      const stepIndicator = document.getElementById('stepIndicator');
+      const stepTitle = document.getElementById('stepTitle');
+      const stepDescription = document.getElementById('stepDescription');
+      
+      if (!stepIndicator || !stepTitle || !stepDescription) return;
+      
+      const currentStep = calculateCurrentStep(referralCount);
+      const nextStep = getNextStep(referralCount);
+      const referralsUntilNext = getReferralsUntilNextStep(referralCount);
+      
+      if (currentStep > 0) {
+        stepIndicator.style.display = 'block';
+        stepIndicator.className = 'step-indicator step-danger';
+        stepTitle.innerHTML = `🚨 Step ${currentStep} Reached`;
+        stepDescription.textContent = `Student has reached ${STEP_THRESHOLDS[currentStep]} referrals. Intervention required.`;
+      } else if (nextStep && referralsUntilNext <= 2) {
+        stepIndicator.style.display = 'block';
+        stepIndicator.className = 'step-indicator step-warning';
+        stepTitle.innerHTML = `⚠️ Approaching Step ${nextStep}`;
+        stepDescription.textContent = `${referralsUntilNext} more referral${referralsUntilNext === 1 ? '' : 's'} until Step ${nextStep} (${STEP_THRESHOLDS[nextStep]} total)`;
+      } else if (nextStep) {
+        stepIndicator.style.display = 'block';
+        stepIndicator.className = 'step-indicator';
+        stepTitle.innerHTML = `🎯 Step Progress`;
+        stepDescription.textContent = `${referralsUntilNext} referrals until Step ${nextStep} (${STEP_THRESHOLDS[nextStep]} total)`;
+      } else {
+        stepIndicator.style.display = 'none';
+      }
+    }
+
+    // ===== IMPLEMENTATION FUNCTIONS =====
+
+    // Tab switching
+    function switchTab(tabName) {
+      console.log('🔄 Switching to tab:', tabName);
+      
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      const targetTab = document.getElementById(tabName + '-tab');
+      if (targetTab) {
+        targetTab.classList.add('active');
+        
+        if (tabName === 'manage') {
+          loadManageReferrals();
+        } else if (tabName === 'analytics') {
+          loadAnalytics();
+        } else if (tabName === 'admin') {
+          loadAdminData();
+        } else if (tabName === 'masterlist') {
+          loadMasterList();
+        }
+      }
+      
+      event.target.classList.add('active');
+    }
+
+    // Referral type selection
+    function selectReferralType(type, element) {
+      console.log('📋 Selecting referral type:', type);
+      selectedType = type;
+      
+      document.querySelectorAll('.type-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      
+      element.classList.add('selected');
+      document.getElementById('referralType').value = type;
+      
+      validateForm();
+    }
+
+    // Enhanced toast notification with higher z-index
+    function showToast(message, type = 'success', duration = 5000) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    // Load CSV data with unified system integration
+    async function loadCSV(filename) {
+      return new Promise((resolve, reject) => {
+        Papa.parse(filename, {
+          download: true,
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            console.log('✅ CSV loaded:', filename, 'Rows:', results.data.length);
+            resolve(results.data);
+          },
+          error: (error) => {
+            console.error('❌ CSV error for', filename, ':', error);
+            reject(error);
+          }
+        });
+      });
+    }
+
+    // Load behavior types from CSV
+    async function loadBehaviorTypes() {
+      try {
+        console.log('📋 Loading behavior types from BehaviourList.csv...');
+        
+        if (!behaviorTypeSelect) {
+          console.error('❌ Behavior type select element not found');
+          return;
+        }
+        
+        const behaviorData = await loadCSV('BehaviourList.csv');
+        console.log('📋 Raw behavior data:', behaviorData);
+        
+        if (behaviorData.length > 0) {
+          behaviorTypeSelect.innerHTML = '<option value="">Select Behavior Type</option>';
+          
+          const behaviors = behaviorData
+            .filter(row => row.Level && row.Behaviour)
+            .map(row => row.Level + ' - ' + row.Behaviour)
+            .filter((value, index, self) => self.indexOf(value) === index)
+            .sort();
+          
+          console.log('✅ Processed behavior types:', behaviors);
+          
+          behaviors.forEach(behavior => {
+            const option = new Option(behavior, behavior);
+            behaviorTypeSelect.appendChild(option);
+          });
+          
+          console.log('✅ Behavior dropdown populated with', behaviors.length, 'options');
+        } else {
+          console.log('⚠️ No behavior data found, using fallback options');
+          const defaultBehaviors = [
+            'Minor - Disrespect/non-compliance',
+            'Minor - Disruption'
+          ];
+          
+          behaviorTypeSelect.innerHTML = '<option value="">Select Behavior Type</option>';
+          defaultBehaviors.forEach(behavior => {
+            const option = new Option(behavior, behavior);
+            behaviorTypeSelect.appendChild(option);
+          });
+        }
+        
+      } catch (error) {
+        console.error('❌ Error loading behavior types:', error);
+        console.log('🔄 Using fallback behavior options');
+        
+        if (behaviorTypeSelect) {
+          const defaultBehaviors = [
+            'Minor - Disrespect/non-compliance',
+            'Minor - Disruption'
+          ];
+          
+          behaviorTypeSelect.innerHTML = '<option value="">Select Behavior Type</option>';
+          defaultBehaviors.forEach(behavior => {
+            const option = new Option(behavior, behavior);
+            behaviorTypeSelect.appendChild(option);
+          });
+        }
+      }
+    }
+
+    // Load all data with unified system integration
+    async function loadAllData() {
+      console.log('📚 Loading all CSV data...');
+      updateLoadingStatus('Initializing system...');
+      
+      try {
+        // Initialize unified system first
+        await initializeUnifiedSystem();
+        
+        updateLoadingStatus('Loading step email templates...');
+        await loadStepEmailTemplates();
+        
+        updateLoadingStatus('Loading student database...');
+        studentsData = await loadCSV('students.csv');
+        setupStudentSearch();
+        
+        updateLoadingStatus('Loading parent contacts...');
+        const parentData = await loadCSV('parentemail.csv');
+        parentEmails = {};
+        parentData.forEach(parent => {
+          if (parent.BCEID1 && parent.ParentEmail) {
+            parentEmails[parent.BCEID1] = {
+              email: parent.ParentEmail,
+              name: ((parent.ParentTitle || '') + ' ' + (parent.ParentFirstName || '') + ' ' + (parent.ParentSecondName || '')).trim()
+            };
+          }
+        });
+        
+        updateLoadingStatus('Loading house companions...');
+        const houseData = await loadCSV('housecompanions.csv');
+        houseCompanions = {};
+        houseData.forEach(companion => {
+          const houseField = companion.housegroup || companion.HouseName;
+          const emailField = companion.email || companion.Email;
+          const nameField = companion['staff name'] || companion['Staff Name'];
+          
+          if (houseField && emailField) {
+            houseCompanions[houseField] = {
+              email: emailField,
+              name: nameField || ''
+            };
+          }
+        });
+        
+        updateLoadingStatus('Loading teaching staff...');
+        const teachersData = await loadCSV('BCEteacherinfo.csv');
+        teacherEmails = {};
+        teachersData.forEach(teacher => {
+          if (teacher.Stafffullname && teacher.BCEID && teacher.Staffemail) {
+            const teacherName = teacher.Stafffullname + ' (' + teacher.BCEID + ')';
+            teacherEmails[teacherName] = teacher.Staffemail;
+            teacherSelect.add(new Option(teacherName, teacherName));
+          }
+        });
+        
+        updateLoadingStatus('Loading classroom locations...');
+        const barcodesData = await loadCSV('Barcodelocations.csv');
+        const classrooms = Array.from(new Set(barcodesData.map(item => item.Title).filter(Boolean))).sort();
+        classrooms.forEach(classroom => {
+          classroomSelect.add(new Option(classroom, classroom));
+        });
+        
+        updateLoadingStatus('Loading subject areas...');
+        const learningData = await loadCSV('Learningareacategory.csv');
+        const subjects = Array.from(new Set(learningData.map(item => item['Learning Area Category']).filter(Boolean))).sort();
+        subjects.forEach(subject => {
+          learningAreaSelect.add(new Option(subject, subject));
+        });
+        
+        updateLoadingStatus('Loading behavior categories...');
+        await loadBehaviorTypes();
+        
+        dataLoaded = true;
+        hideLoadingStatus();
+        showToast('✅ System loaded successfully!', 'success');
+        
+        console.log('✅ Data loading completed');
+        
+      } catch (error) {
+        console.error('❌ Error loading data:', error);
+        updateLoadingStatus('❌ Error loading data - some features may not work');
+        showToast('❌ Error loading data: ' + error.message, 'error');
+      }
+    }
+
+    // Student search
+    function setupStudentSearch() {
+      studentSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        if (searchTerm.length < 2) {
+          studentDropdown.style.display = 'none';
+          return;
+        }
+        
+        const filteredStudents = studentsData.filter(student => {
+          if (!student.FirstName || !student.LegalSurname1 || !student.BCEID1) {
+            return false;
+          }
+          const fullName = (student.FirstName + ' ' + student.LegalSurname1).toLowerCase();
+          const reverseName = (student.LegalSurname1 + ', ' + student.FirstName).toLowerCase();
+          return fullName.includes(searchTerm) || 
+                 reverseName.includes(searchTerm) || 
+                 student.BCEID1.toLowerCase().includes(searchTerm);
+        }).slice(0, 8);
+        
+        studentDropdown.innerHTML = '';
+        
+        if (filteredStudents.length === 0) {
+          const noResults = document.createElement('div');
+          noResults.className = 'student-option';
+          noResults.innerHTML = '<span style="color: var(--text-muted);">No students found</span>';
+          studentDropdown.appendChild(noResults);
+        } else {
+          filteredStudents.forEach(student => {
+            const option = document.createElement('div');
+            option.className = 'student-option';
+            option.innerHTML = '<span>' + student.FirstName + ' ' + student.LegalSurname1 + '</span><span class="student-id">' + student.BCEID1 + '</span>';
+            option.addEventListener('click', () => selectStudent(student));
+            studentDropdown.appendChild(option);
+          });
+        }
+        
+        studentDropdown.style.display = 'block';
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!studentSearch.contains(e.target) && !studentDropdown.contains(e.target)) {
+          studentDropdown.style.display = 'none';
+        }
+      });
+    }
+
+    // Select student with step tracking
+    async function selectStudent(student) {
+      console.log('👤 Student selected:', student.FirstName, student.LegalSurname1);
+      
+      selectedStudent = student;
+      studentSearch.value = student.FirstName + ' ' + student.LegalSurname1;
+      selectedStudentId.value = student.BCEID1;
+      studentDropdown.style.display = 'none';
+      
+      showStudentProfile(student);
+      await loadReferralHistoryWithSteps(student.BCEID1);
+      validateForm();
+    }
+
+    // Show student profile with step indicator
+    function showStudentProfile(student) {
+      document.getElementById('studentName').textContent = student.LegalSurname1 + ', ' + student.FirstName;
+      document.getElementById('studentBCEID').textContent = student.BCEID1;
+      document.getElementById('studentHouse').textContent = student.HouseName || 'Not Assigned';
+      document.getElementById('studentHomeGroup').textContent = student.HomeGroup || 'Not Assigned';
+      document.getElementById('studentYearLevel').textContent = student.YearLevelName || 'Not Available';
+      
+      const photo = document.getElementById('studentPhoto');
+      photo.src = 'students/' + student.BCEID1 + '.jpg';
+      photo.onerror = function() {
+        this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f0f0f0"/><circle cx="50" cy="35" r="15" fill="%23ddd"/><path d="M20 85 Q20 65 50 65 Q80 65 80 85 Z" fill="%23ddd"/></svg>';
+      };
+      
+      studentProfile.style.display = 'flex';
+    }
+
+    // Load referral history with step tracking
+    async function loadReferralHistoryWithSteps(studentId) {
+      console.log('📚 Loading referral history for:', studentId);
+      historySection.style.display = 'block';
+      historyList.innerHTML = '<div style="padding:var(--spacing-lg); text-align: center;">Loading history...</div>';
+
+      try {
+        const snapshot = await db.collection('referrals')
+          .where('student', '==', studentId)
+          .where('semester', '==', currentSemester ? currentSemester.id : 'default')
+          .get();
+        
+        const referrals = [];
+        snapshot.forEach(doc => {
+          referrals.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Sort by timestamp
+        referrals.sort((a, b) => {
+          const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+          const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+          return timeB - timeA;
+        });
+        
+        displayReferralHistory(referrals);
+        
+        // Update step indicator
+        const currentCount = referrals.length;
+        document.getElementById('referralCount').textContent = currentCount;
+        updateStepIndicator(selectedStudent, currentCount);
+        
+      } catch (error) {
+        console.error('❌ Error loading history:', error);
+        historyList.innerHTML = '<div style="padding:var(--spacing-lg); text-align: center; color: var(--danger);">Error loading history</div>';
+      }
+    }
+
+    // Display referral history
+    function displayReferralHistory(referrals) {
+      historyList.innerHTML = '';
+      
+      if (referrals.length === 0) {
+        historyList.innerHTML = '<div style="padding:var(--spacing-lg); text-align: center; color: var(--text-muted);">No previous referrals found</div>';
+      } else {
+        referrals.slice(0, 10).forEach(referral => {
+          const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown Date';
+          const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+          const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
+          const behaviorType = referral.behaviorType || 'Not specified';
+          
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.innerHTML = '<div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-sm);"><strong>' + date + ' ' + time + '</strong><span>' + typeEmoji + ' ' + (referral.referralType || 'Unknown') + '</span></div><div style="margin-bottom: var(--spacing-xs);"><strong>Subject:</strong> ' + (referral.learningArea || 'N/A') + ' | <strong>Teacher:</strong> ' + (referral.teacher || 'N/A') + '</div><div style="margin-bottom: var(--spacing-xs);"><strong>Behavior:</strong> ' + behaviorType + '</div><div style="color: var(--text-muted); font-size: 0.875rem;">' + (referral.details || 'No details provided') + '</div>';
+          historyList.appendChild(item);
+        });
+      }
+    }
+
+    // Form validation
+    function validateForm() {
+      const isValid = selectedStudent && 
+                     selectedType && 
+                     lessonSelect.value && 
+                     classroomSelect.value && 
+                     teacherSelect.value && 
+                     learningAreaSelect.value && 
+                     behaviorTypeSelect.value &&
+                     detailsInput.value.trim() &&
+                     dataLoaded;
+      
+      submitBtn.disabled = !isValid;
+    }
+
+    // Submit referral with step process integration
+    async function submitReferral(event) {
+      event.preventDefault();
+      
+      if (!selectedStudent || !selectedType || !dataLoaded) {
+        showToast('❌ Please complete all fields', 'error');
+        return;
+      }
+
+      const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+      
+      const referralData = {
+        student: selectedStudent.BCEID1,
+        studentName: selectedStudent.LegalSurname1 + ', ' + selectedStudent.FirstName,
+        referralType: selectedType,
+        behaviorType: behaviorTypeSelect.value,
+        lesson: lessonSelect.value,
+        classroom: classroomSelect.value,
+        teacher: teacherSelect.value,
+        learningArea: learningAreaSelect.value,
+        details: detailsInput.value,
+        houseName: selectedStudent.HouseName,
+        staff: staff['staff name'],
+        semester: currentSemester && currentSemester.id ? currentSemester.id : 'default',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      console.log('📝 Submitting referral:', referralData);
+      
+      submitBtn.textContent = '⏳ Saving...';
+      submitBtn.disabled = true;
+
+      try {
+        await db.collection('referrals').add(referralData);
+        console.log('✅ Referral saved');
+        
+        // Calculate ACTUAL referral count from database for current semester
+        const newCount = await getActualReferralCount(selectedStudent.BCEID1);
+        console.log(`📊 Actual referral count for ${selectedStudent.BCEID1}: ${newCount}`);
+        
+        // Check and trigger step process
+        await checkAndTriggerStepProcess(selectedStudent.BCEID1, newCount);
+        
+        showToast('✅ Referral submitted successfully!', 'success');
+        showEmailModal(referralData);
+        resetForm();
+        
+        if (selectedStudent) {
+          await loadReferralHistoryWithSteps(selectedStudent.BCEID1);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error saving referral:', error);
+        showToast('❌ Error saving referral', 'error');
+      } finally {
+        submitBtn.textContent = '📨 Submit Referral';
+        validateForm();
+      }
+    }
+
+    // Get actual referral count from database
+    async function getActualReferralCount(studentId) {
+      try {
+        const snapshot = await db.collection('referrals')
+          .where('student', '==', studentId)
+          .where('semester', '==', currentSemester ? currentSemester.id : 'default')
+          .get();
+        
+        return snapshot.size;
+      } catch (error) {
+        console.error('❌ Error getting referral count:', error);
+        return 0;
+      }
+    }
+
+    // Email modal
+    function showEmailModal(data) {
+      const parentInfo = parentEmails[data.student];
+      const houseCompanion = houseCompanions[data.houseName];
+      const teacherEmail = teacherEmails[data.teacher];
+      
+      const subject = 'Courtesy Notification – Triple R ' + (data.referralType === 'automatic' ? 'Automatic ' : '') + 'Referral – ' + data.learningArea + ' – Lesson ' + data.lesson;
+      const body = generateEmailBody(data, parentInfo);
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'emailModal';
+      
+      const recipients = [];
+      if (parentInfo && parentInfo.email) {
+        recipients.push('📧 TO: ' + parentInfo.name + ' <' + parentInfo.email + '>');
+      } else {
+        recipients.push('❌ TO: No parent email found');
+      }
+      
+      if (houseCompanion && houseCompanion.email) {
+        recipients.push('📬 CC: ' + houseCompanion.name + ' <' + houseCompanion.email + '>');
+      }
+      
+      if (teacherEmail) {
+        recipients.push('📨 BCC: ' + data.teacher + ' <' + teacherEmail + '>');
+      }
+
+      let modalHTML = '<div class="modal-content">';
+      modalHTML += '<div class="modal-header">';
+      modalHTML += '<h3>📧 Send Referral Email</h3>';
+      modalHTML += '<button class="modal-close" onclick="closeEmailModal()">&times;</button>';
+      modalHTML += '</div>';
+      
+      modalHTML += '<div class="modal-body">';
+      modalHTML += '<div style="background: var(--border-light); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); border-radius: var(--spacing-sm);">';
+      modalHTML += '<h4 style="margin: 0 0 var(--spacing-sm) 0;">📬 Recipients:</h4>';
+      modalHTML += recipients.map(r => '<div style="margin: var(--spacing-xs) 0;">' + r + '</div>').join('');
+      modalHTML += '</div>';
+      
+      modalHTML += '<div style="border: 1px solid var(--border); border-radius: var(--spacing-sm); margin-bottom: var(--spacing-lg);">';
+      modalHTML += '<div style="background: var(--border-light); padding: var(--spacing-md); border-bottom: 1px solid var(--border); font-weight: 600;">Email Preview</div>';
+      modalHTML += '<div style="padding: var(--spacing-lg); font-family: Georgia, serif; line-height: 1.6; white-space: pre-line; max-height: 200px; overflow-y: auto;">' + body + '</div>';
+      modalHTML += '</div>';
+      modalHTML += '</div>';
+      
+      modalHTML += '<div class="modal-footer">';
+      if (parentInfo && parentInfo.email) {
+        modalHTML += '<button onclick="openEmailClient(\'' + parentInfo.email + '\', \'' + (houseCompanion && houseCompanion.email ? houseCompanion.email : '') + '\', \'' + (teacherEmail || '') + '\', \'' + subject.replace(/'/g, "\\'") + '\', \'' + body.replace(/'/g, "\\'").replace(/\n/g, "\\n") + '\'); closeEmailModal();" class="btn btn-primary">📧 Open Email</button>';
+      } else {
+        modalHTML += '<div style="background: #fff3cd; padding: var(--spacing-md); border-radius: var(--spacing-sm); text-align: center;"><strong>⚠️ No Parent Email Available</strong></div>';
+      }
+      modalHTML += '<button onclick="closeEmailModal()" class="btn btn-secondary">Close</button>';
+      modalHTML += '</div>';
+      modalHTML += '</div>';
+      
+      modal.innerHTML = modalHTML;
+      document.body.appendChild(modal);
+    }
+
+    // Generate email body
+    function generateEmailBody(data, parentInfo) {
+      const parentName = parentInfo && parentInfo.name ? parentInfo.name : 'Parent/Guardian';
+      
+      return 'Dear ' + parentName + ',\n\nThis is a courtesy email to inform you that ' + data.studentName + ' was referred to the Re-Engagement Room as part of the Triple R process at Sophia College.\n\nREFERRAL DETAILS:\n• Date: ' + new Date().toLocaleDateString() + '\n• Subject: ' + data.learningArea + '\n• Lesson: ' + data.lesson + '\n• Teacher: ' + data.teacher + '\n• Classroom: ' + data.classroom + '\n• Behavior Type: ' + data.behaviorType + '\n• Referral Type: ' + (data.referralType === 'automatic' ? 'Automatic Referral' : 'Warning Referral') + '\n\n' + (data.referralType === 'automatic' ? 'On this occasion, a Triple R disc was not issued. The referral was automatic due to behavior that disrupted the teaching and learning environment.' : 'A Triple R disc was issued as a warning. Despite this warning, ' + data.studentName + ' continued to display disruptive behavior, resulting in this referral.') + '\n\nINCIDENT DESCRIPTION:\n' + data.details + '\n\nThe Re-Engagement Room provides students with an opportunity to reflect on their choices and develop strategies for better decision-making.\n\nIf you require further information, please contact the classroom teacher or Re-Engagement Room Team.\n\nKind regards,\nRe-Engagement Room Team\nSophia College';
+    }
+
+    // Reset form
+    function resetForm() {
+      selectedType = '';
+      selectedStudent = null;
+      referralForm.reset();
+      selectedStudentId.value = '';
+      document.getElementById('referralType').value = '';
+      
+      document.querySelectorAll('.type-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      
+      studentProfile.style.display = 'none';
+      historySection.style.display = 'none';
+      
+      validateForm();
+    }
+
+    // ===== ANALYTICS FUNCTIONALITY =====
+    
+    async function loadAnalytics() {
+      console.log('📊 Loading analytics...');
+      
+      try {
+        const snapshot = await db.collection('referrals').get();
+        const referrals = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.timestamp) {
+            referrals.push({
+              ...data,
+              date: data.timestamp.toDate()
+            });
+          }
+        });
+        
+        updateAnalyticsStats(referrals);
+        renderAnalyticsCharts(referrals);
+        
+      } catch (error) {
+        console.error('❌ Error loading analytics:', error);
+        showToast('❌ Error loading analytics', 'error');
+      }
+    }
+    
+    function updateAnalyticsStats(referrals) {
+      const total = referrals.length;
+      
+      // This week
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const thisWeek = referrals.filter(r => r.date >= weekAgo).length;
+      
+      // Top house
+      const houseCounts = {};
+      referrals.forEach(r => {
+        const house = r.houseName || 'Unknown';
+        houseCounts[house] = (houseCounts[house] || 0) + 1;
+      });
+      const topHouse = Object.keys(houseCounts).reduce((a, b) => 
+        houseCounts[a] > houseCounts[b] ? a : b, 'None');
+      
+      // Daily average (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const lastThirtyDays = referrals.filter(r => r.date >= thirtyDaysAgo).length;
+      const dailyAvg = (lastThirtyDays / 30).toFixed(1);
+      
+      document.getElementById('totalReferrals').textContent = total;
+      document.getElementById('weeklyReferrals').textContent = thisWeek;
+      document.getElementById('topHouse').textContent = topHouse;
+      document.getElementById('avgDaily').textContent = dailyAvg;
+    }
+    
+    function renderAnalyticsCharts(referrals) {
+      renderHouseChart(referrals);
+      renderBehaviorChart(referrals);
+      renderTrendsChart(referrals);
+      renderTypeChart(referrals);
+    }
+    
+    function renderHouseChart(referrals) {
+      const ctx = document.getElementById('houseChart');
+      if (!ctx) return;
+      
+      const houseCounts = {};
+      referrals.forEach(r => {
+        const house = r.houseName || 'Unknown';
+        houseCounts[house] = (houseCounts[house] || 0) + 1;
+      });
+      
+      const labels = Object.keys(houseCounts);
+      const data = Object.values(houseCounts);
+      
+      if (analyticsCharts.house) analyticsCharts.house.destroy();
+      
+      analyticsCharts.house = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Referrals',
+            data: data,
+            backgroundColor: '#003057',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+    
+    function renderBehaviorChart(referrals) {
+      const ctx = document.getElementById('behaviorChart');
+      if (!ctx) return;
+      
+      const behaviorCounts = {};
+      referrals.forEach(r => {
+        const behavior = r.behaviorType || 'Not specified';
+        behaviorCounts[behavior] = (behaviorCounts[behavior] || 0) + 1;
+      });
+      
+      const labels = Object.keys(behaviorCounts);
+      const data = Object.values(behaviorCounts);
+      
+      if (analyticsCharts.behavior) analyticsCharts.behavior.destroy();
+      
+      analyticsCharts.behavior = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#660000', '#17a2b8', '#28a745', '#ffc107']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+    
+    function renderTrendsChart(referrals) {
+      const ctx = document.getElementById('trendsChart');
+      if (!ctx) return;
+      
+      // Last 7 days
+      const dailyCounts = {};
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString();
+        dailyCounts[dateStr] = 0;
+      }
+      
+      referrals.forEach(r => {
+        const dateStr = r.date.toLocaleDateString();
+        if (dailyCounts.hasOwnProperty(dateStr)) {
+          dailyCounts[dateStr]++;
+        }
+      });
+      
+      const labels = Object.keys(dailyCounts);
+      const data = Object.values(dailyCounts);
+      
+      if (analyticsCharts.trends) analyticsCharts.trends.destroy();
+      
+      analyticsCharts.trends = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Daily Referrals',
+            data: data,
+            borderColor: '#660000',
+            backgroundColor: 'rgba(102, 0, 0, 0.1)',
+            tension: 0.4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+    
+    function renderTypeChart(referrals) {
+      const ctx = document.getElementById('typeChart');
+      if (!ctx) return;
+      
+      const typeCounts = {};
+      referrals.forEach(r => {
+        const type = r.referralType || 'Unknown';
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+      });
+      
+      const labels = Object.keys(typeCounts);
+      const data = Object.values(typeCounts);
+      
+      if (analyticsCharts.type) analyticsCharts.type.destroy();
+      
+      analyticsCharts.type = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#ffc107', '#17a2b8']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
+    // ===== MANAGE REFERRALS FUNCTIONALITY =====
+    
+    async function loadManageReferrals() {
+      console.log('📋 Loading manage referrals...');
+      
+      const container = document.getElementById('referralsContainer');
+      const countElement = document.getElementById('referralsCount');
+      
+      container.innerHTML = '<div style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>📚 Loading referrals...</div>';
+      
+      try {
+        const snapshot = await db.collection('referrals').get();
+        allReferrals = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          allReferrals.push({
+            id: doc.id,
+            ...data,
+            houseName: data.houseName || 'Unknown'
+          });
+        });
+        
+        allReferrals.sort((a, b) => {
+          const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+          const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+          return timeB - timeA;
+        });
+        
+        populateHouseFilter();
+        setupManageFilters();
+        
+        filteredReferrals = allReferrals.slice();
+        displayReferrals();
+        
+        countElement.textContent = allReferrals.length;
+        
+      } catch (error) {
+        console.error('❌ Error loading referrals:', error);
+        container.innerHTML = '<div style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading referrals</div>';
+      }
+    }
+
+    function populateHouseFilter() {
+      const houseFilter = document.getElementById('houseFilter');
+      const houses = Array.from(new Set(allReferrals.map(r => r.houseName).filter(Boolean))).sort();
+      
+      houseFilter.innerHTML = '<option value="">All Houses</option>';
+      houses.forEach(house => {
+        houseFilter.add(new Option(house, house));
+      });
+    }
+
+    function setupManageFilters() {
+      const searchInput = document.getElementById('manageSearch');
+      const houseFilter = document.getElementById('houseFilter');
+      const dateFilter = document.getElementById('dateFilter');
+      
+      searchInput.removeEventListener('input', applyFilters);
+      houseFilter.removeEventListener('change', applyFilters);
+      dateFilter.removeEventListener('change', applyFilters);
+      
+      searchInput.addEventListener('input', applyFilters);
+      houseFilter.addEventListener('change', applyFilters);
+      dateFilter.addEventListener('change', applyFilters);
+    }
+
+    function applyFilters() {
+      const searchTerm = document.getElementById('manageSearch').value.toLowerCase();
+      const selectedHouse = document.getElementById('houseFilter').value;
+      const selectedDate = document.getElementById('dateFilter').value;
+      
+      filteredReferrals = allReferrals.filter(referral => {
+        const matchesSearch = !searchTerm || 
+          (referral.studentName && referral.studentName.toLowerCase().includes(searchTerm)) ||
+          (referral.teacher && referral.teacher.toLowerCase().includes(searchTerm)) ||
+          (referral.learningArea && referral.learningArea.toLowerCase().includes(searchTerm)) ||
+          (referral.behaviorType && referral.behaviorType.toLowerCase().includes(searchTerm));
+        
+        const matchesHouse = !selectedHouse || referral.houseName === selectedHouse;
+        
+        let matchesDate = true;
+        if (selectedDate && referral.timestamp) {
+          const referralDate = referral.timestamp.toDate();
+          const now = new Date();
+          
+          switch (selectedDate) {
+            case 'today':
+              matchesDate = referralDate.toDateString() === now.toDateString();
+              break;
+            case 'week':
+              const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              matchesDate = referralDate >= weekAgo;
+              break;
+            case 'month':
+              const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+              matchesDate = referralDate >= monthAgo;
+              break;
+          }
+        }
+        
+        return matchesSearch && matchesHouse && matchesDate;
+      });
+      
+      displayReferrals();
+    }
+
+    function displayReferrals() {
+      const container = document.getElementById('referralsContainer');
+      const countElement = document.getElementById('referralsCount');
+      
+      countElement.textContent = filteredReferrals.length + ' of ' + allReferrals.length;
+      
+      if (filteredReferrals.length === 0) {
+        container.innerHTML = '<div style="padding: var(--spacing-2xl); text-align: center;">📋 No referrals match your filters</div>';
+        return;
+      }
+      
+      const chronologicalReferrals = allReferrals.slice().sort((a, b) => {
+        const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+        const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+        return timeA - timeB;
+      });
+      
+      const numberMap = {};
+      chronologicalReferrals.forEach((referral, index) => {
+        numberMap[referral.id] = index + 1;
+      });
+      
+      container.innerHTML = '';
+      
+      filteredReferrals.forEach(referral => {
+        const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+        const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+        const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
+        const hasReflection = referral.reflection ? '📎' : '';
+        const referralNumber = numberMap[referral.id] || '?';
+        const behaviorType = referral.behaviorType || 'Not specified';
+        
+        const item = document.createElement('div');
+        item.className = 'referral-item';
+        
+        item.innerHTML = `<div><div class="referral-number">#${referralNumber}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${date}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${time}</div></div><div><div style="font-weight: 600; margin-bottom: var(--spacing-xs);">${referral.studentName || 'Unknown'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Subject:</strong> ${referral.learningArea || 'N/A'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Teacher:</strong> ${referral.teacher || 'N/A'}</div><div style="font-size: 0.75rem; color: var(--text-muted);"><strong>Behavior:</strong> ${behaviorType}</div></div><div style="text-align: center;"><span style="padding: var(--spacing-xs) var(--spacing-sm); border-radius: 12px; font-size: 0.75rem; font-weight: 500;${referral.referralType === 'automatic' ? 'background: #d4edda; color: #155724;' : 'background: #fff3cd; color: #856404;'}">${typeEmoji} ${referral.referralType || 'Unknown'}</span></div><div style="text-align: center;"><span style="font-weight: 600; color: var(--accent);">${referral.houseName}</span></div><div style="display: flex; gap: var(--spacing-xs); flex-wrap: wrap;"><button onclick="downloadReferralPDF('${referral.id}')" class="action-btn pdf" title="Download PDF">📄</button>${hasReflection ? `<button onclick="downloadReflection('${referral.id}')" class="action-btn pdf" title="Download Reflection">📎</button>` : `<button onclick="openUploadModal('${referral.id}')" class="action-btn upload" title="Upload">📁</button>`}<button onclick="viewReferralDetails('${referral.id}')" class="action-btn view" title="View">👁️</button><button onclick="deleteReferral('${referral.id}', '${referral.studentName ? referral.studentName.replace(/'/g, "\\'") : ''}', '#${referralNumber}')" class="action-btn delete" title="Delete">🗑️</button></div>`;
+        
+        container.appendChild(item);
+      });
+    }
+
+    // ===== MASTER LIST FUNCTIONALITY =====
+    
+    async function loadMasterList() {
+      console.log('📋 Loading master list...');
+      
+      const tableBody = document.getElementById('masterListTableBody');
+      const countElement = document.getElementById('masterListCount');
+      
+      tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
+      
+      try {
+        const snapshot = await db.collection('referrals').get();
+        masterListData = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          masterListData.push({
+            id: doc.id,
+            ...data,
+            houseName: data.houseName || 'Unknown'
+          });
+        });
+        
+        // Sort chronologically to assign referral numbers
+        masterListData.sort((a, b) => {
+          const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+          const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+          return timeA - timeB;
+        });
+        
+        // Assign referral numbers
+        masterListData.forEach((referral, index) => {
+          referral.referralNumber = index + 1;
+        });
+        
+        populateMasterFilters();
+        setupMasterFilters();
+        displayMasterList();
+        
+        countElement.textContent = masterListData.length;
+        
+      } catch (error) {
+        console.error('❌ Error loading master list:', error);
+        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
+      }
+    }
+
+    function populateMasterFilters() {
+      const houseFilter = document.getElementById('masterHouseFilter');
+      const subjectFilter = document.getElementById('masterSubjectFilter');
+      
+      // Populate house filter
+      const houses = Array.from(new Set(masterListData.map(r => r.houseName).filter(Boolean))).sort();
+      houseFilter.innerHTML = '<option value="">All Houses</option>';
+      houses.forEach(house => {
+        houseFilter.add(new Option(house, house));
+      });
+      
+      // Populate subject filter
+      const subjects = Array.from(new Set(masterListData.map(r => r.learningArea).filter(Boolean))).sort();
+      subjectFilter.innerHTML = '<option value="">All Subjects</option>';
+      subjects.forEach(subject => {
+        subjectFilter.add(new Option(subject, subject));
+      });
+    }
+
+    function setupMasterFilters() {
+      const searchInput = document.getElementById('masterSearch');
+      const houseFilter = document.getElementById('masterHouseFilter');
+      const subjectFilter = document.getElementById('masterSubjectFilter');
+      
+      searchInput.removeEventListener('input', applyMasterFilters);
+      houseFilter.removeEventListener('change', applyMasterFilters);
+      subjectFilter.removeEventListener('change', applyMasterFilters);
+      
+      searchInput.addEventListener('input', applyMasterFilters);
+      houseFilter.addEventListener('change', applyMasterFilters);
+      subjectFilter.addEventListener('change', applyMasterFilters);
+    }
+
+    function applyMasterFilters() {
+      displayMasterList();
+    }
+
+    function displayMasterList() {
+      const searchTerm = document.getElementById('masterSearch').value.toLowerCase();
+      const selectedHouse = document.getElementById('masterHouseFilter').value;
+      const selectedSubject = document.getElementById('masterSubjectFilter').value;
+      
+      let filteredData = masterListData.filter(referral => {
+        const matchesSearch = !searchTerm || 
+          (referral.studentName && referral.studentName.toLowerCase().includes(searchTerm)) ||
+          (referral.houseName && referral.houseName.toLowerCase().includes(searchTerm)) ||
+          (referral.learningArea && referral.learningArea.toLowerCase().includes(searchTerm)) ||
+          (referral.teacher && referral.teacher.toLowerCase().includes(searchTerm));
+        
+        const matchesHouse = !selectedHouse || referral.houseName === selectedHouse;
+        const matchesSubject = !selectedSubject || referral.learningArea === selectedSubject;
+        
+        return matchesSearch && matchesHouse && matchesSubject;
+      });
+      
+      // Apply sorting
+      filteredData.sort((a, b) => {
+        let valueA = a[masterListSortColumn];
+        let valueB = b[masterListSortColumn];
+        
+        // Handle different data types
+        if (masterListSortColumn === 'date') {
+          valueA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
+          valueB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+        } else if (typeof valueA === 'string') {
+          valueA = valueA.toLowerCase();
+          valueB = valueB.toLowerCase();
+        }
+        
+        if (masterListSortOrder === 'asc') {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+      
+      const tableBody = document.getElementById('masterListTableBody');
+      const countElement = document.getElementById('masterListCount');
+      
+      countElement.textContent = filteredData.length;
+      
+      if (filteredData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center;">📋 No referrals match your filters</td></tr>';
+        return;
+      }
+      
+      tableBody.innerHTML = '';
+      
+      filteredData.forEach(referral => {
+        const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+        const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td style="text-align: center; font-weight: 600;">#${referral.referralNumber}</td>
+          <td>${referral.studentName || 'Unknown'}</td>
+          <td>${referral.houseName}</td>
+          <td>${referral.learningArea || 'N/A'}</td>
+          <td>${referral.teacher || 'N/A'}</td>
+          <td>${referral.behaviorType || 'Not specified'}</td>
+          <td>${date}</td>
+          <td style="text-align: center;">${typeEmoji}</td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+
+    function sortMasterList(column) {
+      const header = document.querySelector(`th[data-column="${column}"]`);
+      
+      // Remove sorting classes from all headers
+      document.querySelectorAll('.master-list-table th').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+      });
+      
+      // Toggle sort order
+      if (masterListSortColumn === column) {
+        masterListSortOrder = masterListSortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        masterListSortColumn = column;
+        masterListSortOrder = 'asc';
+      }
+      
+      // Add sorting class to current header
+      header.classList.add(masterListSortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      
+      displayMasterList();
+    }
+
+    function exportMasterList() {
+      const searchTerm = document.getElementById('masterSearch').value.toLowerCase();
+      const selectedHouse = document.getElementById('masterHouseFilter').value;
+      const selectedSubject = document.getElementById('masterSubjectFilter').value;
+      
+      let filteredData = masterListData.filter(referral => {
+        const matchesSearch = !searchTerm || 
+          (referral.studentName && referral.studentName.toLowerCase().includes(searchTerm)) ||
+          (referral.houseName && referral.houseName.toLowerCase().includes(searchTerm)) ||
+          (referral.learningArea && referral.learningArea.toLowerCase().includes(searchTerm)) ||
+          (referral.teacher && referral.teacher.toLowerCase().includes(searchTerm));
+        
+        const matchesHouse = !selectedHouse || referral.houseName === selectedHouse;
+        const matchesSubject = !selectedSubject || referral.learningArea === selectedSubject;
+        
+        return matchesSearch && matchesHouse && matchesSubject;
+      });
+      
+      // Convert to CSV
+      const csvHeaders = ['Referral #', 'Student Name', 'House', 'Subject', 'Teacher', 'Behavior Type', 'Date', 'Type'];
+      const csvRows = filteredData.map(referral => [
+        referral.referralNumber,
+        referral.studentName || 'Unknown',
+        referral.houseName,
+        referral.learningArea || 'N/A',
+        referral.teacher || 'N/A',
+        referral.behaviorType || 'Not specified',
+        referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown',
+        referral.referralType === 'automatic' ? 'Automatic' : 'Warning'
+      ]);
+      
+      const csvContent = [csvHeaders, ...csvRows]
+        .map(row => row.map(field => `"${field}"`).join(','))
+        .join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Referral_Master_List_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      showToast('✅ Master list exported successfully!', 'success');
+    }
+
+    // ===== MANAGE REFERRALS ACTIONS =====
+
+    // ENHANCED: Download referral as PDF with reflection support
+    async function downloadReferralPDF(referralId) {
+      try {
+        const referral = allReferrals.find(r => r.id === referralId);
+        if (!referral) {
+          showToast('❌ Referral not found', 'error');
+          return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(20);
+        doc.text('Sophia College', 20, 20);
+        doc.setFontSize(16);
+        doc.text('Re-Engagement Room Referral', 20, 30);
+        
+        // Referral details
+        doc.setFontSize(12);
+        let yPos = 50;
+        
+        const addLine = (label, value) => {
+          doc.text(label + ':', 20, yPos);
+          doc.text(value || 'N/A', 80, yPos);
+          yPos += 10;
+        };
+        
+        const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+        const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
+        
+        addLine('Date', date);
+        addLine('Time', time);
+        addLine('Student', referral.studentName);
+        addLine('House', referral.houseName);
+        addLine('Subject', referral.learningArea);
+        addLine('Teacher', referral.teacher);
+        addLine('Classroom', referral.classroom);
+        addLine('Lesson', referral.lesson);
+        addLine('Behavior Type', referral.behaviorType);
+        addLine('Referral Type', referral.referralType);
+        addLine('Staff Member', referral.staff);
+        
+        yPos += 10;
+        doc.text('Incident Details:', 20, yPos);
+        yPos += 10;
+        
+        // Split long text into multiple lines
+        const details = referral.details || 'No details provided';
+        const splitDetails = doc.splitTextToSize(details, 170);
+        doc.text(splitDetails, 20, yPos);
+        yPos += splitDetails.length * 5 + 20;
+        
+        // ENHANCED: Add reflection if available
+        if (referral.reflection) {
+          // Start new page for reflection if needed
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFontSize(16);
+          doc.text('Student Reflection', 20, yPos);
+          yPos += 15;
+          
+          doc.setFontSize(12);
+          addLine('File Name', referral.reflection.fileName);
+          addLine('Uploaded Date', referral.reflection.uploadedAt ? referral.reflection.uploadedAt.toDate().toLocaleDateString() : 'Unknown');
+          addLine('Uploaded By', referral.reflection.uploadedBy || 'Unknown');
+          
+          if (referral.reflection.notes) {
+            yPos += 10;
+            doc.text('Notes:', 20, yPos);
+            yPos += 10;
+            const splitNotes = doc.splitTextToSize(referral.reflection.notes, 170);
+            doc.text(splitNotes, 20, yPos);
+            yPos += splitNotes.length * 5 + 20;
+          }
+          
+          // Add reflection content if it's an image
+          if (referral.reflection.data && referral.reflection.fileType.startsWith('image/')) {
+            try {
+              // Start new page for image
+              doc.addPage();
+              doc.setFontSize(14);
+              doc.text('Reflection Image:', 20, 20);
+              
+              // Add image to PDF
+              const imgData = referral.reflection.data;
+              const imgWidth = 170;
+              const imgHeight = 120;
+              doc.addImage(imgData, 'JPEG', 20, 30, imgWidth, imgHeight);
+              
+            } catch (imgError) {
+              console.warn('Could not add image to PDF:', imgError);
+              doc.text('(Reflection image could not be embedded)', 20, yPos);
+            }
+          }
+        }
+        
+        // Save the PDF
+        doc.save(`Referral_${referral.studentName}_${date.replace(/\//g, '-')}.pdf`);
+        showToast('✅ Referral PDF downloaded!', 'success');
+        
+      } catch (error) {
+        console.error('❌ Error generating PDF:', error);
+        showToast('❌ Error generating PDF', 'error');
+      }
+    }
+
+    // Open upload modal
+    function openUploadModal(referralId) {
+      const referral = allReferrals.find(r => r.id === referralId);
+      if (!referral) {
+        showToast('❌ Referral not found', 'error');
+        return;
+      }
+
+      currentUploadReferral = referral;
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'uploadModal';
+      
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>📁 Upload Student Reflection</h3>
+            <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom: var(--spacing-lg); padding: var(--spacing-lg); background: var(--border-light); border-radius: var(--spacing-sm);">
+              <strong>${referral.studentName}</strong><br>
+              <small style="color: var(--text-muted);">${referral.behaviorType} - ${referral.timestamp ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown date'}</small>
+            </div>
+            
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('reflectionFile').click()">
+              <div class="drop-zone-icon">📎</div>
+              <div class="drop-zone-text">Drop file here or click to browse</div>
+              <div class="drop-zone-subtext">JPG, PNG, PDF (Max 10MB)</div>
+            </div>
+            
+            <input type="file" id="reflectionFile" accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="handleFileSelect()">
+            
+            <div class="form-group" style="margin-bottom: var(--spacing-lg);">
+              <label>📝 Notes (Optional)</label>
+              <textarea id="reflectionNotes" class="form-input" placeholder="Add any notes about this reflection..."></textarea>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button onclick="closeUploadModal()" class="btn btn-secondary">Cancel</button>
+            <button id="uploadReflectionBtn" onclick="uploadReflection()" disabled class="btn btn-primary">📤 Upload</button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+      setupDropZone();
+    }
+
+    // Setup drag and drop for file upload
+    function setupDropZone() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('reflectionFile');
+      
+      if (!dropZone || !fileInput) return;
+      
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+      
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          fileInput.files = files;
+          handleFileSelect();
+        }
+      });
+    }
+
+    // Handle file selection
+    function handleFileSelect() {
+      const fileInput = document.getElementById('reflectionFile');
+      const uploadBtn = document.getElementById('uploadReflectionBtn');
+      const dropZone = document.getElementById('dropZone');
+      
+      if (!fileInput || !uploadBtn || !dropZone) return;
+      
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('❌ File size must be less than 10MB', 'error');
+          fileInput.value = '';
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+          showToast('❌ Only JPG, PNG, and PDF files are allowed', 'error');
+          fileInput.value = '';
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        // Update UI
+        dropZone.innerHTML = `
+          <div class="drop-zone-icon">✅</div>
+          <div class="drop-zone-text">File Selected: ${file.name}</div>
+          <div class="drop-zone-subtext">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+        `;
+        
+        uploadBtn.disabled = false;
+      } else {
+        uploadBtn.disabled = true;
+      }
+    }
+
+    // Upload reflection
+    async function uploadReflection() {
+      const fileInput = document.getElementById('reflectionFile');
+      const notesInput = document.getElementById('reflectionNotes');
+      const uploadBtn = document.getElementById('uploadReflectionBtn');
+      
+      if (!fileInput || !fileInput.files.length || !currentUploadReferral) {
+        showToast('❌ Please select a file', 'error');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const notes = notesInput ? notesInput.value : '';
+      
+      uploadBtn.disabled = true;
+      uploadBtn.innerHTML = '⏳ Uploading...';
+      
+      try {
+        // Convert file to base64
+        const base64Data = await fileToBase64(file);
+        
+        // Update referral document with reflection data
+        await db.collection('referrals').doc(currentUploadReferral.id).update({
+          reflection: {
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size,
+            data: base64Data,
+            notes: notes,
+            uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            uploadedBy: JSON.parse(localStorage.getItem('loggedInStaff'))['staff name']
+          }
+        });
+        
+        showToast('✅ Reflection uploaded successfully!', 'success');
+        closeUploadModal();
+        
+        // Refresh the referrals list
+        if (document.getElementById('manage-tab').classList.contains('active')) {
+          loadManageReferrals();
+        }
+        
+      } catch (error) {
+        console.error('❌ Error uploading reflection:', error);
+        showToast('❌ Error uploading reflection: ' + error.message, 'error');
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '📤 Upload';
+      }
+    }
+
+    // Convert file to base64
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    // Close upload modal
+    function closeUploadModal() {
+      const modal = document.getElementById('uploadModal');
+      if (modal) {
+        modal.remove();
+      }
+      currentUploadReferral = null;
+    }
+
+    // View referral details
+    function viewReferralDetails(referralId) {
+      const referral = allReferrals.find(r => r.id === referralId);
+      if (!referral) {
+        showToast('❌ Referral not found', 'error');
+        return;
+      }
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.id = 'viewModal';
+      
+      const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+      const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
+      const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
+      
+      modal.innerHTML = `
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>👁️ Referral Details</h3>
+            <button class="modal-close" onclick="closeViewModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-md) var(--spacing-lg); margin-bottom: var(--spacing-lg);">
+              <img src="students/${referral.student}.jpg" style="width: 80px; height: 80px; border-radius: var(--spacing-sm); object-fit: cover; border: 2px solid var(--border);" 
+                   onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;><rect width=&quot;80&quot; height=&quot;80&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;40&quot; y=&quot;45&quot; text-anchor=&quot;middle&quot; fill=&quot;%23999&quot; font-size=&quot;10&quot;>No Photo</text></svg>'">
+              <div>
+                <h4 style="margin: 0 0 var(--spacing-sm) 0; color: var(--text);">${referral.studentName}</h4>
+                <p style="margin: 0; color: var(--text-light);"><strong>House:</strong> ${referral.houseName}</p>
+                <p style="margin: 0; color: var(--text-light);"><strong>Date:</strong> ${date} ${time}</p>
+                <p style="margin: 0; color: var(--text-light);"><strong>Type:</strong> ${typeEmoji} ${referral.referralType}</p>
+              </div>
+            </div>
+            
+            <div style="background: var(--border-light); padding: var(--spacing-lg); border-radius: var(--spacing-sm); margin-bottom: var(--spacing-lg);">
+              <h5 style="margin: 0 0 var(--spacing-md) 0; color: var(--text);">📋 Incident Details</h5>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-bottom: var(--spacing-md);">
+                <div><strong>Subject:</strong> ${referral.learningArea || 'N/A'}</div>
+                <div><strong>Teacher:</strong> ${referral.teacher || 'N/A'}</div>
+                <div><strong>Classroom:</strong> ${referral.classroom || 'N/A'}</div>
+                <div><strong>Lesson:</strong> ${referral.lesson || 'N/A'}</div>
+                <div><strong>Behavior:</strong> ${referral.behaviorType || 'N/A'}</div>
+                <div><strong>Staff:</strong> ${referral.staff || 'N/A'}</div>
+              </div>
+              <div><strong>Description:</strong></div>
+              <div style="background: var(--card); padding: var(--spacing-md); border-radius: var(--spacing-xs); margin-top: var(--spacing-sm); font-style: italic;">
+                ${referral.details || 'No details provided'}
+              </div>
+            </div>
+            
+            ${referral.reflection ? `
+              <div style="background: #d4edda; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--success);">
+                <h5 style="margin: 0 0 var(--spacing-md) 0; color: var(--success);">📎 Student Reflection</h5>
+                <div style="margin-bottom: var(--spacing-sm);"><strong>File:</strong> ${referral.reflection.fileName}</div>
+                <div style="margin-bottom: var(--spacing-sm);"><strong>Uploaded:</strong> ${referral.reflection.uploadedAt ? referral.reflection.uploadedAt.toDate().toLocaleDateString() : 'Unknown'}</div>
+                <div style="margin-bottom: var(--spacing-sm);"><strong>By:</strong> ${referral.reflection.uploadedBy || 'Unknown'}</div>
+                ${referral.reflection.notes ? `<div><strong>Notes:</strong> ${referral.reflection.notes}</div>` : ''}
+                <button onclick="downloadReflection('${referralId}')" class="btn btn-primary" style="margin-top: var(--spacing-md);">📥 Download Reflection</button>
+              </div>
+            ` : `
+              <div style="background: #fff3cd; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--warning); text-align: center;">
+                <div style="margin-bottom: var(--spacing-md);">📝 No reflection uploaded yet</div>
+                <button onclick="closeViewModal(); openUploadModal('${referralId}');" class="btn btn-primary">📁 Upload Reflection</button>
+              </div>
+            `}
+          </div>
+          
+          <div class="modal-footer">
+            <button onclick="downloadReferralPDF('${referralId}')" class="btn btn-secondary">📄 Download PDF</button>
+            <button onclick="closeViewModal()" class="btn btn-primary">Close</button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+
+    // Close view modal
+    function closeViewModal() {
+      const modal = document.getElementById('viewModal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    // Download reflection
+    function downloadReflection(referralId) {
+      const referral = allReferrals.find(r => r.id === referralId);
+      if (!referral || !referral.reflection) {
+        showToast('❌ No reflection found', 'error');
+        return;
+      }
+      
+      try {
+        // Create download link for base64 data
+        const link = document.createElement('a');
+        link.href = referral.reflection.data;
+        link.download = `Reflection_${referral.studentName}_${referral.reflection.fileName}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast('✅ Reflection downloaded!', 'success');
+        
+      } catch (error) {
+        console.error('❌ Error downloading reflection:', error);
+        showToast('❌ Error downloading reflection', 'error');
+      }
+    }
+
+    // Delete referral
+    async function deleteReferral(referralId, studentName, referralNumber) {
+      const confirmMessage = `Are you sure you want to delete referral ${referralNumber} for ${studentName}?\n\nThis action cannot be undone.`;
+      
+      if (!confirm(confirmMessage)) return;
+      
+      try {
+        await db.collection('referrals').doc(referralId).delete();
+        
+        showToast('✅ Referral deleted successfully!', 'success');
+        
+        // Refresh the referrals list
+        if (document.getElementById('manage-tab').classList.contains('active')) {
+          loadManageReferrals();
+        }
+        
+      } catch (error) {
+        console.error('❌ Error deleting referral:', error);
+        showToast('❌ Error deleting referral: ' + error.message, 'error');
+      }
+    }
+
+    // ===== ADMIN FUNCTIONALITY =====
+
+    async function loadAdminData() {
+      console.log('⚙️ Loading admin data...');
+      
+      try {
+        await loadSemesterData();
+        await loadStepEmailData();
+        showToast('✅ Admin data loaded successfully!', 'success');
+        
+      } catch (error) {
+        console.error('❌ Error loading admin data:', error);
+        showToast('❌ Error loading admin data', 'error');
+      }
+    }
+
+    // Step Email Management Functions
+    async function loadStepEmailData() {
+      console.log('📧 Loading step email data...');
+      
+      const tableBody = document.getElementById('stepEmailTableBody');
+      const countElement = document.getElementById('stepEmailCount');
+      
+      if (!tableBody || !countElement) return;
+      
+      try {
+        // Get all referrals for current semester
+        const referralsSnapshot = await db.collection('referrals')
+          .where('semester', '==', currentSemester ? currentSemester.id : 'default')
+          .get();
+        
+        // Count referrals per student
+        const studentCounts = {};
+        referralsSnapshot.forEach(doc => {
+          const data = doc.data();
+          const studentId = data.student;
+          if (studentId) {
+            studentCounts[studentId] = (studentCounts[studentId] || 0) + 1;
+          }
+        });
+        
+        // Get step email logs
+        const stepEmailLogs = {};
+        const emailLogsSnapshot = await db.collection('stepEmailsLog')
+          .where('semester', '==', currentSemester ? currentSemester.id : 'default')
+          .get();
+        
+        emailLogsSnapshot.forEach(doc => {
+          const data = doc.data();
+          const key = `${data.studentId}_${data.step}`;
+          stepEmailLogs[key] = data;
+        });
+        
+        // Build step email data
+        const stepEmailData = [];
+        
+        Object.entries(studentCounts).forEach(([studentId, count]) => {
+          const currentStep = calculateCurrentStep(count);
+          
+          if (currentStep > 0) {
+            const student = studentsData.find(s => s.BCEID1 === studentId);
+            if (student) {
+              const emailKey = `${studentId}_${currentStep}`;
+              const emailSent = stepEmailLogs[emailKey] ? true : false;
+              
+              stepEmailData.push({
+                studentId: studentId,
+                studentName: `${student.FirstName} ${student.LegalSurname1}`,
+                house: student.HouseName || 'Unknown',
+                referralCount: count,
+                currentStep: currentStep,
+                emailSent: emailSent,
+                emailSentDate: emailSent ? stepEmailLogs[emailKey].sentAt : null,
+                parentEmail: parentEmails[studentId]
+              });
+            }
+          }
+        });
+        
+        // Sort by step descending, then by referral count descending
+        stepEmailData.sort((a, b) => {
+          if (a.currentStep !== b.currentStep) {
+            return b.currentStep - a.currentStep;
+          }
+          return b.referralCount - a.referralCount;
+        });
+        
+        displayStepEmailData(stepEmailData);
+        countElement.textContent = `${stepEmailData.length} students in steps`;
+        
+      } catch (error) {
+        console.error('❌ Error loading step email data:', error);
+        tableBody.innerHTML = '<tr><td colspan="6" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading step email data</td></tr>';
+        countElement.textContent = 'Error';
+      }
+    }
+
+    function displayStepEmailData(stepEmailData) {
+      const tableBody = document.getElementById('stepEmailTableBody');
+      
+      if (stepEmailData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);">📋 No students have reached step thresholds yet</td></tr>';
+        return;
+      }
+      
+      tableBody.innerHTML = '';
+      
+      stepEmailData.forEach(data => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid var(--border)';
+        
+        // Email status styling
+        let emailStatusHTML = '';
+        if (data.emailSent) {
+          const sentDate = data.emailSentDate && data.emailSentDate.toDate ? 
+            data.emailSentDate.toDate().toLocaleDateString() : 'Unknown';
+          emailStatusHTML = `<span style="color: var(--success); font-weight: 600;">✅ Sent</span><br><small style="color: var(--text-muted);">${sentDate}</small>`;
+        } else if (data.parentEmail && data.parentEmail.email) {
+          emailStatusHTML = `<span style="color: var(--warning); font-weight: 600;">⏳ Pending</span><br><small style="color: var(--text-muted);">Ready to send</small>`;
+        } else {
+          emailStatusHTML = `<span style="color: var(--danger); font-weight: 600;">❌ No Email</span><br><small style="color: var(--text-muted);">Parent email missing</small>`;
+        }
+        
+        // Step styling
+        const stepColors = {
+          1: '#17a2b8',
+          2: '#ffc107', 
+          3: '#fd7e14',
+          4: '#dc3545',
+          5: '#6f42c1',
+          6: '#e83e8c'
+        };
+        const stepColor = stepColors[data.currentStep] || '#6c757d';
+        
+        // Action buttons
+        let actionHTML = '';
+        if (!data.emailSent && data.parentEmail && data.parentEmail.email) {
+          actionHTML = `<button onclick="sendStepEmailManual('${data.studentId}', ${data.currentStep})" class="btn btn-primary" style="font-size: 0.75rem; padding: 4px 8px;">📧 Send Email</button>`;
+        } else if (data.emailSent) {
+          actionHTML = `<button onclick="resendStepEmail('${data.studentId}', ${data.currentStep})" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;">📧 Resend</button>`;
+        } else {
+          actionHTML = `<span style="color: var(--text-muted); font-size: 0.75rem;">No action available</span>`;
+        }
+        
+        row.innerHTML = `
+          <td style="padding: var(--spacing-md);">
+            <div style="font-weight: 600;">${data.studentName}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${data.studentId}</div>
+          </td>
+          <td style="padding: var(--spacing-md);">
+            <span style="background: var(--border-light); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 500;">${data.house}</span>
+          </td>
+          <td style="padding: var(--spacing-md); text-align: center;">
+            <div style="font-weight: 700; font-size: 1.1rem; color: var(--accent);">${data.referralCount}</div>
+          </td>
+          <td style="padding: var(--spacing-md); text-align: center;">
+            <span style="background: ${stepColor}; color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Step ${data.currentStep}</span>
+          </td>
+          <td style="padding: var(--spacing-md); text-align: center;">
+            ${emailStatusHTML}
+          </td>
+          <td style="padding: var(--spacing-md); text-align: center;">
+            ${actionHTML}
+          </td>
+        `;
+        
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function sendStepEmailManual(studentId, step) {
+      console.log(`📧 Manually sending step ${step} email for student ${studentId}`);
+      
+      try {
+        const student = studentsData.find(s => s.BCEID1 === studentId);
+        if (!student) {
+          showToast('❌ Student not found', 'error');
+          return;
+        }
+        
+        const parentInfo = parentEmails[studentId];
+        if (!parentInfo || !parentInfo.email) {
+          showToast('❌ No parent email found for this student', 'error');
+          return;
+        }
+        
+        const houseCompanionData = houseCompanions[student.HouseName];
+        if (!houseCompanionData) {
+          showToast('❌ No house companion found for this house', 'error');
+          return;
+        }
+        
+        // Process email template
+        const template = stepEmailTemplates[step];
+        if (!template) {
+          showToast('❌ Email template not found for this step', 'error');
+          return;
+        }
+        
+        const emailContent = processEmailTemplate(template, {
+          parentName: parentInfo.name || 'Parent/Guardian',
+          studentName: `${student.FirstName} ${student.LegalSurname1}`,
+          houseCompanion: houseCompanionData.name || `${student.HouseName} House Companion`
+        });
+        
+        // Show email modal for manual step emails
+        showStepEmailModal(emailContent, parentInfo, houseCompanionData, student, step, true);
+        
+      } catch (error) {
+        console.error('❌ Error preparing manual step email:', error);
+        showToast('❌ Error preparing step email', 'error');
+      }
+    }
+
+    async function resendStepEmail(studentId, step) {
+      const confirmMessage = `Are you sure you want to resend the Step ${step} email?\n\nThis will open your email client with the step notification ready to send.`;
+      
+      if (confirm(confirmMessage)) {
+        await sendStepEmailManual(studentId, step);
+      }
+    }
+
+    function refreshStepEmails() {
+      console.log('🔄 Refreshing step email data...');
+      
+      if (document.getElementById('admin-tab').classList.contains('active')) {
+        loadStepEmailData();
+        showToast('🔄 Step email data refreshed', 'info', 2000);
+      }
+    }
+
+    async function loadSemesterData() {
+      console.log('📅 Loading semester data...');
+      
+      try {
+        const semesterSnapshot = await db.collection('semesters').orderBy('startDate', 'desc').get();
+        allSemesters = [];
+        
+        semesterSnapshot.forEach(doc => {
+          allSemesters.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        // Find current semester
+        const now = new Date();
+        currentSemester = allSemesters.find(semester => {
+          const start = semester.startDate && semester.startDate.toDate ? semester.startDate.toDate() : new Date(0);
+          const end = semester.endDate && semester.endDate.toDate ? semester.endDate.toDate() : new Date();
+          return now >= start && now <= end;
+        });
+        
+        // If no current semester, create a default one
+        if (!currentSemester && allSemesters.length === 0) {
+          await createDefaultSemester();
+        }
+        
+        displayCurrentSemesterInfo();
+        displaySemesterHistory();
+        
+      } catch (error) {
+        console.error('❌ Error loading semesters:', error);
+        await createDefaultSemester();
+      }
+    }
+
+    async function createDefaultSemester() {
+      console.log('📅 Creating default semester...');
+      
+      const now = new Date();
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const endOfYear = new Date(now.getFullYear(), 11, 31);
+      
+      const defaultSemester = {
+        name: now.getFullYear() + ' - Default',
+        startDate: firebase.firestore.Timestamp.fromDate(startOfYear),
+        endDate: firebase.firestore.Timestamp.fromDate(endOfYear),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdBy: 'System'
+      };
+      
+      try {
+        const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+        if (staff) {
+          defaultSemester.createdBy = staff['staff name'];
+        }
+        
+        const docRef = await db.collection('semesters').add(defaultSemester);
+        currentSemester = { id: docRef.id, ...defaultSemester };
+        allSemesters.unshift(currentSemester);
+        
+        console.log('✅ Default semester created');
+      } catch (error) {
+        console.error('❌ Error creating default semester:', error);
+      }
+    }
+
+    function displayCurrentSemesterInfo() {
+      const infoElement = document.getElementById('currentSemesterInfo');
+      
+      if (currentSemester) {
+        const startDate = currentSemester.startDate && currentSemester.startDate.toDate ? currentSemester.startDate.toDate().toLocaleDateString() : 'Unknown';
+        const endDate = currentSemester.endDate && currentSemester.endDate.toDate ? currentSemester.endDate.toDate().toLocaleDateString() : 'Unknown';
+        
+        infoElement.innerHTML = `<span style="font-size: 1.2em;">📅</span><div><strong>Current Semester:</strong> ${currentSemester.name || 'Default Semester'}<br><small>Period: ${startDate} - ${endDate}</small></div>`;
+        infoElement.className = 'warning-banner';
+      } else {
+        infoElement.innerHTML = '<span style="font-size: 1.2em;">⚠️</span><div><strong>No Active Semester:</strong> Please create a new semester to track referrals properly.</div>';
+        infoElement.className = 'warning-banner danger';
+      }
+    }
+
+    function displaySemesterHistory() {
+      const container = document.getElementById('semesterHistory');
+      container.innerHTML = '';
+      
+      if (allSemesters.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: var(--spacing-2xl); color: var(--text-muted);">No semesters found</div>';
+        return;
+      }
+      
+      allSemesters.forEach(semester => {
+        const startDate = semester.startDate && semester.startDate.toDate ? semester.startDate.toDate().toLocaleDateString() : 'Unknown';
+        const endDate = semester.endDate && semester.endDate.toDate ? semester.endDate.toDate().toLocaleDateString() : 'Unknown';
+        const isCurrent = semester.id === (currentSemester && currentSemester.id ? currentSemester.id : '');
+        
+        const card = document.createElement('div');
+        card.style.cssText = `
+          background: ${isCurrent ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 'var(--border-light)'};
+          border: 1px solid ${isCurrent ? 'var(--success)' : 'var(--border)'};
+          border-radius: var(--border-radius);
+          padding: var(--spacing-lg);
+          position: relative;
+        `;
+        
+        let cardHTML = '';
+        if (isCurrent) {
+          cardHTML += '<div style="position: absolute; top: var(--spacing-sm); right: var(--spacing-sm); background: var(--success); color: white; padding: var(--spacing-xs) var(--spacing-sm); border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Current</div>';
+        }
+        cardHTML += `<h4 style="margin: 0 0 var(--spacing-md) 0; color: var(--text);">${semester.name || 'Unnamed Semester'}</h4>`;
+        cardHTML += `<p style="margin: var(--spacing-sm) 0;"><strong>Start:</strong> ${startDate}</p>`;
+        cardHTML += `<p style="margin: var(--spacing-sm) 0;"><strong>End:</strong> ${endDate}</p>`;
+        cardHTML += `<p style="margin: var(--spacing-sm) 0; font-size: 0.875rem; color: var(--text-muted);">Created by: ${semester.createdBy || 'Unknown'}</p>`;
+        
+        card.innerHTML = cardHTML;
+        container.appendChild(card);
+      });
+    }
+
+    async function createNewSemester() {
+      const startDate = document.getElementById('semesterStartDate').value;
+      const endDate = document.getElementById('semesterEndDate').value;
+      
+      if (!startDate || !endDate) {
+        showToast('❌ Please select both start and end dates', 'error');
+        return;
+      }
+      
+      if (new Date(startDate) >= new Date(endDate)) {
+        showToast('❌ Start date must be before end date', 'error');
+        return;
+      }
+      
+      const confirmMessage = `Create new semester from ${startDate} to ${endDate}?\n\nThis will:\n• Reset all student referral counts to zero\n• Archive current semester data\n• Start fresh tracking\n\nThis action cannot be undone.`;
+      
+      if (!confirm(confirmMessage)) return;
+      
+      try {
+        showToast('📅 Creating new semester...', 'info');
+        
+        const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+        const semesterName = `Semester ${new Date(startDate).getFullYear()} - ${new Date(startDate).toLocaleDateString()}`;
+        
+        const newSemester = {
+          name: semesterName,
+          startDate: firebase.firestore.Timestamp.fromDate(new Date(startDate)),
+          endDate: firebase.firestore.Timestamp.fromDate(new Date(endDate)),
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdBy: staff ? staff['staff name'] : 'Unknown'
+        };
+        
+        const docRef = await db.collection('semesters').add(newSemester);
+        
+        currentSemester = { id: docRef.id, ...newSemester };
+        allSemesters.unshift(currentSemester);
+        
+        document.getElementById('semesterStartDate').value = '';
+        document.getElementById('semesterEndDate').value = '';
+        
+        displayCurrentSemesterInfo();
+        displaySemesterHistory();
+        
+        showToast('✅ New semester created successfully!', 'success');
+        
+      } catch (error) {
+        console.error('❌ Error creating semester:', error);
+        showToast('❌ Error creating semester: ' + error.message, 'error');
+      }
+    }
+
+    // Utility functions
+    function updateLoadingStatus(message) {
+      if (loadingStatus) {
+        loadingStatus.innerHTML = `<div class="loading-spinner"></div>${message}`;
+      }
+    }
+
+    function hideLoadingStatus() {
+      if (loadingStatus) {
+        loadingStatus.style.display = 'none';
+      }
+    }
+
+    function navigate(url) { 
+      location.href = url; 
+    }
+    
+    function logout() { 
+      localStorage.removeItem('loggedInStaff'); 
+      navigate('index.html'); 
+    }
+
+    function openEmailClient(toEmail, ccEmail, bccEmail, subject, body) {
+      let mailto = 'mailto:' + encodeURIComponent(toEmail);
+      mailto += '?subject=' + encodeURIComponent(subject);
+      if (ccEmail) mailto += '&cc=' + encodeURIComponent(ccEmail);
+      if (bccEmail) mailto += '&bcc=' + encodeURIComponent(bccEmail);
+      mailto += '&body=' + encodeURIComponent(body);
+      window.location.href = mailto;
+    }
+
+    function closeEmailModal() {
+      const modal = document.querySelector('.modal');
+      if (modal) modal.remove();
+    }
+
+    // Initialize system
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📄 Re-Engagement Room System initializing...');
+      
+      const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
+      if (!staff) return navigate('index.html');
+      
+      document.getElementById('staffName').textContent = staff['staff name'];
+      
+      if (staff.adminaccess === 'Y') {
+        const adminTab = document.querySelector('.admin-only');
+        if (adminTab) adminTab.style.display = 'block';
+      } else {
+        const adminLink = document.getElementById('adminLink');
+        if (adminLink) adminLink.style.display = 'none';
+      }
+
+      // Get DOM elements
+      studentSearch = document.getElementById('studentSearch');
+      studentDropdown = document.getElementById('studentDropdown');
+      selectedStudentId = document.getElementById('selectedStudentId');
+      lessonSelect = document.getElementById('lessonSelect');
+      classroomSelect = document.getElementById('classroomSelect');
+      teacherSelect = document.getElementById('teacherSelect');
+      learningAreaSelect = document.getElementById('learningAreaSelect');
+      behaviorTypeSelect = document.getElementById('behaviorTypeSelect');
+      detailsInput = document.getElementById('detailsInput');
+      submitBtn = document.getElementById('submitBtn');
+      referralForm = document.getElementById('referralForm');
+      studentProfile = document.getElementById('studentProfile');
+      historySection = document.getElementById('historySection');
+      historyList = document.getElementById('historyList');
+      loadingStatus = document.getElementById('loadingStatus');
+
+      // Set up event listeners
+      const formControls = [lessonSelect, classroomSelect, teacherSelect, learningAreaSelect, behaviorTypeSelect, detailsInput];
+      formControls.forEach(function(el) {
+        if (el) {
+          el.addEventListener('change', validateForm);
+          el.addEventListener('input', validateForm);
+        }
+      });
+      
+      if (referralForm) {
+        referralForm.addEventListener('submit', submitReferral);
+      }
+
+      // Load data
+      loadAllData();
+    });
+  </script>
+</body>
+</html>

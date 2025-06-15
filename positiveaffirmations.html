@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="en" aria-label="Sophia College Positive Affirmations">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sophia College - Positive Affirmations</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="../logo.ico" type="image/x-icon">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <!-- PapaParse CSV parser -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <!-- Unified System -->
+  <script src="/shared/sophia-unified-system.js"></script>
+  <style>
+    :root { 
+      --nav-bg: #003057; 
+      --nav-fg: #fff; 
+      --bg: linear-gradient(135deg, #fbecec 0%, #f8fafc 100%); 
+      --card: #ffffff; 
+      --accent: #660000; 
+      --text: #2c2c2c;
+      --text-light: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
+      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --border-radius: 12px;
+      --border-radius-lg: 16px;
+      --success: #059669;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --info: #0284c7;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+      --nav-height: 64px;
+    }
+    
+    * { 
+      box-sizing: border-box; 
+      margin: 0;
+      padding: 0;
+    }
+    
+    body { 
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+      background: var(--bg); 
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+    
+    /* Enhanced Navigation */
+    .nav-bar { 
+      display: flex; 
+      align-items: center; 
+      background: var(--nav-bg); 
+      color: var(--nav-fg); 
+      padding: var(--spacing-md) var(--spacing-lg); 
+      position: sticky; 
+      top: 0; 
+      z-index: 1000;
+      box-shadow: var(--shadow-lg);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      height: var(--nav-height);
+    }
+    
+    .nav-logo { 
+      height: 36px; 
+      margin-right: var(--spacing-md);
+      transition: transform 0.2s ease;
+    }
+    
+    .nav-logo:hover { transform: scale(1.05); }
+    
+    .nav-title { 
+      font-size: 1.25rem; 
+      font-weight: 600;
+      letter-spacing: -0.025em;
+    }
+    
+    .nav-links { 
+      margin-left: auto; 
+      display: flex; 
+      align-items: center; 
+      gap: var(--spacing-md);
+    }
+    
+    #staffName {
+      font-weight: 600;
+      color: #fbecec;
+    }
+    
+    .dropdown {
+      position: relative;
+    }
+    
+    .dropbtn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 18px;
+      font-size: 0.95em;
+      background: white;
+      color: var(--nav-bg);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .dropbtn:hover {
+      background-color: #005187;
+      color: white;
+    }
+    
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background-color: #ffffff;
+      min-width: 160px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    
+    .dropdown-content a,
+    .dropdown-content button {
+      color: var(--nav-bg);
+      padding: 10px 16px;
+      text-decoration: none;
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    
+    .dropdown-content a:hover,
+    .dropdown-content button:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    
+    /* Main Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: var(--spacing-lg);
+      min-height: calc(100vh - var(--nav-height));
+    }
+    
+    /* Header Section */
+    .page-header {
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+      padding: var(--spacing-xl) 0;
+    }
+    
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: var(--spacing-sm);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .page-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* Form Layout */
+    .affirmation-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-2xl);
+      margin-bottom: var(--spacing-2xl);
+    }
+    
+    .form-section {
+      background: var(--card);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-light);
+    }
+    
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: var(--spacing-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    
+    /* Student Selection */
+    .student-search-container {
+      position: relative;
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(102, 0, 0, 0.1);
+    }
+    
+    .search-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+    
+    .student-option {
+      padding: 12px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-light);
+      transition: background-color 0.2s ease;
+    }
+    
+    .student-option:hover {
+      background-color: var(--border-light);
+    }
+    
+    .student-option:last-child {
+      border-bottom: none;
+    }
+    
+    .selected-students {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-md);
+      min-height: 120px;
+      padding: var(--spacing-md);
+      border: 2px dashed var(--border);
+      border-radius: var(--border-radius);
+    }
+    
+    .student-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--card);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    
+    .student-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .student-photo {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent);
+      margin-bottom: var(--spacing-sm);
+    }
+    
+    .student-name {
+      font-weight: 600;
+      text-align: center;
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    .student-details {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      text-align: center;
+    }
+    
+    .remove-student {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      padding: 0;
+      margin-left: var(--spacing-xs);
+    }
+    
+    .remove-student:hover {
+      opacity: 0.7;
+    }
+    
+    /* Affirmation Categories - Improved Layout */
+    .pb4l-categories {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-md);
+    }
+    
+    .category-section {
+      border: 2px solid var(--border);
+      border-radius: var(--border-radius-lg);
+      overflow: hidden;
+      background: var(--card);
+    }
+    
+    .category-header {
+      background: linear-gradient(135deg, var(--accent), #800000);
+      color: white;
+      padding: var(--spacing-lg);
+      font-weight: 600;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.2s ease;
+    }
+    
+    .category-header:hover {
+      background: linear-gradient(135deg, #800000, var(--accent));
+    }
+    
+    .category-toggle {
+      font-size: 1.4rem;
+      transition: transform 0.3s ease;
+    }
+    
+    .category-content {
+      background: var(--card);
+      padding: 0;
+      display: none;
+      border-top: 1px solid var(--border-light);
+    }
+    
+    .category-content.expanded {
+      display: block;
+    }
+    
+    .context-tabs {
+      display: flex;
+      background: var(--border-light);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    
+    .context-tab {
+      padding: var(--spacing-md);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-light);
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .context-tab:hover {
+      background: rgba(102, 0, 0, 0.05);
+      color: var(--accent);
+    }
+    
+    .context-tab.active {
+      background: var(--card);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    
+    .context-content {
+      padding: var(--spacing-lg);
+      display: none;
+    }
+    
+    .context-content.active {
+      display: block;
+    }
+    
+    .affirmation-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-sm);
+    }
+    
+    .affirmation-item {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    
+    .affirmation-item:hover {
+      background: rgba(102, 0, 0, 0.03);
+      border-color: var(--accent);
+    }
+    
+    .affirmation-item.selected {
+      background: rgba(102, 0, 0, 0.05);
+      border-color: var(--accent);
+    }
+    
+    .affirmation-checkbox {
+      margin-top: 2px;
+      transform: scale(1.2);
+    }
+    
+    .affirmation-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      flex: 1;
+    }
+    
+    /* Selected Affirmations Summary */
+    .selected-affirmations {
+      background: var(--card);
+      border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border-light);
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-xl);
+    }
+    
+    .summary-section h4 {
+      color: var(--accent);
+      margin-bottom: var(--spacing-md);
+      font-size: 1.1rem;
+    }
+    
+    .summary-list {
+      background: var(--border-light);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      min-height: 100px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .summary-item {
+      padding: var(--spacing-sm);
+      margin-bottom: var(--spacing-xs);
+      background: white;
+      border-radius: 4px;
+      border-left: 3px solid var(--accent);
+      font-size: 0.9rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      margin-top: var(--spacing-xl);
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #800000;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--text-muted);
+      color: white;
+    }
+    
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--card);
+      color: var(--text);
+      padding: var(--spacing-md) var(--spacing-lg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+      border-left: 4px solid var(--success);
+      z-index: 1000;
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      max-width: 400px;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+    
+    .toast.warning {
+      border-left-color: var(--warning);
+    }
+    
+    .toast.info {
+      border-left-color: var(--info);
+    }
+    
+    /* Loading States */
+    .loading {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top: 2px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+      .affirmation-form {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xl);
+      }
+      
+      .summary-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg);
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: var(--spacing-md);
+      }
+      
+      .page-title {
+        font-size: 2rem;
+      }
+      
+      .form-section {
+        padding: var(--spacing-lg);
+      }
+      
+      .context-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+    
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    *:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <img src="crest.png" class="nav-logo" alt="Sophia College Crest">
+    <div class="nav-title">✨ Positive Affirmations</div>
+    <div class="nav-links">
+      <span id="staffName"></span>
+      <div class="dropdown">
+        <button class="dropbtn" aria-label="Navigation menu">
+          ☰ Menu
+        </button>
+        <div class="dropdown-content">
+          <a href="home.html">🏠 Home</a>
+          <a href="staff.html">📝 Infringement Tracker</a>
+          <a href="reengagementroom.html">🔄 Re-Engagement Room</a>
+          <a href="outofclass.html">🚪 Out-of-Class Tracker</a>
+          <a href="admin.html" id="adminLink">👥 Admin Dashboard</a>
+          <button onclick="logout()">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="page-title">✨ Positive Affirmations</h1>
+      <p class="page-subtitle">
+        Celebrate student achievements and reinforce positive behaviors aligned with our PB4L values
+      </p>
+    </header>
+
+    <!-- Main Form -->
+    <div class="affirmation-form">
+      <!-- Student Selection -->
+      <section class="form-section">
+        <h2 class="section-title">👥 Select Students</h2>
+        
+        <div class="student-search-container">
+          <input type="text" 
+                 class="search-input" 
+                 id="studentSearch" 
+                 placeholder="Search for students by name or BCE ID..."
+                 autocomplete="off">
+          <div class="search-dropdown" id="searchDropdown"></div>
+        </div>
+        
+        <div class="selected-students" id="selectedStudents">
+          <p style="color: var(--text-muted); font-style: italic; margin: auto;">
+            Search and select students above
+          </p>
+        </div>
+      </section>
+
+      <!-- Affirmation Categories -->
+      <section class="form-section">
+        <h2 class="section-title">🌟 Choose Affirmations</h2>
+        
+        <div class="pb4l-categories" id="pb4lCategories">
+          <!-- Categories will be populated by JavaScript -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Selected Summary -->
+    <section class="selected-affirmations" id="summarySection" style="display: none;">
+      <h3 class="section-title">📋 Summary</h3>
+      <div class="summary-grid">
+        <div class="summary-section">
+          <h4>Selected Students (<span id="studentCount">0</span>)</h4>
+          <div class="summary-list" id="selectedStudentsList"></div>
+        </div>
+        <div class="summary-section">
+          <h4>Selected Affirmations (<span id="affirmationCount">0</span>)</h4>
+          <div class="summary-list" id="selectedAffirmationsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="btn btn-secondary" onclick="clearAll()">
+        🗑️ Clear All
+      </button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveAffirmations()">
+        💾 Save Affirmations
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Global Variables
+    let studentsData = [];
+    let selectedStudents = [];
+    let selectedAffirmations = [];
+    let pb4lData = {};
+    let parentEmails = {};
+    let houseCompanions = {};
+    let firebaseInitialized = false;
+    
+    // Firebase configuration
+    const firebaseConfig = {
+      // Your Firebase config will be loaded from the existing system
+    };
+
+    // Initialize Firebase if not already done
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+    
+    // PB4L Categories and Affirmations based on the matrix
+    const pb4lCategories = {
+      'RESPECT FOR OUR LEARNING': {
+        emoji: '📚',
+        contexts: {
+          'WHEN IN THE CLASSROOM': [
+            'You came prepared to learn and ready to engage',
+            'You actively participated in classroom learning',
+            'You persevered and persisted with your learning',
+            'You asked thoughtful questions to improve understanding',
+            'You completed home learning appropriately',
+            'You respected other students\' rights to learn',
+            'You respected the thoughts and opinions of others',
+            'You assisted others to achieve positive results'
+          ],
+          'WHEN OUTSIDE': [
+            'You engaged in learning across the entire campus',
+            'You moved promptly to class and lined up respectfully',
+            'You looked after school equipment and grounds',
+            'You moved around the school safely',
+            'You celebrated achievements respectfully'
+          ],
+          'WHEN WE GATHER AS COMMUNITY': [
+            'You were open to the opinions of others',
+            'You listened and shared respectfully',
+            'You celebrated learning achievements appropriately'
+          ],
+          'WHEN INTERACTING WITH ICT': [
+            'You used technology appropriately for learning',
+            'You used school devices for educational purposes',
+            'You supported your learning with appropriate technology use',
+            'You stored personal devices responsibly'
+          ],
+          'WHEN IN THE WIDER COMMUNITY': [
+            'You embraced learning opportunities in the community',
+            'You celebrated learning success appropriately'
+          ]
+        }
+      },
+      'RESPECT FOR INTEGRAL ECOLOGY': {
+        emoji: '🌱',
+        contexts: {
+          'WHEN IN THE CLASSROOM': [
+            'You respected the learning environment and left it better than you found it',
+            'You understood your impact on the College community',
+            'You respected diverse views, opinions and cultures',
+            'You respected your own and others\' belongings'
+          ],
+          'WHEN OUTSIDE': [
+            'You disposed of rubbish appropriately',
+            'You helped keep the College grounds clean',
+            'You cared for creation by staying off garden beds',
+            'You left your areas neat and tidy',
+            'You stored personal devices responsibly'
+          ],
+          'WHEN WE GATHER AS COMMUNITY': [
+            'You recognised sacred spaces and entered with respect',
+            'You took care when moving through and around equipment'
+          ],
+          'WHEN INTERACTING WITH ICT': [
+            'You created a positive online environment',
+            'You considered your digital footprint thoughtfully',
+            'You acted safely and responsibly online'
+          ],
+          'WHEN IN THE WIDER COMMUNITY': [
+            'You respected all public spaces',
+            'You cared for creation by walking on provided paths'
+          ]
+        }
+      },
+      'RESPECT FOR OUR FAITH': {
+        emoji: '🙏',
+        contexts: {
+          'WHEN IN THE CLASSROOM': [
+            'You actively participated in prayer, liturgy, song and Sophia Stillness',
+            'You lived the Gospel values in your actions',
+            'You respected the opinions of others'
+          ],
+          'WHEN OUTSIDE': [
+            'You treated others and their property with respect',
+            'You spoke and acted respectfully towards peers and staff',
+            'You took care of creation by caring for the environment',
+            'You put rubbish in bins and picked up others\' rubbish'
+          ],
+          'WHEN WE GATHER AS COMMUNITY': [
+            'You recognised sacred spaces and entered with dignity',
+            'You participated and listened actively',
+            'You listened and shared respectfully',
+            'You were open to the opinions of others',
+            'You respected guests, presenters and speakers'
+          ],
+          'WHEN INTERACTING WITH ICT': [
+            'You spoke and acted respectfully in digital spaces',
+            'You respected your dignity and the dignity of others online'
+          ],
+          'WHEN IN THE WIDER COMMUNITY': [
+            'You represented yourself and the College with pride',
+            'You spoke respectfully to community members',
+            'You were open to the opinions of others',
+            'You sought to see the good in others',
+            'You strived to present the best version of yourself'
+          ]
+        }
+      },
+      'RESPECT OUR ENGAGEMENT WITH OURSELVES AND OTHERS': {
+        emoji: '🤝',
+        contexts: {
+          'WHEN IN THE CLASSROOM': [
+            'You spoke and acted respectfully towards peers, staff and yourself',
+            'You used kind and encouraging language in all interactions',
+            'You offered help and support to others when needed',
+            'You took responsibility for your roles in group tasks',
+            'You contributed ideas and listened actively during discussions',
+            'You attended school and class on time, prepared to participate',
+            'You wore your uniform correctly with pride'
+          ],
+          'WHEN OUTSIDE': [
+            'You were accountable for your words and actions',
+            'You treated others and their property with respect',
+            'You practiced sun safety appropriately',
+            'You remained in boundary areas as required',
+            'You played appropriately with others',
+            'You wore your uniform correctly with pride'
+          ],
+          'WHEN WE GATHER AS COMMUNITY': [
+            'You participated and listened actively',
+            'You moved quickly and quietly to gathering areas',
+            'You respected guests and presenters',
+            'You brought the best version of yourself',
+            'You wore your uniform correctly with pride'
+          ],
+          'WHEN INTERACTING WITH ICT': [
+            'You communicated in a polite and respectful manner',
+            'You obtained permission before sharing images',
+            'You protected the privacy of yourself and others',
+            'You reported inappropriate posts responsibly'
+          ],
+          'WHEN IN THE WIDER COMMUNITY': [
+            'You wore your uniform correctly with pride',
+            'You followed instructions from staff and community adults',
+            'You were aware of the safety of others',
+            'You presented the best version of yourself'
+          ]
+        }
+      }
+    };
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initializePage();
+    });
+
+    async function initializePage() {
+      try {
+        showToast('Loading system data...', 'info');
+        
+        // Load staff name
+        const staffName = sessionStorage.getItem('staffName') || 'Staff Member';
+        document.getElementById('staffName').textContent = staffName;
+        
+        // Load all necessary data
+        await Promise.all([
+          loadStudentsData(),
+          loadParentEmails(),
+          loadHouseCompanions()
+        ]);
+        
+        // Initialize PB4L categories
+        initializePB4LCategories();
+        
+        // Set up search functionality
+        setupStudentSearch();
+        
+        showToast('✅ System loaded successfully!', 'success');
+        
+      } catch (error) {
+        console.error('Error initializing page:', error);
+        showToast('❌ Error loading system data', 'error');
+      }
+    }
+
+    async function loadStudentsData() {
+      try {
+        const response = await fetch('students.csv');
+        const csvText = await response.text();
+        
+        const parsed = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim()
+        });
+        
+        studentsData = parsed.data.filter(student => 
+          student.FirstName && student.LegalSurname1 && student.BCEID1
+        );
+        
+        console.log(`Loaded ${studentsData.length} students`);
+        
+      } catch (error) {
+        console.error('Error loading students:', error);
+        throw error;
+      }
+    }
+
+    async function loadParentEmails() {
+      try {
+        const response = await fetch('parentemail.csv');
+        const csvText = await response.text();
+        
+        const parsed = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim()
+        });
+        
+        parsed.data.forEach(row => {
+          if (row.BCEID1 && row.ParentEmail) {
+            parentEmails[row.BCEID1] = row.ParentEmail;
+          }
+        });
+        
+        console.log(`Loaded ${Object.keys(parentEmails).length} parent emails`);
+        
+      } catch (error) {
+        console.error('Error loading parent emails:', error);
+      }
+    }
+
+    async function loadHouseCompanions() {
+      try {
+        const response = await fetch('housecompanions.csv');
+        const csvText = await response.text();
+        
+        const parsed = Papa.parse(csvText, {
+          header: true,
+          skipEmptyLines: true,
+          transformHeader: (header) => header.trim()
+        });
+        
+        parsed.data.forEach(row => {
+          const houseField = row.housegroup || row.HouseName;
+          const emailField = row.email || row.Email;
+          const nameField = row['staff name'] || row['Staff Name'];
+          
+          if (houseField && emailField) {
+            houseCompanions[houseField] = {
+              email: emailField,
+              name: nameField || 'House Companion'
+            };
+          }
+        });
+        
+        console.log(`Loaded ${Object.keys(houseCompanions).length} house companions`);
+        
+      } catch (error) {
+        console.error('Error loading house companions:', error);
+      }
+    }
+
+    function initializePB4LCategories() {
+      const container = document.getElementById('pb4lCategories');
+      container.innerHTML = '';
+      
+      Object.entries(pb4lCategories).forEach(([categoryName, categoryData]) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category-section';
+        
+        const contextsHtml = Object.keys(categoryData.contexts).map((contextName, index) => `
+          <button class="context-tab ${index === 0 ? 'active' : ''}" 
+                  onclick="switchContext('${categoryName}', '${contextName}')">
+            ${contextName.replace('WHEN ', '')}
+          </button>
+        `).join('');
+        
+        const contextContentsHtml = Object.entries(categoryData.contexts).map(([contextName, affirmations], index) => `
+          <div class="context-content ${index === 0 ? 'active' : ''}" 
+               id="context-${categoryName}-${contextName}">
+            <div class="affirmation-grid">
+              ${affirmations.map((affirmation, affIndex) => {
+                const affirmationId = `${categoryName}-${contextName}-${affIndex}`;
+                return `
+                  <div class="affirmation-item" onclick="toggleAffirmation('${affirmationId}')">
+                    <input type="checkbox" 
+                           class="affirmation-checkbox" 
+                           id="${affirmationId}"
+                           onchange="updateSelectedAffirmations()">
+                    <span class="affirmation-text">${affirmation}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `).join('');
+        
+        categoryDiv.innerHTML = `
+          <div class="category-header" onclick="toggleCategory('${categoryName}')">
+            <span>${categoryData.emoji} ${categoryName}</span>
+            <span class="category-toggle" id="toggle-${categoryName}">▼</span>
+          </div>
+          <div class="category-content" id="content-${categoryName}">
+            <div class="context-tabs">
+              ${contextsHtml}
+            </div>
+            ${contextContentsHtml}
+          </div>
+        `;
+        
+        container.appendChild(categoryDiv);
+      });
+    }
+
+    function switchContext(categoryName, contextName) {
+      // Update tabs
+      const categoryElement = document.getElementById(`content-${categoryName}`);
+      const tabs = categoryElement.querySelectorAll('.context-tab');
+      const contents = categoryElement.querySelectorAll('.context-content');
+      
+      tabs.forEach(tab => tab.classList.remove('active'));
+      contents.forEach(content => content.classList.remove('active'));
+      
+      // Activate selected tab and content
+      event.target.classList.add('active');
+      document.getElementById(`context-${categoryName}-${contextName}`).classList.add('active');
+    }
+
+    function toggleAffirmation(affirmationId) {
+      const checkbox = document.getElementById(affirmationId);
+      const item = checkbox.closest('.affirmation-item');
+      
+      checkbox.checked = !checkbox.checked;
+      
+      if (checkbox.checked) {
+        item.classList.add('selected');
+      } else {
+        item.classList.remove('selected');
+      }
+      
+      updateSelectedAffirmations();
+    }
+
+    function setupStudentSearch() {
+      const searchInput = document.getElementById('studentSearch');
+      const dropdown = document.getElementById('searchDropdown');
+      let searchTimeout;
+      
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim().toLowerCase();
+        
+        if (query.length < 2) {
+          dropdown.style.display = 'none';
+          return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+          performSearch(query);
+        }, 300);
+      });
+      
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.length >= 2) {
+          dropdown.style.display = 'block';
+        }
+      });
+      
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+    }
+
+    function performSearch(query) {
+      const dropdown = document.getElementById('searchDropdown');
+      
+      const results = studentsData.filter(student => {
+        const fullName = `${student.FirstName} ${student.LegalSurname1}`.toLowerCase();
+        const reverseName = `${student.LegalSurname1}, ${student.FirstName}`.toLowerCase();
+        const bceid = student.BCEID1.toLowerCase();
+        
+        return fullName.includes(query) || 
+               reverseName.includes(query) || 
+               bceid.includes(query);
+      }).slice(0, 8);
+      
+      dropdown.innerHTML = '';
+      
+      if (results.length === 0) {
+        dropdown.innerHTML = '<div class="student-option" style="color: var(--text-muted); font-style: italic;">No students found</div>';
+      } else {
+        results.forEach(student => {
+          const option = document.createElement('div');
+          option.className = 'student-option';
+          option.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <img src="students/${student.BCEID1}.jpg" 
+                   style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent);"
+                   onerror="this.src='data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"32\\" height=\\"32\\" viewBox=\\"0 0 32 32\\"><rect width=\\"32\\" height=\\"32\\" fill=\\"%23ddd\\"/><text x=\\"16\\" y=\\"20\\" text-anchor=\\"middle\\" fill=\\"%23999\\" font-size=\\"10\\">👤</text></svg>';">
+              <div>
+                <div style="font-weight: 600;">${student.LegalSurname1}, ${student.FirstName}</div>
+                <div style="font-size: 0.8rem; color: var(--text-light);">${student.BCEID1} • ${student.HouseName || 'No House'}</div>
+              </div>
+            </div>
+          `;
+          option.onclick = () => selectStudent(student);
+          dropdown.appendChild(option);
+        });
+      }
+      
+      dropdown.style.display = 'block';
+    }
+
+    function selectStudent(student) {
+      // Check if student is already selected
+      if (selectedStudents.some(s => s.BCEID1 === student.BCEID1)) {
+        showToast('Student already selected', 'warning');
+        return;
+      }
+      
+      selectedStudents.push(student);
+      updateSelectedStudentsDisplay();
+      updateSummary();
+      
+      // Clear search
+      document.getElementById('studentSearch').value = '';
+      document.getElementById('searchDropdown').style.display = 'none';
+    }
+
+    function updateSelectedStudentsDisplay() {
+      const container = document.getElementById('selectedStudents');
+      
+      if (selectedStudents.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); font-style: italic; margin: auto; grid-column: 1/-1; text-align: center;">Search and select students above</p>';
+        return;
+      }
+      
+      container.innerHTML = selectedStudents.map(student => `
+        <div class="student-card">
+          <img src="students/${student.BCEID1}.jpg" 
+               class="student-photo"
+               onerror="this.src='data:image/svg+xml,<svg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"60\\" height=\\"60\\" viewBox=\\"0 0 60 60\\"><rect width=\\"60\\" height=\\"60\\" fill=\\"%23f0f0f0\\" rx=\\"30\\"/><text x=\\"30\\" y=\\"35\\" text-anchor=\\"middle\\" fill=\\"%23999\\" font-size=\\"20\\">👤</text></svg>';"
+               alt="${student.FirstName} ${student.LegalSurname1}">
+          <div class="student-name">${student.LegalSurname1}, ${student.FirstName}</div>
+          <div class="student-details">
+            ${student.BCEID1}<br>
+            ${student.HouseName || 'No House'}<br>
+            ${student.HomeGroup || 'No Homegroup'}
+          </div>
+          <button class="remove-student" onclick="removeStudent('${student.BCEID1}')" 
+                  style="position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 12px; line-height: 1;" 
+                  aria-label="Remove student">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeStudent(bceid) {
+      selectedStudents = selectedStudents.filter(s => s.BCEID1 !== bceid);
+      updateSelectedStudentsDisplay();
+      updateSummary();
+    }
+
+    function toggleCategory(categoryName) {
+      const content = document.getElementById(`content-${categoryName}`);
+      const toggle = document.getElementById(`toggle-${categoryName}`);
+      
+      if (content.classList.contains('expanded')) {
+        content.classList.remove('expanded');
+        toggle.textContent = '▼';
+      } else {
+        content.classList.add('expanded');
+        toggle.textContent = '▲';
+      }
+    }
+
+    function updateSelectedAffirmations() {
+      const checkboxes = document.querySelectorAll('.affirmation-checkbox:checked');
+      selectedAffirmations = Array.from(checkboxes).map(checkbox => {
+        const item = checkbox.closest('.affirmation-item');
+        return item.querySelector('.affirmation-text').textContent;
+      });
+      
+      updateSummary();
+    }
+
+    function updateSummary() {
+      const summarySection = document.getElementById('summarySection');
+      const studentCount = document.getElementById('studentCount');
+      const affirmationCount = document.getElementById('affirmationCount');
+      const studentsList = document.getElementById('selectedStudentsList');
+      const affirmationsList = document.getElementById('selectedAffirmationsList');
+      
+      // Update counts
+      studentCount.textContent = selectedStudents.length;
+      affirmationCount.textContent = selectedAffirmations.length;
+      
+      // Update student list
+      studentsList.innerHTML = selectedStudents.length === 0 
+        ? '<p style="color: var(--text-muted); font-style: italic;">No students selected</p>'
+        : selectedStudents.map(student => `
+            <div class="summary-item">
+              ${student.LegalSurname1}, ${student.FirstName} (${student.BCEID1})
+            </div>
+          `).join('');
+      
+      // Update affirmations list
+      affirmationsList.innerHTML = selectedAffirmations.length === 0 
+        ? '<p style="color: var(--text-muted); font-style: italic;">No affirmations selected</p>'
+        : selectedAffirmations.map(affirmation => `
+            <div class="summary-item">
+              ${affirmation}
+            </div>
+          `).join('');
+      
+      // Show/hide summary section
+      summarySection.style.display = (selectedStudents.length > 0 || selectedAffirmations.length > 0) ? 'block' : 'none';
+    }
+
+    async function saveAffirmations() {
+      if (selectedStudents.length === 0) {
+        showToast('Please select at least one student', 'warning');
+        return;
+      }
+      
+      if (selectedAffirmations.length === 0) {
+        showToast('Please select at least one affirmation', 'warning');
+        return;
+      }
+      
+      const saveBtn = document.getElementById('saveBtn');
+      const originalText = saveBtn.innerHTML;
+      
+      try {
+        saveBtn.innerHTML = '<span class="loading"><span class="spinner"></span>Saving...</span>';
+        saveBtn.disabled = true;
+        
+        // Create affirmation records
+        const records = [];
+        const timestamp = new Date().toISOString();
+        const staffName = document.getElementById('staffName').textContent;
+        const staffEmail = sessionStorage.getItem('staffEmail') || 'noreply@sophiacollege.edu.au';
+        
+        selectedStudents.forEach(student => {
+          selectedAffirmations.forEach(affirmation => {
+            const record = {
+              timestamp,
+              staffName,
+              staffEmail,
+              studentName: `${student.LegalSurname1}, ${student.FirstName}`,
+              studentBCEID: student.BCEID1,
+              studentHouse: student.HouseName || '',
+              studentHomeGroup: student.HomeGroup || '',
+              studentEmail: `${student.BCEID1}@sophiacollege.edu.au`,
+              parentEmail: parentEmails[student.BCEID1] || '',
+              houseCompanionEmail: houseCompanions[student.HouseName]?.email || '',
+              houseCompanionName: houseCompanions[student.HouseName]?.name || '',
+              affirmation,
+              id: `${student.BCEID1}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+            };
+            records.push(record);
+          });
+        });
+        
+        // Save to Firebase
+        await saveToFirebase(records);
+        
+        // Send emails
+        await sendAffirmationEmails(records);
+        
+        showToast(`✅ Successfully sent ${records.length} affirmation${records.length > 1 ? 's' : ''} to ${selectedStudents.length} student${selectedStudents.length > 1 ? 's' : ''}!`, 'success');
+        
+        // Clear selections
+        clearAll();
+        
+      } catch (error) {
+        console.error('Error saving affirmations:', error);
+        showToast('❌ Error saving affirmations', 'error');
+      } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+      }
+    }
+
+    async function saveToFirebase(records) {
+      try {
+        const batch = db.batch();
+        
+        records.forEach(record => {
+          const docRef = db.collection('affirmations').doc(record.id);
+          batch.set(docRef, record);
+        });
+        
+        await batch.commit();
+        console.log('Affirmations saved to Firebase successfully');
+        
+      } catch (error) {
+        console.error('Error saving to Firebase:', error);
+        throw error;
+      }
+    }
+
+    async function sendAffirmationEmails(records) {
+      try {
+        // Group records by student to send one email per student
+        const studentGroups = {};
+        records.forEach(record => {
+          if (!studentGroups[record.studentBCEID]) {
+            studentGroups[record.studentBCEID] = {
+              student: record,
+              affirmations: []
+            };
+          }
+          studentGroups[record.studentBCEID].affirmations.push(record.affirmation);
+        });
+        
+        // Send emails for each student
+        for (const [bceid, data] of Object.entries(studentGroups)) {
+          const emailData = {
+            from: data.student.staffEmail,
+            to: data.student.studentEmail,
+            cc: [
+              data.student.parentEmail,
+              data.student.houseCompanionEmail
+            ].filter(email => email && email.trim()),
+            subject: `🌟 Positive Recognition - Well Done ${data.student.studentName.split(',')[1].trim()}!`,
+            body: generateEmailBody(data.student, data.affirmations)
+          };
+          
+          // In a real implementation, this would send via your email service
+          console.log('Email would be sent:', emailData);
+          
+          // Add small delay to avoid overwhelming email server
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+      } catch (error) {
+        console.error('Error sending emails:', error);
+        throw error;
+      }
+    }
+
+    function generateEmailBody(student, affirmations) {
+      const firstName = student.studentName.split(',')[1].trim();
+      const affirmationsList = affirmations.map(a => `• ${a}`).join('\n');
+      
+      return `Dear ${firstName},
+
+Congratulations! Your teacher ${student.staffName} has recognized your outstanding behavior and positive contribution to our Sophia College community.
+
+🌟 Recognitions:
+${affirmationsList}
+
+📅 Date: ${new Date(student.timestamp).toLocaleDateString()}
+🏠 House: ${student.studentHouse}
+
+Your commitment to living our PB4L values is truly commendable. You are demonstrating the qualities that make our college community special, and we are proud of your efforts.
+
+Keep up the excellent work! Continue to be a positive role model for your peers and show the Sophia College spirit in all that you do.
+
+With appreciation and encouragement,
+${student.staffName}
+Sophia College Staff
+
+Wisdom and Love 📚💚
+
+---
+
+Parents/Guardians and House Companions are CC'd on this positive recognition to celebrate ${firstName}'s achievements together.`;
+    }
+
+    function clearAll() {
+      // Clear selected students
+      selectedStudents = [];
+      updateSelectedStudentsDisplay();
+      
+      // Clear selected affirmations
+      document.querySelectorAll('.affirmation-checkbox:checked').forEach(checkbox => {
+        checkbox.checked = false;
+        checkbox.closest('.affirmation-item').classList.remove('selected');
+      });
+      selectedAffirmations = [];
+      
+      // Update summary
+      updateSummary();
+      
+      // Clear search
+      document.getElementById('studentSearch').value = '';
+      document.getElementById('searchDropdown').style.display = 'none';
+      
+      showToast('All selections cleared', 'info');
+    }
+
+    function showToast(message, type = 'info', duration = 4000) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, duration);
+    }
+
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Navigation functions (matching existing system)
+    function navigate(page) {
+      window.location.href = page;
+    }
+  </script>
+</body>
+</html>

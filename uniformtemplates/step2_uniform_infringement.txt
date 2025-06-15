@@ -1,0 +1,12 @@
+Subject: Uniform Infringement Notification – Step 2
+
+Dear {parentName},
+
+This email is to advise you that {studentName} has now received ten uniform infringements in the current semester and has progressed to Step 2 of the uniform process. As a consequence, {studentName} is required to attend an after-school detention on {date} from {startTime} to {endTime}.
+
+Please ensure arrangements are made for collection after detention. If you have any queries, feel free to contact me.
+
+Kind regards,
+{houseCompanion}
+House Companion
+Sophia College

@@ -1,0 +1,211 @@
+/* Sophia College Themed Styles */
+
+/* Global body, fonts and colors */
+body {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  background-color: #f4f7fa;
+  color: #2c2c2c;
+  margin: 0;
+}
+
+/* Shared navigation bar */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  background-color: #003057;  /* Deep Navy */
+  color: white;
+  padding: 10px 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.nav-logo {
+  height: 36px;
+  margin-right: 12px;
+}
+
+.nav-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 600;
+  font-size: 1.2em;
+  white-space: nowrap;
+}
+
+.nav-links {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.nav-links #staffName {
+  font-weight: bold;
+  color: #fbecec; /* pale contrast */
+}
+
+/* Dropdown menus */
+.dropdown {
+  position: relative;
+}
+
+.dropbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  font-size: 0.95em;
+  background: white;
+  color: #003057;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.dropbtn:hover {
+  background-color: #005187;
+  color: white;
+}
+
+.dropbtn .arrow {
+  margin-left: 4px;
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #ffffff;
+  min-width: 160px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.dropdown-content a,
+.dropdown-content button.logout-btn {
+  color: #003057;
+  padding: 10px 16px;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-content a:hover,
+.dropdown-content button.logout-btn:hover {
+  background-color: #f1f1f1;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+/* Header (legacy pages) */
+.header {
+  background-color: #003057;
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header button {
+  background-color: #6c9bd4;  /* Light Blue */
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.header button:hover {
+  background-color: #005187;
+}
+
+/* Main container */
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+/* Form elements */
+select, button, input {
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 80%;
+  font-size: 1em;
+}
+
+button {
+  background-color: #660000;  /* Maroon */
+  color: white;
+}
+
+button:hover {
+  background-color: #880000;
+}
+
+/* Student info and history */
+.student-info {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 30px;
+}
+
+.student-info img {
+  max-width: 120px;
+  border-radius: 10px;
+}
+
+.student-details {
+  text-align: left;
+}
+
+.history {
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* Headings */
+h2 {
+  color: #003057;
+}
+
+h3 {
+  color: #660000;
+}
+
+/* Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}

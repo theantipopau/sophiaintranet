@@ -1,0 +1,13 @@
+Subject: Courtesy Notification – Triple R Automatic Referral – {subjectArea} – Lesson {lesson}
+
+Dear {parentName},
+
+This is a courtesy email to inform you that {studentName} was referred, as part of the Triple R process at Sophia College, to the Re-Engagement Room for {subjectArea} during Lesson {lesson} with {teacher}.
+
+On this occasion, a Triple R disc was not issued. The referral was automatic due to behaviour and disruption to the teaching and learning environment, which does not align with the expectations of our Positive Behaviour for Learning (PB4L) framework.
+
+If you require any further information, you are welcome to contact the classroom teacher or the Re-Engagement Room Team.
+
+Kind regards,  
+Re-Engagement Room Team  
+Sophia College

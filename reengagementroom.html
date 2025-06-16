@@ -4,20 +4,201 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sophia College - Re-Engagement Room</title>
+  
+  <!-- External Stylesheets -->
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="reengagement-styles.css">
   <link rel="icon" href="../logo.ico" type="image/x-icon">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
-  <!-- PapaParse CSV parser -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <!-- jsPDF for PDF generation -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <!-- Chart.js for Analytics -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="js/error-handler.js" as="script">
+  <link rel="preload" href="js/data-manager.js" as="script">
+  <link rel="preload" href="js/ui-components.js" as="script">
+  
+  <!-- Firebase SDK with defer for better performance -->
+  <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  
+  <!-- External libraries with defer -->
+  <script defer src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
   <!-- Unified System -->
-  <script src="/shared/sophia-unified-system.js"></script>
+  <script defer src="/shared/sophia-unified-system.js"></script>
+  
+  <!-- Enhanced JavaScript Modules -->
+  <script defer src="js/error-handler.js"></script>
+  <script defer src="js/data-manager.js"></script>
+  <script defer src="js/ui-components.js"></script>
+  
+  <!-- Additional CSS for enhanced components -->
   <style>
+    /* Enhanced loading states */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-2xl);
+      text-align: center;
+    }
+    
+    .loading-message {
+      margin-top: var(--spacing-md);
+      color: var(--text-light);
+      font-weight: 500;
+    }
+    
+    .loading-progress {
+      width: 200px;
+      height: 4px;
+      background: var(--border-light);
+      border-radius: 2px;
+      margin-top: var(--spacing-md);
+      overflow: hidden;
+    }
+    
+    .loading-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    /* Enhanced form validation */
+    .field-valid {
+      border-color: var(--success) !important;
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+    }
+    
+    .field-invalid {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+    }
+    
+    .field-error {
+      color: var(--danger);
+      font-size: 0.75rem;
+      margin-top: var(--spacing-xs);
+      font-weight: 500;
+    }
+    
+    /* Screen reader only content */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* Enhanced modal sizes */
+    .modal-sm { max-width: 400px; }
+    .modal-md { max-width: 600px; }
+    .modal-lg { max-width: 800px; }
+    .modal-fullscreen { 
+      max-width: 95vw; 
+      max-height: 95vh; 
+      width: 95vw; 
+      height: 95vh; 
+    }
+    
+    /* Data table enhancements */
+    .data-table-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+    
+    .data-table-controls {
+      padding: var(--spacing-lg);
+      background: var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .data-table-search {
+      max-width: 300px;
+      flex: 1;
+      margin-right: var(--spacing-lg);
+    }
+    
+    .data-table-count {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .data-table-wrapper {
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    
+    .data-table th {
+      background: var(--nav-bg);
+      color: white;
+      padding: var(--spacing-md);
+      text-align: left;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .data-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease;
+    }
+    
+    .data-table th.sortable:hover {
+      background: #004a73;
+    }
+    
+    .sort-indicator {
+      margin-left: var(--spacing-xs);
+      opacity: 0.5;
+    }
+    
+    .data-table td {
+      padding: var(--spacing-md);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    
+    .data-table tr:hover {
+      background: var(--border-light);
+    }
+    
+    .data-table-pagination {
+      padding: var(--spacing-lg);
+      background: var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+    }
+    
+    .pagination-info {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
     :root { 
       --nav-bg: #003057; 
       --nav-fg: #fff; 
@@ -1613,17 +1794,12 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    // Firebase initialization
-    firebase.initializeApp({ 
-      apiKey:'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU', 
-      authDomain:'sophia-infringements.firebaseapp.com', 
-      projectId:'sophia-infringements' 
-    });
-    const db = firebase.firestore();
-
-    // Global variables
+    // Global variables - declare first
+    let db = null;
     let unifiedSystem = null;
     let dataManager = null;
+    let errorHandler = null;
+    let uiManager = null;
     let studentsData = [];
     let parentEmails = {};
     let houseCompanions = {};
@@ -2935,7 +3111,7 @@ Sophia College`;
       const tableBody = document.getElementById('masterListTableBody');
       const countElement = document.getElementById('masterListCount');
       
-      tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
       
       try {
         const snapshot = await db.collection('referrals').get();
@@ -2957,19 +3133,9 @@ Sophia College`;
           return timeA - timeB;
         });
         
-        // Assign referral numbers and calculate student counts
-        const studentCounts = {};
+        // Assign referral numbers
         masterListData.forEach((referral, index) => {
           referral.referralNumber = index + 1;
-          
-          // Count referrals per student
-          const studentId = referral.student;
-          if (studentId) {
-            studentCounts[studentId] = (studentCounts[studentId] || 0) + 1;
-            referral.studentCount = studentCounts[studentId];
-          } else {
-            referral.studentCount = 1;
-          }
         });
         
         populateMasterFilters();
@@ -2980,7 +3146,7 @@ Sophia College`;
         
       } catch (error) {
         console.error('❌ Error loading master list:', error);
-        tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
       }
     }
 
@@ -4034,8 +4200,8 @@ Sophia College`;
       if (modal) modal.remove();
     }
 
-    // Initialize system
-    document.addEventListener('DOMContentLoaded', function() {
+    // Initialize system with enhanced modules
+    document.addEventListener('DOMContentLoaded', async function() {
       console.log('📄 Re-Engagement Room System initializing...');
       
       const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
@@ -4049,6 +4215,46 @@ Sophia College`;
       } else {
         const adminLink = document.getElementById('adminLink');
         if (adminLink) adminLink.style.display = 'none';
+      }
+
+      // Initialize Firebase first
+      try {
+        console.log('🔥 Initializing Firebase...');
+        firebase.initializeApp({ 
+          apiKey:'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU', 
+          authDomain:'sophia-infringements.firebaseapp.com', 
+          projectId:'sophia-infringements' 
+        });
+        db = firebase.firestore();
+        console.log('✅ Firebase initialized successfully');
+      } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        showToast('❌ Firebase initialization failed', 'error');
+      }
+
+      // Initialize enhanced modules
+      try {
+        // Initialize error handler first
+        if (typeof ErrorHandler !== 'undefined') {
+          errorHandler = new ErrorHandler();
+          console.log('✅ Error Handler initialized');
+        }
+
+        // Initialize UI manager
+        if (typeof UIManager !== 'undefined') {
+          uiManager = new UIManager();
+          window.uiManager = uiManager; // Make globally available
+          console.log('✅ UI Manager initialized');
+        }
+
+        // Initialize data manager
+        if (typeof DataManager !== 'undefined') {
+          dataManager = new DataManager();
+          console.log('✅ Data Manager initialized');
+        }
+
+      } catch (error) {
+        console.warn('⚠️ Some enhanced modules failed to initialize:', error);
       }
 
       // Get DOM elements
@@ -4081,8 +4287,22 @@ Sophia College`;
         referralForm.addEventListener('submit', submitReferral);
       }
 
-      // Load data
-      loadAllData();
+      // Load data with enhanced error handling
+      try {
+        await loadAllData();
+      } catch (error) {
+        if (errorHandler) {
+          errorHandler.handleError({
+            type: 'initialization',
+            message: 'Failed to load system data',
+            error: error,
+            severity: 'error'
+          });
+        } else {
+          console.error('❌ Failed to load system data:', error);
+          showToast('❌ Failed to load system data', 'error');
+        }
+      }
     });
   </script>
 </body>

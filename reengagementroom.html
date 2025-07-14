@@ -1,36 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sophia College - Re-Engagement Room</title>
-  
-  <!-- External Stylesheets -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="shared/common-styles.css">
   <link rel="stylesheet" href="reengagement-styles.css">
-  <link rel="icon" href="../logo.ico" type="image/x-icon">
+  <link rel="icon" href="logo.ico" type="image/x-icon">
   
-  <!-- Preload critical resources -->
-  <link rel="preload" href="js/error-handler.js" as="script">
-  <link rel="preload" href="js/data-manager.js" as="script">
-  <link rel="preload" href="js/ui-components.js" as="script">
+  <!-- Preload for error-handler, data-manager, and ui-components removed as they are loaded by sophia-unified-system.js -->
   
   <!-- Firebase SDK with defer for better performance -->
   <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-storage-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/11.7.1/firebase-database-compat.js"></script>
   
   <!-- External libraries with defer -->
   <script defer src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
   <!-- Unified System -->
   <script defer src="/shared/sophia-unified-system.js"></script>
   
-  <!-- Enhanced JavaScript Modules -->
-  <script defer src="js/error-handler.js"></script>
-  <script defer src="js/data-manager.js"></script>
-  <script defer src="js/ui-components.js"></script>
+  <!-- Enhanced JavaScript Modules (error-handler, data-manager, ui-components) are now loaded via sophia-unified-system.js to prevent duplicate loading errors. -->
+  <script src="js/critical-fixes.js"></script>
   
   <!-- Additional CSS for enhanced components -->
   <style>
@@ -199,6 +195,246 @@
       font-size: 0.875rem;
       font-weight: 500;
     }
+
+    /* Skip Links for Accessibility */
+    .skip-links {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10001; 
+    }
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      background: var(--accent);
+      color: white;
+      padding: 10px 18px;
+      text-decoration: none;
+      border-radius: 0 0 6px 6px;
+      font-weight: 600;
+      font-size: 0.95em;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      transition: none;
+    }
+    .skip-link:focus {
+      left: 8px;
+      top: 8px;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Connection Status */
+    .connection-status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+      display: none; /* Hidden by default, shown by JS */
+    }
+    .connection-status.online {
+      background: linear-gradient(135deg, var(--success), #20c997);
+      color: white;
+      box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    .connection-status.offline {
+      background: linear-gradient(135deg, var(--danger), #c82333);
+      color: white;
+      box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+    }
+    .connection-status.loading {
+      background: linear-gradient(135deg, var(--warning), #e0a800);
+      color: #333; /* Ensure text is readable on yellow */
+      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+    }
+     .dark-mode .connection-status { /* Ensure visibility in dark mode */
+      border-color: rgba(0,0,0,0.2);
+    }
+    .dark-mode .connection-status.loading {
+      color: var(--text); /* Ensure contrast in dark mode */
+    }
+
+
+    /* Dark Mode Styles */
+    .dark-mode body {
+      --bg: linear-gradient(135deg, #1e1e2f 0%, #2d2d3f 100%);
+      --card: #2d2d3f;
+      --text: #e0e0e0;
+      --text-light: #a0aec0;
+      --text-muted: #718096;
+      --border: #4a5568;
+      --border-light: #2d3748;
+    }
+    .dark-mode .nav-bar {
+      background: rgba(0, 48, 87, 0.85); /* Darker navy with some transparency */
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .dark-mode .theme-btn { /* Style for theme button in dark mode */
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+    .dark-mode .dropdown-content {
+      background: #2c2c2c;
+      border-color: var(--border);
+    }
+    .dark-mode .dropdown-content a, .dark-mode .dropdown-content button {
+      color: #ffffff; /* Ensure dropdown text is visible */
+    }
+    .dark-mode .dropdown-content a:hover, .dark-mode .dropdown-content button:hover {
+      background: var(--border-light);
+    }
+    .dark-mode .container {
+      background: var(--card);
+      border-color: var(--border);
+    }
+    .dark-mode .header-section {
+       background: linear-gradient(135deg, var(--nav-bg) 0%, #004060 100%); /* Adjust gradient for dark */
+    }
+    .dark-mode .loading-status {
+      background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+      border-color: #4a5568;
+      color: #e2e8f0;
+    }
+    .dark-mode .tab-navigation {
+      background: var(--border-light);
+      border-bottom-color: var(--border);
+    }
+    .dark-mode .tab-btn {
+      color: var(--text-light);
+    }
+    .dark-mode .tab-btn:hover {
+      background: rgba(102,0,0,0.15); /* Darker accent hover */
+      color: var(--accent);
+    }
+    .dark-mode .tab-btn.active {
+      background: var(--card);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    /* Add more specific dark mode styles for other elements as needed */
+    .dark-mode .form-group input, .dark-mode .form-group select, .dark-mode .form-group textarea,
+    .dark-mode .form-input, .dark-mode .form-select {
+      background: var(--border-light);
+      border-color: var(--border);
+      color: var(--text);
+    }
+    .dark-mode .form-group input:focus, .dark-mode .form-group select:focus, .dark-mode .form-group textarea:focus,
+    .dark-mode .form-input:focus, .dark-mode .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(126, 42, 42, 0.2); /* Accent shadow for dark mode */
+    }
+    .dark-mode .student-dropdown {
+      background: var(--card);
+      border-color: var(--border);
+    }
+    .dark-mode .student-option:hover {
+      background: var(--border-light);
+    }
+    .dark-mode .student-id {
+      background: var(--border-light);
+      color: var(--text-muted);
+    }
+    .dark-mode .type-option {
+      border-color: var(--border);
+      background: var(--card);
+    }
+    .dark-mode .type-option:hover {
+      border-color: var(--accent);
+      background: rgba(102,0,0,0.1); /* Darker accent hover */
+    }
+    .dark-mode .type-option.selected {
+      border-color: var(--accent);
+      background: rgba(102,0,0,0.1); /* Darker accent selected */
+    }
+    .dark-mode .student-info {
+      background: var(--border-light);
+      border-color: var(--border);
+    }
+    .dark-mode .student-photo img {
+      border-color: var(--card);
+    }
+    .dark-mode .history {
+      background: var(--card);
+      border-color: var(--border);
+    }
+    .dark-mode .history h3 {
+      background: var(--accent); /* Keep accent for headers */
+    }
+    .dark-mode .history-item:hover {
+      background: var(--border-light);
+    }
+    .dark-mode .footer {
+      border-top-color: var(--border);
+      color: var(--text-muted);
+    }
+    .dark-mode .footer a {
+      color: var(--nav-fg); /* Lighter link for dark footer */
+    }
+    .dark-mode .footer a:hover {
+      color: var(--accent);
+    }
+    .dark-mode .toast {
+      background: var(--card);
+      border-color: var(--border);
+    }
+     .dark-mode .master-list-table th {
+      background: var(--nav-bg); /* Keep nav-bg for table headers */
+    }
+    .dark-mode .master-list-table th.sorted-asc,
+    .dark-mode .master-list-table th.sorted-desc {
+      background: #004a73; /* Slightly lighter for active sort header in dark mode */
+    }
+    .dark-mode .master-list-table th.sorted-asc::after,
+    .dark-mode .master-list-table th.sorted-desc::after {
+      color: #bee3f8; /* Lighter arrow color for dark mode */
+    }
+    .dark-mode .master-list-table tr:nth-child(even) {
+      background: var(--border-light);
+    }
+     .dark-mode .master-list-table tr:hover {
+      background: #384252; /* Slightly lighter than card for hover */
+    }
+    .dark-mode .admin-section-header {
+       background: var(--nav-bg);
+    }
+    .dark-mode .admin-section-content {
+      background: var(--card);
+      border-color: var(--border);
+    }
+    .dark-mode .step-email-table th {
+      background: var(--border-light);
+      border-bottom-color: var(--border);
+      color: var(--text);
+    }
+     .dark-mode .step-email-table tr:hover {
+      background: #384252;
+    }
+    .dark-mode .warning-banner {
+      background: linear-gradient(135deg, #4a3a1f 0%, #5e4a2b 100%);
+      border-color: var(--warning);
+      color: #ffe0b2; /* Lighter text for dark yellow */
+    }
+    .dark-mode .warning-banner.danger {
+      background: linear-gradient(135deg, #5c2323 0%, #782f2f 100%);
+      border-color: var(--danger);
+      color: #fecaca; /* Lighter text for dark red */
+    }
+
     :root { 
       --nav-bg: #003057; 
       --nav-fg: #fff; 
@@ -248,40 +484,60 @@
       align-items: center; 
       background: var(--nav-bg); 
       color: var(--nav-fg); 
-      padding: var(--spacing-md) var(--spacing-lg); 
+      padding: 12px 24px; 
       position: sticky; 
       top: 0; 
       z-index: 1000;
-      box-shadow: var(--shadow-lg);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      box-shadow: var(--shadow);
       height: var(--nav-height);
+      backdrop-filter: blur(10px);
     }
     
     .nav-logo { 
-      height: 36px; 
-      margin-right: var(--spacing-md);
-      transition: transform 0.2s ease;
+      height: 40px; 
+      margin-right: 16px;
+      transition: var(--transition);
     }
     
-    .nav-logo:hover { transform: scale(1.05); }
+    .nav-logo:hover {
+      transform: scale(1.05);
+    }
     
     .nav-title { 
-      font-size: 1.25rem; 
+      font-size: 1.3em; 
       font-weight: 600;
-      letter-spacing: -0.025em;
+      margin-right: auto;
     }
     
     .nav-links { 
-      margin-left: auto; 
       display: flex; 
       align-items: center; 
-      gap: var(--spacing-md); 
+      gap: 16px;
     }
     
     #staffName { 
-      font-weight: 500; 
+      font-weight: 600; 
       color: rgba(255,255,255,0.9);
-      font-size: 0.875rem;
+      font-size: 0.95em;
+    }
+    
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--nav-fg);
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(180deg);
     }
     
     .dropdown { 
@@ -292,12 +548,14 @@
       background: rgba(255,255,255,0.1); 
       color: var(--nav-fg); 
       border: 1px solid rgba(255,255,255,0.2);
-      padding: var(--spacing-sm) var(--spacing-md); 
-      border-radius: var(--spacing-sm); 
+      padding: 8px 16px; 
+      border-radius: 8px; 
       cursor: pointer;
       font-weight: 500;
-      transition: all 0.2s ease;
-      font-size: 0.875rem;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     .dropbtn:hover { 
@@ -309,43 +567,62 @@
       display: none; 
       position: absolute; 
       right: 0; 
-      background: var(--card); 
-      min-width: 200px; 
-      box-shadow: var(--shadow-lg); 
+      background: var(--nav-bg); 
+      min-width: 220px; 
+      box-shadow: var(--shadow); 
       border-radius: var(--border-radius); 
       overflow: hidden;
-      z-index: 10001;
-      border: 1px solid var(--border);
-      margin-top: var(--spacing-xs);
+      border: 1px solid rgba(0,0,0,0.1);
+      animation: fadeInUp 0.2s ease;
+      z-index: 1001;
     }
     
-    .dropdown-content a, .dropdown-content button { 
+    .dropdown-content a, 
+    .dropdown-content button { 
       display: flex;
       align-items: center;
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md); 
+      gap: 8px;
+      padding: 12px 16px; 
       text-decoration: none; 
-      color: var(--text); 
+      color: var(--nav-fg); 
       background: none; 
       border: none; 
       width: 100%; 
       text-align: left; 
       cursor: pointer;
-      font-size: 0.875rem;
+      font-size: 0.95em;
       font-weight: 500;
-      transition: background 0.15s ease;
-      border-bottom: 1px solid var(--border-light);
+      transition: var(--transition);
     }
     
-    .dropdown-content a:last-child, .dropdown-content button:last-child {
-      border-bottom: none;
+    .dropdown-content a:hover, 
+    .dropdown-content button:hover { 
+      background: rgba(0,48,87,0.08); 
+      transform: translateX(4px);
     }
     
-    .dropdown-content a:hover, .dropdown-content button:hover { 
-      background: var(--border-light);
+    .dropdown:hover .dropdown-content,
+    .dropdown-content:hover { /* Keep open when hovering over content */
+      display: block; 
+      animation: fadeInUp 0.2s ease; /* Apply animation */
+    }
+
+    .dropdown-content a.active {
+      background-color: #f0f0f0; /* A light grey background */
+      color: var(--accent);
+      font-weight: 600;
+      pointer-events: none; /* Make it non-clickable */
     }
     
-    .dropdown:hover .dropdown-content { display: block; }
+    .dropdown-content.show {
+      display: block;
+      animation: fadeInUp 0.2s ease; /* Apply animation */
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
     
     /* Enhanced Container */
     .container { 
@@ -919,6 +1196,57 @@
       transform: translateY(-1px);
       box-shadow: var(--shadow);
     }
+
+    /* Action Dropdown */
+    .actions-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .actions-dropdown-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--spacing-sm);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .actions-dropdown-btn:hover {
+      background: var(--border-light);
+    }
+    .actions-dropdown-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: var(--card);
+      min-width: 180px;
+      box-shadow: var(--shadow-lg);
+      border-radius: var(--border-radius);
+      z-index: 10;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .actions-dropdown-content button {
+      width: 100%;
+      text-align: left;
+      padding: var(--spacing-md);
+      background: none;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+    .actions-dropdown-content button:last-child {
+      border-bottom: none;
+    }
+    .actions-dropdown-content button:hover {
+      background: var(--border-light);
+    }
+    .actions-dropdown:hover .actions-dropdown-content {
+      display: block;
+    }
     
     /* Master List Styles */
     .master-list-table {
@@ -936,30 +1264,39 @@
       font-weight: 600;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 10; /* Ensure header is above content when scrolling */
       cursor: pointer;
       user-select: none;
       transition: background 0.15s ease;
+      white-space: nowrap; /* Prevent header text wrapping */
     }
     
     .master-list-table th:hover {
       background: #004a73;
     }
     
+    .master-list-table th.sorted-asc,
+    .master-list-table th.sorted-desc {
+      background: #004a73; /* Darker background for active sort */
+    }
+
     .master-list-table th.sorted-asc::after {
       content: ' ↑';
-      color: #90caf9;
+      color: #bee3f8; /* Light blue for visibility */
+      font-weight: bold;
     }
     
     .master-list-table th.sorted-desc::after {
       content: ' ↓';
-      color: #90caf9;
+      color: #bee3f8; /* Light blue for visibility */
+      font-weight: bold;
     }
     
     .master-list-table td {
       padding: var(--spacing-md);
       border-bottom: 1px solid var(--border);
       vertical-align: middle;
+      font-size: 0.85rem; /* Slightly smaller font for table data */
     }
     
     .master-list-table tr:hover {
@@ -1372,20 +1709,40 @@
   </style>
 </head>
 <body>
-  <nav class="nav-bar">
-    <img src="crest.png" class="nav-logo" alt="College Crest">
-    <div class="nav-title">🔄 Re-Engagement Room</div>
-    <div class="nav-links">
-      <span id="staffName"></span>
-      <div class="dropdown">
-        <button class="dropbtn">☰ Menu</button>
-        <div class="dropdown-content">
-          <a href="home.html" onclick="navigate('home.html'); return false;">🏠 Home</a>
-          <a href="staff.html" onclick="navigate('staff.html'); return false;">📝 Infringement Tracker</a>
-          <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;">🏫 Out-of-Class Logger</a>
-          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;">🔄 Re-Engagement Room</a>
-          <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;">👥 Admin Dashboard</a>
-          <button onclick="logout(); return false;">🚪 Logout</button>
+  <div class="skip-links">
+    <a href="#submit-tab" class="skip-link">Skip to Submit Referral</a>
+    <a href="#analytics-tab" class="skip-link">Skip to Analytics</a>
+    <a href="#manage-tab" class="skip-link">Skip to Manage Referrals</a>
+    <a href="#masterlist-tab" class="skip-link">Skip to Master List</a>
+    <a href="#admin-tab" class="skip-link">Skip to Admin</a>
+  </div>
+  <!-- Enhanced Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <div class="nav-left">
+      <img src="crest.png" alt="College Crest" class="nav-logo">
+    </div>
+
+    <div class="nav-title" style="text-align: center;">🔄 Re-Engagement Room</div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <span id="staffName" aria-live="polite"></span>
+        <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Navigation menu" aria-expanded="false" aria-haspopup="true">
+            ☰ Menu
+          </button>
+          <div class="dropdown-content" role="menu">
+            <a href="home.html" onclick="navigate('home.html'); return false;" role="menuitem">🏠 Home</a>
+            <a href="staff.html" onclick="navigate('staff.html'); return false;" role="menuitem">📝 Infringement Tracker</a>
+            <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;" role="menuitem">🏫 Out-of-Class Logger</a>
+            <a href="positiveaffirmations.html" onclick="navigate('positiveaffirmations.html'); return false;" role="menuitem">✨ Positive Affirmations</a>
+            <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;" role="menuitem">🔄 Re-Engagement Room</a>
+            <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;" role="menuitem">
+              👥 Admin Dashboard 
+              <span id="badge" class="badge" style="display:none;" aria-label="notifications"></span>
+            </a>
+            <button onclick="logout(); return false;" role="menuitem">🚪 Logout</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1452,10 +1809,9 @@
           </div>
           
           <div class="form-group">
-            <label for="teacherSelect">👩‍🏫 Teacher</label>
-            <select id="teacherSelect">
-              <option value="">Select Teacher</option>
-            </select>
+            <label for="teacherSearch">👩‍🏫 Teacher</label>
+            <input list="teacherList" id="teacherSearch" class="form-input" placeholder="Type name or staff ID...">
+            <datalist id="teacherList"></datalist>
           </div>
           
           <div class="form-group">
@@ -1469,8 +1825,6 @@
             <label for="behaviorTypeSelect">⚠️ Behavior Category</label>
             <select id="behaviorTypeSelect">
               <option value="">Select Behavior Type</option>
-              <option value="Minor - Disrespect/non-compliance">Minor - Disrespect/non-compliance</option>
-              <option value="Minor - Disruption">Minor - Disruption</option>
             </select>
           </div>
         </div>
@@ -1657,9 +2011,9 @@
           <table class="master-list-table">
             <thead>
               <tr>
-                <th onclick="sortMasterList('referralNumber')" data-column="referralNumber">#</th>
+                <th onclick="sortMasterList('displayOrder')" data-column="displayOrder">#</th>
                 <th onclick="sortMasterList('studentName')" data-column="studentName">Student Name</th>
-                <th onclick="sortMasterList('studentCount')" data-column="studentCount">Student Count</th>
+                <th onclick="sortMasterList('studentReferralOrder')" data-column="studentReferralOrder">Student Count</th>
                 <th onclick="sortMasterList('house')" data-column="house">House</th>
                 <th onclick="sortMasterList('subject')" data-column="subject">Subject</th>
                 <th onclick="sortMasterList('teacher')" data-column="teacher">Teacher</th>
@@ -1684,6 +2038,25 @@
     <!-- Admin Tab -->
     <div id="admin-tab" class="tab-content">
       
+      <!-- Clear Referrals Section -->
+      <div class="admin-section">
+        <div class="admin-section-header">
+          🗑️ Danger Zone
+        </div>
+        <div class="admin-section-content">
+          <div style="background: #ffebee; padding: var(--spacing-lg); border-radius: var(--spacing-sm); margin-bottom: var(--spacing-lg);">
+            <h4 style="color: #b71c1c; margin-top: 0;">⚠️ Warning: Destructive Action</h4>
+            <p style="margin-bottom: var(--spacing-md);">This will permanently delete all referral records in the database. This action cannot be undone.</p>
+            <div class="action-buttons">
+              <button id="clearReferralsBtn" class="btn btn-danger">
+                <span style="margin-right: 8px;">🗑️</span> Clear All Referrals
+              </button>
+              <span id="clearReferralsStatus" style="margin-left: var(--spacing-md); font-weight: 600;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Step Email Management Section -->
       <div class="admin-section">
         <div class="admin-section-header">
@@ -1787,13 +2160,55 @@
     <p>© 2025 Sophia College | 
       <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
       <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
-      Version 2.2
+      Enhanced Version 2.2
     </p>
   </footer>
 
   <div id="toast" class="toast"></div>
+  
+  <div id="connectionStatus" class="connection-status loading" style="display:none;">
+    <span id="connectionText">Connecting...</span>
+  </div>
 
   <script>
+    // Attach clear referrals logic only after DOM and button exist
+    function setupClearReferralsButton() {
+      const clearBtn = document.getElementById('clearReferralsBtn');
+      const statusSpan = document.getElementById('clearReferralsStatus');
+      if (clearBtn) {
+        clearBtn.addEventListener('click', async function() {
+          if (!window.confirm('Are you sure you want to delete ALL referrals? This cannot be undone.')) return;
+          clearBtn.disabled = true;
+          statusSpan.textContent = 'Clearing...';
+          try {
+            if (!window.firebase || !firebase.firestore) throw new Error('Firestore not available');
+            const db = firebase.firestore();
+            const snapshot = await db.collection('referrals').get();
+            if (snapshot.empty) {
+              statusSpan.textContent = 'No referrals to delete.';
+              clearBtn.disabled = false;
+              return;
+            }
+            // Firestore batch limit is 500, so chunk if needed
+            const docs = snapshot.docs;
+            while (docs.length) {
+              const batch = db.batch();
+              docs.splice(0, 500).forEach(doc => batch.delete(doc.ref));
+              await batch.commit();
+            }
+            statusSpan.textContent = 'All referrals deleted.';
+          } catch (err) {
+            statusSpan.textContent = 'Error: ' + (err.message || err);
+          }
+          clearBtn.disabled = false;
+        });
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupClearReferralsButton);
+    } else {
+      setupClearReferralsButton();
+    }
     // Global variables - declare first
     let db = null;
     let unifiedSystem = null;
@@ -1815,8 +2230,8 @@
     let currentUploadReferral = null;
     let stepEmailTemplates = {};
     let masterListData = [];
-    let masterListSortColumn = 'referralNumber';
-    let masterListSortOrder = 'desc';
+    let masterListSortColumn = 'date'; // Default sort by date
+    let masterListSortOrder = 'desc'; // Default newest first
 
     // Step thresholds and configuration
     const STEP_THRESHOLDS = {
@@ -1830,7 +2245,7 @@
 
     // DOM elements
     let studentSearch, studentDropdown, selectedStudentId, lessonSelect, classroomSelect, 
-        teacherSelect, learningAreaSelect, behaviorTypeSelect, detailsInput, submitBtn, referralForm,
+        teacherSearch, learningAreaSelect, behaviorTypeSelect, detailsInput, submitBtn, referralForm,
         studentProfile, historySection, historyList, loadingStatus;
 
     // ===== GLOBAL FUNCTION DECLARATIONS =====
@@ -1845,7 +2260,7 @@
     window.openUploadModal = openUploadModal;
     window.closeUploadModal = closeUploadModal;
     window.uploadReflection = uploadReflection;
-    window.handleFileSelect = handleFileSelect;
+    window.handleFileSelectWithCompression = handleFileSelectWithCompression;
     window.viewReferralDetails = viewReferralDetails;
     window.closeViewModal = closeViewModal;
     window.downloadReflection = downloadReflection;
@@ -1858,27 +2273,71 @@
     window.resendStepEmail = resendStepEmail;
     window.openStepEmailClientAndRecord = openStepEmailClientAndRecord;
 
-    // ===== UNIFIED SYSTEM INTEGRATION =====
+    // ===== THEME MANAGEMENT =====
+    const THEME_KEY_REENGAGEMENT = 'sophia_reengagement_theme';
 
-    async function initializeUnifiedSystem() {
-      console.log('🔄 Initializing Unified System...');
-      
-      try {
-        if (typeof SophiaSystem !== 'undefined') {
-          unifiedSystem = new SophiaSystem();
-          await unifiedSystem.initialize();
-          dataManager = unifiedSystem.dataManager;
-          console.log('✅ Unified System initialized successfully');
-          return true;
-        } else {
-          console.warn('⚠️ Unified System not available, using fallback methods');
-          return false;
-        }
-      } catch (error) {
-        console.error('❌ Error initializing Unified System:', error);
-        return false;
+    function toggleTheme_Reengagement() {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem(THEME_KEY_REENGAGEMENT, isDark ? 'dark' : 'light');
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.textContent = isDark ? '☀️' : '🌓';
+        themeToggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+      // If charts are visible and analyticsCharts object exists, re-render them
+      if (typeof analyticsCharts !== 'undefined' && Object.keys(analyticsCharts).length > 0 && document.getElementById('analytics-tab')?.classList.contains('active')) {
+        renderAnalyticsCharts(allReferrals); // Assuming allReferrals holds the data for charts
       }
     }
+
+    function initializeTheme_Reengagement() {
+      const savedTheme = localStorage.getItem(THEME_KEY_REENGAGEMENT);
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const themeToggle = document.getElementById('themeToggle');
+
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.body.classList.add('dark-mode');
+        if (themeToggle) themeToggle.textContent = '☀️';
+      } else {
+        if (themeToggle) themeToggle.textContent = '🌓';
+      }
+      
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if (!localStorage.getItem(THEME_KEY_REENGAGEMENT)) { // Only if no explicit user choice
+          document.body.classList.toggle('dark-mode', e.matches);
+          if (themeToggle) themeToggle.textContent = e.matches ? '☀️' : '🌓';
+          if (typeof analyticsCharts !== 'undefined' && Object.keys(analyticsCharts).length > 0 && document.getElementById('analytics-tab')?.classList.contains('active')) {
+            renderAnalyticsCharts(allReferrals);
+          }
+        }
+      });
+      if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme_Reengagement);
+      }
+    }
+    // ===== END THEME MANAGEMENT =====
+
+    // ===== UNIFIED SYSTEM INTEGRATION =====
+
+async function initializeUnifiedSystem() {
+  console.log('🔄 Initializing Unified System...');
+  
+  try {
+    if (typeof SophiaSystem !== 'undefined') {
+  unifiedSystem = SophiaSystem; // Use directly without initializeSystem
+  dataManager = unifiedSystem.dataManager || unifiedSystem;
+      console.log('✅ Unified System initialized successfully');
+      return true;
+    } else {
+      console.warn('⚠️ Unified System not available, using fallback methods');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error initializing Unified System:', error);
+    return false;
+  }
+}
 
     // ===== TRIPLE R STEP PROCESS IMPLEMENTATION =====
 
@@ -2266,8 +2725,12 @@ Sophia College`;
 
     // Load CSV data with unified system integration
     async function loadCSV(filename) {
+      // Sanitize filename to prevent path duplication
+      const sanitizedFilename = filename.replace(/^data\//, '');
+      const fullPath = `/data/${sanitizedFilename}`;
+      
       return new Promise((resolve, reject) => {
-        Papa.parse(filename, {
+        Papa.parse(fullPath, {
           download: true,
           header: true,
           skipEmptyLines: true,
@@ -2294,7 +2757,6 @@ Sophia College`;
         }
         
         const behaviorData = await loadCSV('BehaviourList.csv');
-        console.log('📋 Raw behavior data:', behaviorData);
         
         if (behaviorData.length > 0) {
           behaviorTypeSelect.innerHTML = '<option value="">Select Behavior Type</option>';
@@ -2302,17 +2764,26 @@ Sophia College`;
           const behaviors = behaviorData
             .filter(row => row.Level && row.Behaviour)
             .map(row => row.Level + ' - ' + row.Behaviour)
-            .filter((value, index, self) => self.indexOf(value) === index)
-            .sort();
-          
-          console.log('✅ Processed behavior types:', behaviors);
+            .filter((value, index, self) => self.indexOf(value) === index);
+
+          // Sort minors first, then alphabetically
+          behaviors.sort((a, b) => {
+            const aIsMinor = a.toLowerCase().startsWith('minor');
+            const bIsMinor = b.toLowerCase().startsWith('minor');
+            if (aIsMinor && !bIsMinor) {
+              return -1;
+            }
+            if (!aIsMinor && bIsMinor) {
+              return 1;
+            }
+            return a.localeCompare(b); // Alphabetical for same-level items
+          });
           
           behaviors.forEach(behavior => {
             const option = new Option(behavior, behavior);
             behaviorTypeSelect.appendChild(option);
           });
           
-          console.log('✅ Behavior dropdown populated with', behaviors.length, 'options');
         } else {
           console.log('⚠️ No behavior data found, using fallback options');
           const defaultBehaviors = [
@@ -2392,27 +2863,95 @@ Sophia College`;
         
         updateLoadingStatus('Loading teaching staff...');
         const teachersData = await loadCSV('BCEteacherinfo.csv');
+        const teacherList = document.getElementById('teacherList');
         teacherEmails = {};
         teachersData.forEach(teacher => {
           if (teacher.Stafffullname && teacher.BCEID && teacher.Staffemail) {
             const teacherName = teacher.Stafffullname + ' (' + teacher.BCEID + ')';
             teacherEmails[teacherName] = teacher.Staffemail;
-            teacherSelect.add(new Option(teacherName, teacherName));
+            const option = document.createElement('option');
+            option.value = teacherName;
+            teacherList.appendChild(option);
           }
         });
         
         updateLoadingStatus('Loading classroom locations...');
         const barcodesData = await loadCSV('Barcodelocations.csv');
-        const classrooms = Array.from(new Set(barcodesData.map(item => item.Title).filter(Boolean))).sort();
-        classrooms.forEach(classroom => {
-          classroomSelect.add(new Option(classroom, classroom));
+        const buildingNames = ["Angelo", "Bonaventure", "Elizabeth", "Greccio", "Leo", "Rieti", "Spoleto"];
+        const categorizedClassrooms = { "Other": [] };
+
+        barcodesData.forEach(item => {
+            const title = item.Title;
+            if (title) {
+                let found = false;
+                for (const building of buildingNames) {
+                    if (title.startsWith(building)) {
+                        if (!categorizedClassrooms[building]) {
+                            categorizedClassrooms[building] = [];
+                        }
+                        categorizedClassrooms[building].push(title);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    categorizedClassrooms["Other"].push(title);
+                }
+            }
         });
+
+        classroomSelect.innerHTML = '<option value="">Select Classroom</option>';
+        
+        // Add categorized buildings first
+        buildingNames.forEach(building => {
+            if (categorizedClassrooms[building]) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = building;
+                categorizedClassrooms[building].sort().forEach(classroom => {
+                    const option = new Option(classroom, classroom);
+                    optgroup.appendChild(option);
+                });
+                classroomSelect.appendChild(optgroup);
+            }
+        });
+
+        // Add "Other" category
+        if (categorizedClassrooms["Other"].length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = "Other";
+            categorizedClassrooms["Other"].sort().forEach(classroom => {
+                const option = new Option(classroom, classroom);
+                optgroup.appendChild(option);
+            });
+            classroomSelect.appendChild(optgroup);
+        }
         
         updateLoadingStatus('Loading subject areas...');
         const learningData = await loadCSV('Learningareacategory.csv');
-        const subjects = Array.from(new Set(learningData.map(item => item['Learning Area Category']).filter(Boolean))).sort();
-        subjects.forEach(subject => {
-          learningAreaSelect.add(new Option(subject, subject));
+        const learningAreas = {};
+        learningData.forEach(item => {
+            const category = item['Learning Area Category'];
+            const area = item['Learning Area'];
+            if (category && area) {
+                if (!learningAreas[category]) {
+                    learningAreas[category] = [];
+                }
+                learningAreas[category].push(area);
+            }
+        });
+
+        learningAreaSelect.innerHTML = '<option value="">Select Subject</option>';
+        const sortedCategories = Object.keys(learningAreas).sort();
+
+        sortedCategories.forEach(category => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = category;
+            const sortedAreas = [...new Set(learningAreas[category])].sort();
+            sortedAreas.forEach(area => {
+                const option = new Option(area, area);
+                optgroup.appendChild(option);
+            });
+            learningAreaSelect.appendChild(optgroup);
         });
         
         updateLoadingStatus('Loading behavior categories...');
@@ -2504,7 +3043,7 @@ Sophia College`;
       const photo = document.getElementById('studentPhoto');
       photo.src = 'students/' + student.BCEID1 + '.jpg';
       photo.onerror = function() {
-        this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f0f0f0"/><circle cx="50" cy="35" r="15" fill="%23ddd"/><path d="M20 85 Q20 65 50 65 Q80 65 80 85 Z" fill="%23ddd"/></svg>';
+        this.src = 'placeholder.jpg';
       };
       
       studentProfile.style.display = 'flex';
@@ -2574,7 +3113,7 @@ Sophia College`;
                      selectedType && 
                      lessonSelect.value && 
                      classroomSelect.value && 
-                     teacherSelect.value && 
+                     teacherSearch.value && 
                      learningAreaSelect.value && 
                      behaviorTypeSelect.value &&
                      detailsInput.value.trim() &&
@@ -2601,7 +3140,7 @@ Sophia College`;
         behaviorType: behaviorTypeSelect.value,
         lesson: lessonSelect.value,
         classroom: classroomSelect.value,
-        teacher: teacherSelect.value,
+        teacher: teacherSearch.value,
         learningArea: learningAreaSelect.value,
         details: detailsInput.value,
         houseName: selectedStudent.HouseName,
@@ -2682,9 +3221,13 @@ Sophia College`;
         recipients.push('📬 CC: ' + houseCompanion.name + ' <' + houseCompanion.email + '>');
       }
       
+      let bccEmails = [];
       if (teacherEmail) {
+        bccEmails.push(teacherEmail);
         recipients.push('📨 BCC: ' + data.teacher + ' <' + teacherEmail + '>');
       }
+      bccEmails.push('splareengagementroom@bne.catholic.edu.au');
+      recipients.push('🔒 BCC: Re-Engagement Room');
 
       let modalHTML = '<div class="modal-content">';
       modalHTML += '<div class="modal-header">';
@@ -2706,7 +3249,7 @@ Sophia College`;
       
       modalHTML += '<div class="modal-footer">';
       if (parentInfo && parentInfo.email) {
-        modalHTML += '<button onclick="openEmailClient(\'' + parentInfo.email + '\', \'' + (houseCompanion && houseCompanion.email ? houseCompanion.email : '') + '\', \'' + (teacherEmail || '') + '\', \'' + subject.replace(/'/g, "\\'") + '\', \'' + body.replace(/'/g, "\\'").replace(/\n/g, "\\n") + '\'); closeEmailModal();" class="btn btn-primary">📧 Open Email</button>';
+        modalHTML += '<button onclick="openEmailClient(\'' + parentInfo.email + '\', \'' + (houseCompanion && houseCompanion.email ? houseCompanion.email : '') + '\', \'' + bccEmails.join(',') + '\', \'' + subject.replace(/'/g, "\\'") + '\', \'' + body.replace(/'/g, "\\'").replace(/\n/g, "\\n") + '\'); closeEmailModal();" class="btn btn-primary">📧 Open Email</button>';
       } else {
         modalHTML += '<div style="background: #fff3cd; padding: var(--spacing-md); border-radius: var(--spacing-sm); text-align: center;"><strong>⚠️ No Parent Email Available</strong></div>';
       }
@@ -3097,7 +3640,22 @@ Sophia College`;
         const item = document.createElement('div');
         item.className = 'referral-item';
         
-        item.innerHTML = `<div><div class="referral-number">#${referralNumber}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${date}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${time}</div></div><div><div style="font-weight: 600; margin-bottom: var(--spacing-xs);">${referral.studentName || 'Unknown'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Subject:</strong> ${referral.learningArea || 'N/A'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Teacher:</strong> ${referral.teacher || 'N/A'}</div><div style="font-size: 0.75rem; color: var(--text-muted);"><strong>Behavior:</strong> ${behaviorType}</div></div><div style="text-align: center;"><span style="padding: var(--spacing-xs) var(--spacing-sm); border-radius: 12px; font-size: 0.75rem; font-weight: 500;${referral.referralType === 'automatic' ? 'background: #d4edda; color: #155724;' : 'background: #fff3cd; color: #856404;'}">${typeEmoji} ${referral.referralType || 'Unknown'}</span></div><div style="text-align: center;"><span style="font-weight: 600; color: var(--accent);">${referral.houseName}</span></div><div style="display: flex; flex-direction: column; gap: var(--spacing-xs);"><button onclick="downloadReferralPDF('${referral.id}')" class="action-btn pdf" title="Download PDF">📄 Download PDF</button>${hasReflection ? `<button onclick="downloadReflection('${referral.id}')" class="action-btn pdf" title="Download Reflection">📎 Download Reflection</button>` : `<button onclick="openUploadModal('${referral.id}')" class="action-btn upload" title="Upload Reflection">📁 Upload Reflection</button>`}<button onclick="viewReferralDetails('${referral.id}')" class="action-btn view" title="View Referral">👁️ View Referral</button><button onclick="deleteReferral('${referral.id}', '${referral.studentName ? referral.studentName.replace(/'/g, "\\'") : ''}', '#${referralNumber}')" class="action-btn delete" title="Delete Referral">🗑️ Delete Referral</button></div>`;
+        const actionsHTML = `
+          <div class="actions-dropdown">
+            <button class="actions-dropdown-btn">Actions ▾</button>
+            <div class="actions-dropdown-content">
+              <button onclick="viewReferralDetails('${referral.id}')">👁️ View Details</button>
+              <button onclick="downloadReferralPDF('${referral.id}')">📄 Download PDF</button>
+              ${hasReflection ? 
+                `<button onclick="downloadReflection('${referral.id}')">📎 Download Reflection</button>` : 
+                `<button onclick="openUploadModal('${referral.id}')">📁 Upload Reflection</button>`
+              }
+              <button onclick="deleteReferral('${referral.id}', '${referral.studentName ? referral.studentName.replace(/'/g, "\\'") : ''}', '#${referralNumber}')" style="color: var(--danger);">🗑️ Delete Referral</button>
+            </div>
+          </div>
+        `;
+
+        item.innerHTML = `<div><div class="referral-number">#${referralNumber}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${date}</div><div style="font-size: 0.75rem; color: var(--text-muted);">${time}</div></div><div><div style="font-weight: 600; margin-bottom: var(--spacing-xs);">${referral.studentName || 'Unknown'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Subject:</strong> ${referral.learningArea || 'N/A'}</div><div style="font-size: 0.875rem; color: var(--text-light); margin-bottom: var(--spacing-xs);"><strong>Teacher:</strong> ${referral.teacher || 'N/A'}</div><div style="font-size: 0.75rem; color: var(--text-muted);"><strong>Behavior:</strong> ${behaviorType}</div></div><div style="text-align: center;"><span style="padding: var(--spacing-xs) var(--spacing-sm); border-radius: 12px; font-size: 0.75rem; font-weight: 500;${referral.referralType === 'automatic' ? 'background: #d4edda; color: #155724;' : 'background: #fff3cd; color: #856404;'}">${typeEmoji} ${referral.referralType || 'Unknown'}</span></div><div style="text-align: center;"><span style="font-weight: 600; color: var(--accent);">${referral.houseName}</span></div><div>${actionsHTML}</div>`;
         
         container.appendChild(item);
       });
@@ -3111,7 +3669,7 @@ Sophia College`;
       const tableBody = document.getElementById('masterListTableBody');
       const countElement = document.getElementById('masterListCount');
       
-      tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--text-muted);"><div class="loading-spinner" style="margin: 0 auto var(--spacing-md);"></div>Loading master list...</td></tr>';
       
       try {
         const snapshot = await db.collection('referrals').get();
@@ -3122,31 +3680,45 @@ Sophia College`;
           masterListData.push({
             id: doc.id,
             ...data,
-            houseName: data.houseName || 'Unknown'
+            houseName: data.houseName || 'Unknown',
+            timestamp: data.timestamp && data.timestamp.toDate ? data.timestamp.toDate() : new Date(0) // Ensure timestamp is a Date object
           });
         });
         
-        // Sort chronologically to assign referral numbers
-        masterListData.sort((a, b) => {
-          const timeA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
-          const timeB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
-          return timeA - timeB;
-        });
+        // Calculate per-student referral order and overall chronological number
+        const referralsByStudent = {};
+        masterListData.sort((a, b) => a.timestamp - b.timestamp); // Sort all referrals chronologically first
         
-        // Assign referral numbers
-        masterListData.forEach((referral, index) => {
-          referral.referralNumber = index + 1;
+        masterListData.forEach((ref, index) => {
+            ref.referralNumber = index + 1; // Overall chronological number for the '#' column
+            if (!referralsByStudent[ref.student]) {
+                referralsByStudent[ref.student] = [];
+            }
+            referralsByStudent[ref.student].push(ref);
         });
+
+        for (const studentId in referralsByStudent) {
+            // Referrals for each student are already sorted by timestamp due to the previous sort
+            referralsByStudent[studentId].forEach((ref, index) => {
+                ref.studentReferralOrder = index + 1; // Assign 1-based order for "Student Count"
+            });
+        }
+        
+        // Set default sort after processing 
+        masterListSortColumn = 'date'; 
+        masterListSortOrder = 'desc';
         
         populateMasterFilters();
         setupMasterFilters();
-        displayMasterList();
+        displayMasterList(); // This will apply the default sort
         
-        countElement.textContent = masterListData.length;
+        if (countElement) {
+            countElement.textContent = masterListData.length + (masterListData.length === 1 ? " Record" : " Records");
+        }
         
       } catch (error) {
         console.error('❌ Error loading master list:', error);
-        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center; color: var(--danger);">❌ Error loading master list</td></tr>';
       }
     }
 
@@ -3210,42 +3782,50 @@ Sophia College`;
         let valueA = a[masterListSortColumn];
         let valueB = b[masterListSortColumn];
         
-        // Handle different data types
         if (masterListSortColumn === 'date') {
-          valueA = a.timestamp && a.timestamp.toDate ? a.timestamp.toDate() : new Date(0);
-          valueB = b.timestamp && b.timestamp.toDate ? b.timestamp.toDate() : new Date(0);
+          valueA = a.timestamp; 
+          valueB = b.timestamp;
+        } else if (masterListSortColumn === 'studentReferralOrder' || masterListSortColumn === 'referralNumber' || masterListSortColumn === 'displayOrder') {
+           valueA = Number(valueA) || 0;
+           valueB = Number(valueB) || 0;
         } else if (typeof valueA === 'string') {
           valueA = valueA.toLowerCase();
-          valueB = valueB.toLowerCase();
+          valueB = (valueB || '').toLowerCase(); 
+        } else if (valueA === null || typeof valueA === 'undefined') {
+          valueA = masterListSortOrder === 'asc' ? Infinity : -Infinity; 
+        } else if (valueB === null || typeof valueB === 'undefined') {
+          valueB = masterListSortOrder === 'asc' ? Infinity : -Infinity;
         }
         
-        if (masterListSortOrder === 'asc') {
-          return valueA > valueB ? 1 : -1;
-        } else {
-          return valueA < valueB ? 1 : -1;
-        }
+        if (valueA < valueB) return masterListSortOrder === 'asc' ? -1 : 1;
+        if (valueA > valueB) return masterListSortOrder === 'asc' ? 1 : -1;
+        return 0;
       });
       
       const tableBody = document.getElementById('masterListTableBody');
       const countElement = document.getElementById('masterListCount');
       
-      countElement.textContent = filteredData.length;
+      if (countElement) {
+        countElement.textContent = filteredData.length + (filteredData.length === 1 ? " Record" : " Records");
+      }
       
       if (filteredData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="8" style="padding: var(--spacing-2xl); text-align: center;">📋 No referrals match your filters</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" style="padding: var(--spacing-2xl); text-align: center;">📋 No referrals match your filters</td></tr>';
         return;
       }
       
       tableBody.innerHTML = '';
       
-      filteredData.forEach(referral => {
-        const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+      filteredData.forEach((referral, index) => { // Use index for the '#' column
+        const date = referral.timestamp ? referral.timestamp.toLocaleDateString() : 'Unknown';
         const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
         
         const row = document.createElement('tr');
+        // Use index + 1 for the display order in the '#' column
         row.innerHTML = `
-          <td style="text-align: center; font-weight: 600;">#${referral.referralNumber}</td>
+          <td style="text-align: center; font-weight: 600;">${index + 1}</td>
           <td>${referral.studentName || 'Unknown'}</td>
+          <td style="text-align: center;">${referral.studentReferralOrder || 0}</td> 
           <td>${referral.houseName}</td>
           <td>${referral.learningArea || 'N/A'}</td>
           <td>${referral.teacher || 'N/A'}</td>
@@ -3259,23 +3839,22 @@ Sophia College`;
     }
 
     function sortMasterList(column) {
-      const header = document.querySelector(`th[data-column="${column}"]`);
+      const header = document.querySelector(`.master-list-table th[data-column="${column}"]`);
       
-      // Remove sorting classes from all headers
       document.querySelectorAll('.master-list-table th').forEach(th => {
         th.classList.remove('sorted-asc', 'sorted-desc');
       });
       
-      // Toggle sort order
       if (masterListSortColumn === column) {
         masterListSortOrder = masterListSortOrder === 'asc' ? 'desc' : 'asc';
       } else {
         masterListSortColumn = column;
-        masterListSortOrder = 'asc';
+        masterListSortOrder = 'asc'; 
       }
       
-      // Add sorting class to current header
-      header.classList.add(masterListSortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      if(header) {
+        header.classList.add(masterListSortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      }
       
       displayMasterList();
     }
@@ -3298,25 +3877,40 @@ Sophia College`;
         return matchesSearch && matchesHouse && matchesSubject;
       });
       
-      // Convert to CSV
-      const csvHeaders = ['Referral #', 'Student Name', 'House', 'Subject', 'Teacher', 'Behavior Type', 'Date', 'Type'];
-      const csvRows = filteredData.map(referral => [
-        referral.referralNumber,
+      // Apply current sorting to exported data
+      filteredData.sort((a, b) => {
+        let valueA = a[masterListSortColumn];
+        let valueB = b[masterListSortColumn];
+        if (masterListSortColumn === 'date') {
+          valueA = a.timestamp; valueB = b.timestamp;
+        } else if (masterListSortColumn === 'studentReferralOrder' || masterListSortColumn === 'referralNumber' || masterListSortColumn === 'displayOrder') {
+           valueA = Number(valueA) || 0; valueB = Number(valueB) || 0;
+        } else if (typeof valueA === 'string') {
+          valueA = valueA.toLowerCase(); valueB = (valueB || '').toLowerCase();
+        }
+        if (valueA < valueB) return masterListSortOrder === 'asc' ? -1 : 1;
+        if (valueA > valueB) return masterListSortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+      
+      const csvHeaders = ['#', 'Student Name', 'Student Referral Count', 'House', 'Subject', 'Teacher', 'Behavior Type', 'Date', 'Type'];
+      const csvRows = filteredData.map((referral, index) => [ // Use index for '#'
+        index + 1,
         referral.studentName || 'Unknown',
+        referral.studentReferralOrder || 0,
         referral.houseName,
         referral.learningArea || 'N/A',
         referral.teacher || 'N/A',
         referral.behaviorType || 'Not specified',
-        referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown',
+        referral.timestamp ? referral.timestamp.toLocaleDateString() : 'Unknown',
         referral.referralType === 'automatic' ? 'Automatic' : 'Warning'
       ]);
       
       const csvContent = [csvHeaders, ...csvRows]
-        .map(row => row.map(field => `"${field}"`).join(','))
+        .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
         .join('\n');
       
-      // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -3331,7 +3925,64 @@ Sophia College`;
 
     // ===== MANAGE REFERRALS ACTIONS =====
 
-    // ENHANCED: Download referral as PDF with reflection support
+    // Helper to fetch an image and convert to data URL
+    async function toDataURL(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.warn('Could not fetch image for PDF:', error);
+        return null;
+      }
+    }
+
+    // Simplified Firebase initialization (no storage needed)
+    async function initializeFirebaseSimplified() {
+      try {
+        console.log('🔥 Initializing Firebase (Firestore only)...');
+        
+        // Check if Firebase is already initialized
+        if (firebase.apps.length === 0) {
+          firebase.initializeApp({ 
+            apiKey: "AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU",
+
+  authDomain: "sophia-infringements.firebaseapp.com",
+
+  projectId: "sophia-infringements",
+
+  storageBucket: "sophia-infringements.firebasestorage.app",
+
+  messagingSenderId: "116239143555",
+
+  appId: "1:116239143555:web:876887ec3fb4bfdce641b6",
+
+  measurementId: "G-35ZSCSNEBG"
+
+            // Note: No storageBucket needed for base64 storage
+          });
+        }
+        
+        db = firebase.firestore();
+        // storage is not needed for base64 method
+        
+        console.log('✅ Firebase initialized successfully (Firestore only)');
+        return true;
+        
+      } catch (error) {
+        console.error('❌ Firebase initialization failed:', error);
+        showToast('❌ Firebase initialization failed', 'error');
+        return false;
+      }
+    }
+
+// Updated PDF generation to handle base64 stored reflections
     async function downloadReferralPDF(referralId) {
       try {
         const referral = allReferrals.find(r => r.id === referralId);
@@ -3343,25 +3994,46 @@ Sophia College`;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
+        // Get student photo & logo
+        const studentPhotoUrl = `students/${referral.student}.jpg`;
+        const studentPhotoData = await toDataURL(studentPhotoUrl);
+        const rrrLogoData = await toDataURL('rrr-logo.png');
+
         // Header
         doc.setFontSize(20);
+        doc.setTextColor(0, 48, 87); // Navy blue
         doc.text('Sophia College', 20, 20);
         doc.setFontSize(16);
         doc.text('Re-Engagement Room Referral', 20, 30);
+
+        // Add student photo if available
+        if (studentPhotoData) {
+          doc.addImage(studentPhotoData, 'JPEG', 140, 15, 30, 30);
+        }
+        // Add RRR logo if available
+        if (rrrLogoData) {
+          doc.addImage(rrrLogoData, 'PNG', 175, 15, 30, 30);
+        }
         
         // Referral details
         doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0); // Reset to black
         let yPos = 50;
         
         const addLine = (label, value) => {
+          doc.setFont(undefined, 'bold');
           doc.text(label + ':', 20, yPos);
+          doc.setFont(undefined, 'normal');
           doc.text(value || 'N/A', 80, yPos);
           yPos += 10;
         };
         
-        const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
-        const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
+        const date = referral.timestamp && referral.timestamp.toDate ? 
+          referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+        const time = referral.timestamp && referral.timestamp.toDate ? 
+          referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
         
+        // Basic referral information
         addLine('Date', date);
         addLine('Time', time);
         addLine('Student', referral.studentName);
@@ -3375,73 +4047,103 @@ Sophia College`;
         addLine('Staff Member', referral.staff);
         
         yPos += 10;
+        
+        // Incident details section
+        doc.setFont(undefined, 'bold');
         doc.text('Incident Details:', 20, yPos);
         yPos += 10;
+        doc.setFont(undefined, 'normal');
         
-        // Split long text into multiple lines
         const details = referral.details || 'No details provided';
         const splitDetails = doc.splitTextToSize(details, 170);
         doc.text(splitDetails, 20, yPos);
         yPos += splitDetails.length * 5 + 20;
         
-        // ENHANCED: Add reflection if available
+        // Add reflection section if available
         if (referral.reflection) {
-          // Start new page for reflection if needed
-          if (yPos > 250) {
-            doc.addPage();
-            yPos = 20;
-          }
+          // Add a new page for the reflection
+          doc.addPage();
           
+          // Reflection header
           doc.setFontSize(16);
-          doc.text('Student Reflection', 20, yPos);
-          yPos += 15;
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(102, 0, 0); // Dark red
+          doc.text('Student Reflection', 20, 20);
           
-          doc.setFontSize(12);
-          addLine('File Name', referral.reflection.fileName);
-          addLine('Uploaded Date', referral.reflection.uploadedAt ? referral.reflection.uploadedAt.toDate().toLocaleDateString() : 'Unknown');
-          addLine('Uploaded By', referral.reflection.uploadedBy || 'Unknown');
-          
-          if (referral.reflection.notes) {
-            yPos += 10;
-            doc.text('Notes:', 20, yPos);
-            yPos += 10;
-            const splitNotes = doc.splitTextToSize(referral.reflection.notes, 170);
-            doc.text(splitNotes, 20, yPos);
-            yPos += splitNotes.length * 5 + 20;
-          }
-          
-          // Add reflection content if it's an image
-          if (referral.reflection.data && referral.reflection.fileType.startsWith('image/')) {
-            try {
-              // Start new page for image
-              doc.addPage();
-              doc.setFontSize(14);
-              doc.text('Reflection Image:', 20, 20);
+          // Handle different file types for base64 stored files
+          if (referral.reflection.data) {
+            if (referral.reflection.fileType.startsWith('image/')) {
+              try {
+                let imageFormat = 'JPEG';
+                if (referral.reflection.fileType === 'image/png') {
+                  imageFormat = 'PNG';
+                }
+                
+                // Get page dimensions
+                const pageW = doc.internal.pageSize.getWidth();
+                const pageH = doc.internal.pageSize.getHeight();
+                const margin = 20;
+
+                // Create a temporary image to get its dimensions
+                const img = new Image();
+                img.src = referral.reflection.data;
+                await new Promise(resolve => img.onload = resolve);
+
+                const imgW = img.width;
+                const imgH = img.height;
+                
+                // Calculate scaling to fit the page while maintaining aspect ratio
+                const ratio = Math.min((pageW - margin * 2) / imgW, (pageH - margin * 2 - 20) / imgH);
+                const newW = imgW * ratio;
+                const newH = imgH * ratio;
+                
+                // Center the image on the page
+                const x = (pageW - newW) / 2;
+                const y = 40;
+
+                doc.addImage(referral.reflection.data, imageFormat, x, y, newW, newH);
+                
+              } catch (imgError) {
+                console.warn('Could not add base64 image to PDF:', imgError);
+                doc.setFont(undefined, 'italic');
+                doc.setTextColor(128, 128, 128);
+                doc.text('(Reflection image could not be embedded - view original file)', 20, 40);
+              }
               
-              // Add image to PDF
-              const imgData = referral.reflection.data;
-              const imgWidth = 170;
-              const imgHeight = 120;
-              doc.addImage(imgData, 'JPEG', 20, 30, imgWidth, imgHeight);
-              
-            } catch (imgError) {
-              console.warn('Could not add image to PDF:', imgError);
-              doc.text('(Reflection image could not be embedded)', 20, yPos);
+            } else if (referral.reflection.fileType === 'application/pdf') {
+              doc.setFont(undefined, 'italic');
+              doc.setTextColor(0, 100, 200);
+              doc.text('📄 PDF Reflection file attached (download separately)', 20, 40);
             }
+          } else {
+            doc.setFont(undefined, 'italic');
+            doc.setTextColor(128, 128, 128);
+            doc.text('(Reflection file stored separately - download from system)', 20, 40);
           }
         }
         
+        // Footer with generation info
+        const pageCount = doc.internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.setTextColor(128, 128, 128);
+          doc.text(`Generated: ${new Date().toLocaleString()} | Page ${i} of ${pageCount}`, 20, 285);
+          doc.text('Sophia College Re-Engagement System', 150, 285);
+        }
+        
         // Save the PDF
-        doc.save(`Referral_${referral.studentName}_${date.replace(/\//g, '-')}.pdf`);
+        const fileName = `Referral_${referral.studentName?.replace(/[^a-zA-Z0-9]/g, '_')}_${date.replace(/\//g, '-')}.pdf`;
+        doc.save(fileName);
         showToast('✅ Referral PDF downloaded!', 'success');
         
       } catch (error) {
         console.error('❌ Error generating PDF:', error);
-        showToast('❌ Error generating PDF', 'error');
+        showToast('❌ Error generating PDF: ' + error.message, 'error');
       }
     }
 
-    // Open upload modal
+    // Updated modal with better file size guidance
     function openUploadModal(referralId) {
       const referral = allReferrals.find(r => r.id === referralId);
       if (!referral) {
@@ -3455,6 +4157,8 @@ Sophia College`;
       modal.className = 'modal';
       modal.id = 'uploadModal';
       
+      const maxSizeKB = Math.round(800); // 800KB limit
+      
       modal.innerHTML = `
         <div class="modal-content">
           <div class="modal-header">
@@ -3467,13 +4171,18 @@ Sophia College`;
               <small style="color: var(--text-muted);">${referral.behaviorType} - ${referral.timestamp ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown date'}</small>
             </div>
             
+            <div style="background: #e3f2fd; padding: var(--spacing-md); border-radius: var(--spacing-sm); margin-bottom: var(--spacing-lg); border-left: 4px solid #2196f3;">
+              <strong>📏 File Size Limit:</strong> Maximum ${maxSizeKB}KB<br>
+              <small style="color: var(--text-muted);">Files are stored as base64 data in the database for better compatibility</small>
+            </div>
+            
             <div class="drop-zone" id="dropZone" onclick="document.getElementById('reflectionFile').click()">
               <div class="drop-zone-icon">📎</div>
               <div class="drop-zone-text">Drop file here or click to browse</div>
-              <div class="drop-zone-subtext">JPG, PNG, PDF (Max 10MB)</div>
+              <div class="drop-zone-subtext">JPG, PNG, PDF (Max ${maxSizeKB}KB)</div>
             </div>
             
-            <input type="file" id="reflectionFile" accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="handleFileSelect()">
+            <input type="file" id="reflectionFile" accept=".jpg,.jpeg,.png,.pdf" style="display: none;" onchange="handleFileSelectWithCompression()">
             
             <div class="form-group" style="margin-bottom: var(--spacing-lg);">
               <label>📝 Notes (Optional)</label>
@@ -3520,7 +4229,7 @@ Sophia College`;
       });
     }
 
-    // Handle file selection
+    // Updated file size validation in handleFileSelect
     function handleFileSelect() {
       const fileInput = document.getElementById('reflectionFile');
       const uploadBtn = document.getElementById('uploadReflectionBtn');
@@ -3531,11 +4240,17 @@ Sophia College`;
       if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
         
-        // Validate file size (10MB limit)
-        if (file.size > 10 * 1024 * 1024) {
-          showToast('❌ File size must be less than 10MB', 'error');
+        // Updated file size limit for base64 storage
+        const maxFileSize = 800 * 1024; // 800KB
+        if (file.size > maxFileSize) {
+          showToast(`❌ File size must be less than ${Math.round(maxFileSize / 1024)}KB for base64 storage`, 'error');
           fileInput.value = '';
           uploadBtn.disabled = true;
+          dropZone.innerHTML = `
+            <div class="drop-zone-icon">📎</div>
+            <div class="drop-zone-text">Drop file here or click to browse</div>
+            <div class="drop-zone-subtext">JPG, PNG, PDF (Max ${Math.round(maxFileSize / 1024)}KB)</div>
+          `;
           return;
         }
         
@@ -3548,11 +4263,14 @@ Sophia College`;
           return;
         }
         
-        // Update UI
+        // Update UI with file info
+        const fileSizeKB = Math.round(file.size / 1024);
+        const estimatedBase64Size = Math.round(file.size * 1.37 / 1024); // Base64 is ~37% larger
+        
         dropZone.innerHTML = `
           <div class="drop-zone-icon">✅</div>
           <div class="drop-zone-text">File Selected: ${file.name}</div>
-          <div class="drop-zone-subtext">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+          <div class="drop-zone-subtext">${fileSizeKB}KB (${estimatedBase64Size}KB when stored)</div>
         `;
         
         uploadBtn.disabled = false;
@@ -3561,7 +4279,7 @@ Sophia College`;
       }
     }
 
-    // Upload reflection
+    // Updated upload reflection function - pure base64
     async function uploadReflection() {
       const fileInput = document.getElementById('reflectionFile');
       const notesInput = document.getElementById('reflectionNotes');
@@ -3575,15 +4293,32 @@ Sophia College`;
       const file = fileInput.files[0];
       const notes = notesInput ? notesInput.value : '';
       
+      // Firestore has a 1MB document limit, so we need to check file size
+      const maxFileSize = 800 * 1024; // 800KB to leave room for other data
+      if (file.size > maxFileSize) {
+        showToast(`❌ File too large. Maximum size is ${Math.round(maxFileSize / 1024)}KB`, 'error');
+        return;
+      }
+      
       uploadBtn.disabled = true;
-      uploadBtn.innerHTML = '⏳ Uploading...';
+      uploadBtn.innerHTML = '⏳ Converting file...';
       
       try {
+        console.log('📤 Starting base64 upload process...');
+        console.log('📁 File details:', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+        
         // Convert file to base64
+        uploadBtn.innerHTML = '⏳ Processing file...';
         const base64Data = await fileToBase64(file);
         
-        // Update referral document with reflection data
-        await db.collection('referrals').doc(currentUploadReferral.id).update({
+        console.log('✅ File converted to base64, length:', base64Data.length);
+        
+        // Prepare reflection data
+        const reflectionData = {
           reflection: {
             fileName: file.name,
             fileType: file.type,
@@ -3591,10 +4326,17 @@ Sophia College`;
             data: base64Data,
             notes: notes,
             uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            uploadedBy: JSON.parse(localStorage.getItem('loggedInStaff'))['staff name']
+            uploadedBy: JSON.parse(localStorage.getItem('loggedInStaff'))['staff name'],
+            storageMethod: 'base64'
           }
-        });
+        };
         
+        uploadBtn.innerHTML = '⏳ Saving to database...';
+        console.log('💾 Updating Firestore with base64 data...');
+        
+        await db.collection('referrals').doc(currentUploadReferral.id).update(reflectionData);
+        
+        console.log('✅ Reflection saved successfully');
         showToast('✅ Reflection uploaded successfully!', 'success');
         closeUploadModal();
         
@@ -3605,21 +4347,157 @@ Sophia College`;
         
       } catch (error) {
         console.error('❌ Error uploading reflection:', error);
-        showToast('❌ Error uploading reflection: ' + error.message, 'error');
+        
+        if (error.code === 'invalid-argument' && error.message.includes('too large')) {
+          showToast('❌ File creates too much data. Please choose a smaller file.', 'error');
+        } else {
+          showToast('❌ Upload failed: ' + error.message, 'error');
+        }
       } finally {
         uploadBtn.disabled = false;
         uploadBtn.innerHTML = '📤 Upload';
       }
     }
 
-    // Convert file to base64
+    // Enhanced file to base64 converter with progress
     function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
+        
+        reader.onload = () => {
+          try {
+            const result = reader.result;
+            console.log('📊 Base64 conversion complete, size:', result.length);
+            resolve(result);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        
+        reader.onerror = () => {
+          reject(new Error('Failed to read file'));
+        };
+        
+        reader.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded / event.total) * 100);
+            const uploadBtn = document.getElementById('uploadReflectionBtn');
+            if (uploadBtn) {
+              uploadBtn.innerHTML = `⏳ Reading file... ${progress}%`;
+            }
+          }
+        };
+        
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
       });
+    }
+
+    // Image compression utility (optional - to help with file sizes)
+    function compressImage(file, maxWidth = 1024, quality = 0.8) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('image/')) {
+          resolve(file); // Not an image, return as-is
+          return;
+        }
+        
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = () => {
+          // Calculate new dimensions
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            // Create new file with compressed data
+            const compressedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now()
+            });
+            
+            console.log(`🗜️ Image compressed: ${Math.round(file.size/1024)}KB → ${Math.round(compressedFile.size/1024)}KB`);
+            resolve(compressedFile);
+          }, file.type, quality);
+        };
+        
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    // Enhanced file selection with optional compression
+    async function handleFileSelectWithCompression() {
+      const fileInput = document.getElementById('reflectionFile');
+      const uploadBtn = document.getElementById('uploadReflectionBtn');
+      const dropZone = document.getElementById('dropZone');
+      
+      if (!fileInput || !uploadBtn || !dropZone) return;
+      
+      if (fileInput.files.length > 0) {
+        let file = fileInput.files[0];
+        
+        // Try compression for images if file is too large
+        const maxFileSize = 800 * 1024; // 800KB
+        if (file.size > maxFileSize && file.type.startsWith('image/')) {
+          dropZone.innerHTML = `
+            <div class="drop-zone-icon">🗜️</div>
+            <div class="drop-zone-text">Compressing image...</div>
+            <div class="drop-zone-subtext">Please wait</div>
+          `;
+          
+          file = await compressImage(file, 1024, 0.7);
+          
+          // Update the file input with compressed file
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+        }
+        
+        // Check size again after compression
+        if (file.size > maxFileSize) {
+          showToast(`❌ File still too large after compression. Please choose a smaller file.`, 'error');
+          fileInput.value = '';
+          uploadBtn.disabled = true;
+          dropZone.innerHTML = `
+            <div class="drop-zone-icon">📎</div>
+            <div class="drop-zone-text">Drop file here or click to browse</div>
+            <div class="drop-zone-subtext">JPG, PNG, PDF (Max ${Math.round(maxFileSize / 1024)}KB)</div>
+          `;
+          return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+        if (!allowedTypes.includes(file.type)) {
+          showToast('❌ Only JPG, PNG, and PDF files are allowed', 'error');
+          fileInput.value = '';
+          uploadBtn.disabled = true;
+          return;
+        }
+        
+        // Update UI with file info
+        const fileSizeKB = Math.round(file.size / 1024);
+        const estimatedBase64Size = Math.round(file.size * 1.37 / 1024);
+        
+        dropZone.innerHTML = `
+          <div class="drop-zone-icon">✅</div>
+          <div class="drop-zone-text">Ready: ${file.name}</div>
+          <div class="drop-zone-subtext">${fileSizeKB}KB (${estimatedBase64Size}KB when stored)</div>
+        `;
+        
+        uploadBtn.disabled = false;
+      } else {
+        uploadBtn.disabled = true;
+      }
     }
 
     // Close upload modal
@@ -3631,7 +4509,7 @@ Sophia College`;
       currentUploadReferral = null;
     }
 
-    // View referral details
+    // Updated view modal to better display base64 stored files
     function viewReferralDetails(referralId) {
       const referral = allReferrals.find(r => r.id === referralId);
       if (!referral) {
@@ -3643,12 +4521,59 @@ Sophia College`;
       modal.className = 'modal';
       modal.id = 'viewModal';
       
-      const date = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
-      const time = referral.timestamp && referral.timestamp.toDate ? referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
+      const date = referral.timestamp && referral.timestamp.toDate ? 
+        referral.timestamp.toDate().toLocaleDateString() : 'Unknown';
+      const time = referral.timestamp && referral.timestamp.toDate ? 
+        referral.timestamp.toDate().toLocaleTimeString() : 'Unknown';
       const typeEmoji = referral.referralType === 'automatic' ? '🔄' : '⚠️';
       
+      // Build reflection section
+      let reflectionHTML = '';
+      if (referral.reflection) {
+        const uploadDate = referral.reflection.uploadedAt && referral.reflection.uploadedAt.toDate ? 
+          referral.reflection.uploadedAt.toDate().toLocaleDateString() : 'Unknown';
+        
+        let filePreview = '';
+        if (referral.reflection.data && referral.reflection.fileType.startsWith('image/')) {
+          filePreview = `
+            <div style="margin-top: var(--spacing-md);">
+              <strong>Preview:</strong><br>
+              <img src="${referral.reflection.data}" style="max-width: 100%; max-height: 200px; border: 1px solid var(--border); border-radius: var(--spacing-sm); margin-top: var(--spacing-sm);" alt="Reflection preview">
+            </div>
+          `;
+        } else if (referral.reflection.fileType === 'application/pdf') {
+          filePreview = `
+            <div style="margin-top: var(--spacing-md); padding: var(--spacing-md); background: var(--border-light); border-radius: var(--spacing-sm); text-align: center;">
+              <div style="font-size: 2rem; margin-bottom: var(--spacing-sm);">📄</div>
+              <div style="font-weight: 600;">PDF Document</div>
+              <div style="font-size: 0.875rem; color: var(--text-muted);">${Math.round(referral.reflection.fileSize / 1024)}KB</div>
+            </div>
+          `;
+        }
+        
+        reflectionHTML = `
+          <div style="background: #d4edda; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--success);">
+            <h5 style="margin: 0 0 var(--spacing-md) 0; color: var(--success);">📎 Student Reflection</h5>
+            <div style="margin-bottom: var(--spacing-sm);"><strong>File:</strong> ${referral.reflection.fileName}</div>
+            <div style="margin-bottom: var(--spacing-sm);"><strong>Size:</strong> ${Math.round(referral.reflection.fileSize / 1024)}KB</div>
+            <div style="margin-bottom: var(--spacing-sm);"><strong>Uploaded:</strong> ${uploadDate}</div>
+            <div style="margin-bottom: var(--spacing-sm);"><strong>By:</strong> ${referral.reflection.uploadedBy || 'Unknown'}</div>
+            ${referral.reflection.notes ? `<div style="margin-bottom: var(--spacing-sm);"><strong>Notes:</strong> ${referral.reflection.notes}</div>` : ''}
+            ${filePreview}
+            <button onclick="downloadReflection('${referralId}')" class="btn btn-primary" style="margin-top: var(--spacing-md);">📥 Download File</button>
+          </div>
+        `;
+      } else {
+        reflectionHTML = `
+          <div style="background: #fff3cd; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--warning); text-align: center;">
+            <div style="margin-bottom: var(--spacing-md);">📝 No reflection uploaded yet</div>
+            <button onclick="closeViewModal(); openUploadModal('${referralId}');" class="btn btn-primary">📁 Upload Reflection</button>
+          </div>
+        `;
+      }
+      
       modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content modal-lg">
           <div class="modal-header">
             <h3>👁️ Referral Details</h3>
             <button class="modal-close" onclick="closeViewModal()">&times;</button>
@@ -3656,7 +4581,7 @@ Sophia College`;
           <div class="modal-body">
             <div style="display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-md) var(--spacing-lg); margin-bottom: var(--spacing-lg);">
               <img src="students/${referral.student}.jpg" style="width: 80px; height: 80px; border-radius: var(--spacing-sm); object-fit: cover; border: 2px solid var(--border);" 
-                   onerror="this.src='data:image/svg+xml,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;><rect width=&quot;80&quot; height=&quot;80&quot; fill=&quot;%23f0f0f0&quot;/><text x=&quot;40&quot; y=&quot;45&quot; text-anchor=&quot;middle&quot; fill=&quot;%23999&quot; font-size=&quot;10&quot;>No Photo</text></svg>'">
+                   onerror="this.src='placeholder.jpg'">
               <div>
                 <h4 style="margin: 0 0 var(--spacing-sm) 0; color: var(--text);">${referral.studentName}</h4>
                 <p style="margin: 0; color: var(--text-light);"><strong>House:</strong> ${referral.houseName}</p>
@@ -3676,26 +4601,12 @@ Sophia College`;
                 <div><strong>Staff:</strong> ${referral.staff || 'N/A'}</div>
               </div>
               <div><strong>Description:</strong></div>
-              <div style="background: var(--card); padding: var(--spacing-md); border-radius: var(--spacing-xs); margin-top: var(--spacing-sm); font-style: italic;">
+              <div style="background: var(--card); padding: var(--spacing-md); border-radius: var(--spacing-xs); margin-top: var(--spacing-sm); font-style: italic; white-space: pre-wrap;">
                 ${referral.details || 'No details provided'}
               </div>
             </div>
             
-            ${referral.reflection ? `
-              <div style="background: #d4edda; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--success);">
-                <h5 style="margin: 0 0 var(--spacing-md) 0; color: var(--success);">📎 Student Reflection</h5>
-                <div style="margin-bottom: var(--spacing-sm);"><strong>File:</strong> ${referral.reflection.fileName}</div>
-                <div style="margin-bottom: var(--spacing-sm);"><strong>Uploaded:</strong> ${referral.reflection.uploadedAt ? referral.reflection.uploadedAt.toDate().toLocaleDateString() : 'Unknown'}</div>
-                <div style="margin-bottom: var(--spacing-sm);"><strong>By:</strong> ${referral.reflection.uploadedBy || 'Unknown'}</div>
-                ${referral.reflection.notes ? `<div><strong>Notes:</strong> ${referral.reflection.notes}</div>` : ''}
-                <button onclick="downloadReflection('${referralId}')" class="btn btn-primary" style="margin-top: var(--spacing-md);">📥 Download Reflection</button>
-              </div>
-            ` : `
-              <div style="background: #fff3cd; padding: var(--spacing-lg); border-radius: var(--spacing-sm); border: 1px solid var(--warning); text-align: center;">
-                <div style="margin-bottom: var(--spacing-md);">📝 No reflection uploaded yet</div>
-                <button onclick="closeViewModal(); openUploadModal('${referralId}');" class="btn btn-primary">📁 Upload Reflection</button>
-              </div>
-            `}
+            ${reflectionHTML}
           </div>
           
           <div class="modal-footer">
@@ -3716,24 +4627,30 @@ Sophia College`;
       }
     }
 
-    // Download reflection
+    // Updated download reflection for base64 data
     function downloadReflection(referralId) {
       const referral = allReferrals.find(r => r.id === referralId);
       if (!referral || !referral.reflection) {
-        showToast('❌ No reflection found', 'error');
+        showToast('❌ No reflection file found', 'error');
         return;
       }
       
       try {
-        // Create download link for base64 data
-        const link = document.createElement('a');
-        link.href = referral.reflection.data;
-        link.download = `Reflection_${referral.studentName}_${referral.reflection.fileName}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        showToast('✅ Reflection downloaded!', 'success');
+        if (referral.reflection.data) {
+          // Create download link for base64 data
+          const link = document.createElement('a');
+          link.href = referral.reflection.data;
+          link.download = referral.reflection.fileName;
+          link.style.display = 'none';
+          
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          showToast('✅ Reflection download initiated!', 'success');
+        } else {
+          showToast('❌ Reflection file data not found', 'error');
+        }
         
       } catch (error) {
         console.error('❌ Error downloading reflection:', error);
@@ -3745,22 +4662,22 @@ Sophia College`;
     async function deleteReferral(referralId, studentName, referralNumber) {
       const confirmMessage = `Are you sure you want to delete referral ${referralNumber} for ${studentName}?\n\nThis action cannot be undone.`;
       
-      if (!confirm(confirmMessage)) return;
-      
-      try {
-        await db.collection('referrals').doc(referralId).delete();
-        
-        showToast('✅ Referral deleted successfully!', 'success');
-        
-        // Refresh the referrals list
-        if (document.getElementById('manage-tab').classList.contains('active')) {
-          loadManageReferrals();
+      uiManager.showConfirmationModal(confirmMessage, async () => {
+        try {
+          await db.collection('referrals').doc(referralId).delete();
+          
+          showToast('✅ Referral deleted successfully!', 'success');
+          
+          // Refresh the referrals list
+          if (document.getElementById('manage-tab').classList.contains('active')) {
+            loadManageReferrals();
+          }
+          
+        } catch (error) {
+          console.error('❌ Error deleting referral:', error);
+          showToast('❌ Error deleting referral: ' + error.message, 'error');
         }
-        
-      } catch (error) {
-        console.error('❌ Error deleting referral:', error);
-        showToast('❌ Error deleting referral: ' + error.message, 'error');
-      }
+      });
     }
 
     // ===== ADMIN FUNCTIONALITY =====
@@ -4051,7 +4968,7 @@ Sophia College`;
           defaultSemester.createdBy = staff['staff name'];
         }
         
-        const docRef = await db.collection('semesters').add(defaultSemester);
+        const docRef = await db.collection('semesters').add(newSemester);
         currentSemester = { id: docRef.id, ...defaultSemester };
         allSemesters.unshift(currentSemester);
         
@@ -4200,8 +5117,137 @@ Sophia College`;
       if (modal) modal.remove();
     }
 
+    // Setup keyboard navigation and dropdown functionality
+    function setupKeyboardNavigation() {
+      document.addEventListener('keydown', (e) => {
+        // Handle dropdown menu with keyboard
+        if (e.key === 'Escape') {
+          const dropdowns = document.querySelectorAll('.dropdown-content');
+          dropdowns.forEach(dropdown => {
+            dropdown.style.display = 'none';
+            dropdown.classList.remove('show');
+          });
+        }
+        
+        // Handle toast close with Escape
+        if (e.key === 'Escape') {
+          const toast = document.getElementById('toast');
+          if (toast && toast.classList.contains('show')) {
+            toast.classList.remove('show');
+          }
+        }
+      });
+      
+      // Enhanced dropdown accessibility
+      const dropdownBtn = document.querySelector('.dropbtn');
+      const dropdownContent = document.querySelector('.dropdown-content');
+      
+      if (dropdownBtn && dropdownContent) {
+        dropdownBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isOpen = dropdownContent.style.display === 'block' || dropdownContent.classList.contains('show');
+          
+          // Close all other dropdowns first
+          document.querySelectorAll('.dropdown-content').forEach(dropdown => {
+            dropdown.style.display = 'none';
+            dropdown.classList.remove('show');
+          });
+          
+          if (!isOpen) {
+            dropdownContent.style.display = 'block';
+            dropdownContent.classList.add('show');
+            dropdownBtn.setAttribute('aria-expanded', 'true');
+          } else {
+            dropdownContent.style.display = 'none';
+            dropdownContent.classList.remove('show');
+            dropdownBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!dropdownBtn.contains(e.target) && !dropdownContent.contains(e.target)) {
+            dropdownContent.style.display = 'none';
+            dropdownContent.classList.remove('show');
+            dropdownBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+        
+        // Handle keyboard navigation within dropdown
+        dropdownBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            dropdownBtn.click();
+          }
+        });
+      }
+    }
+
+    // Initialize clear referrals functionality
+    async function setupClearReferralsButton() {
+      const clearBtn = document.getElementById('clearReferralsBtn');
+      const statusSpan = document.getElementById('clearReferralsStatus');
+
+      if (!clearBtn || !statusSpan) return;
+
+      clearBtn.addEventListener('click', async () => {
+        const confirmed = confirm('⚠️ WARNING: This will permanently delete all referral records. This action cannot be undone. Are you sure you want to continue?');
+        
+        if (!confirmed) return;
+
+        try {
+          clearBtn.disabled = true;
+          statusSpan.textContent = '🔄 Deleting all referrals...';
+          statusSpan.style.color = '#1976d2';
+
+          // Get all documents in the referrals collection
+          const snapshot = await db.collection('referrals').get();
+          
+          // Delete each document
+          const batch = db.batch();
+          snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+          });
+          
+          await batch.commit();
+          
+          statusSpan.textContent = '✅ All referrals have been deleted';
+          statusSpan.style.color = '#2e7d32';
+          
+          // Refresh the referrals table if it exists
+          if (typeof loadReferrals === 'function') {
+            loadReferrals();
+          }
+        } catch (error) {
+          console.error('Error clearing referrals:', error);
+          statusSpan.textContent = '❌ Error: Could not delete referrals';
+          statusSpan.style.color = '#c62828';
+        } finally {
+          clearBtn.disabled = false;
+          setTimeout(() => {
+            statusSpan.textContent = '';
+          }, 5000);
+        }
+      });
+    }
+
     // Initialize system with enhanced modules
     document.addEventListener('DOMContentLoaded', async function() {
+      const currentPage = window.location.pathname.split('/').pop();
+      const links = document.querySelectorAll('.dropdown-content a');
+      links.forEach(link => {
+          const linkPage = link.getAttribute('href');
+          if (linkPage === currentPage) {
+              link.classList.add('active');
+              link.setAttribute('aria-current', 'page');
+          }
+      });
+
+      initializeTheme_Reengagement(); // Initialize theme first
+      setupKeyboardNavigation(); // Setup keyboard nav for dropdowns
+      setupClearReferralsButton(); // Setup clear referrals functionality
+
       console.log('📄 Re-Engagement Room System initializing...');
       
       const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
@@ -4218,19 +5264,7 @@ Sophia College`;
       }
 
       // Initialize Firebase first
-      try {
-        console.log('🔥 Initializing Firebase...');
-        firebase.initializeApp({ 
-          apiKey:'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU', 
-          authDomain:'sophia-infringements.firebaseapp.com', 
-          projectId:'sophia-infringements' 
-        });
-        db = firebase.firestore();
-        console.log('✅ Firebase initialized successfully');
-      } catch (error) {
-        console.error('❌ Firebase initialization failed:', error);
-        showToast('❌ Firebase initialization failed', 'error');
-      }
+      await initializeFirebaseSimplified();
 
       // Initialize enhanced modules
       try {
@@ -4263,7 +5297,7 @@ Sophia College`;
       selectedStudentId = document.getElementById('selectedStudentId');
       lessonSelect = document.getElementById('lessonSelect');
       classroomSelect = document.getElementById('classroomSelect');
-      teacherSelect = document.getElementById('teacherSelect');
+      teacherSearch = document.getElementById('teacherSearch');
       learningAreaSelect = document.getElementById('learningAreaSelect');
       behaviorTypeSelect = document.getElementById('behaviorTypeSelect');
       detailsInput = document.getElementById('detailsInput');
@@ -4275,7 +5309,7 @@ Sophia College`;
       loadingStatus = document.getElementById('loadingStatus');
 
       // Set up event listeners
-      const formControls = [lessonSelect, classroomSelect, teacherSelect, learningAreaSelect, behaviorTypeSelect, detailsInput];
+      const formControls = [lessonSelect, classroomSelect, teacherSearch, learningAreaSelect, behaviorTypeSelect, detailsInput];
       formControls.forEach(function(el) {
         if (el) {
           el.addEventListener('change', validateForm);
@@ -4303,7 +5337,31 @@ Sophia College`;
           showToast('❌ Failed to load system data', 'error');
         }
       }
+
+      // Initialize connection status listener (example using generic Firebase, adapt if SophiaDataManager has its own)
+      const statusElement = document.getElementById('connectionStatus');
+      const textElement = document.getElementById('connectionText');
+      if (typeof firebase !== 'undefined' && firebase.database && statusElement && textElement) {
+          const connectedRef = firebase.database().ref(".info/connected");
+          connectedRef.on("value", (snap) => {
+              if (snap.val() === true) {
+                  statusElement.className = 'connection-status online';
+                  textElement.textContent = 'Connected';
+                  statusElement.style.display = 'block';
+                  setTimeout(() => { statusElement.style.display = 'none'; }, 3000);
+              } else {
+                  statusElement.className = 'connection-status offline';
+                  textElement.textContent = 'Offline';
+                  statusElement.style.display = 'block';
+              }
+          });
+      } else {
+          console.warn("Firebase Database SDK not available for connection status or elements not found.");
+      }
+
     });
   </script>
 </body>
 </html>
+
+</final_file_content>

@@ -1,0 +1,33 @@
+﻿Level,Behaviour,CodeN
+Minor,Disrespect/non-compliance,b1
+Minor,Disruption,b2
+Minor,Inappropriate verbal language,b3
+Minor,Late,b4
+Minor,Lying/cheating,b5
+Minor,Out of bounds,b6
+Minor,Physical contact,b7
+Minor,Property misuse,b8
+Minor,Sexual behaviour,b9
+Minor,Task avoidance,b10
+Minor,Teasing,b11
+Minor,Technology violation,b12
+Minor,Uniform violation,b13
+Major,Academic disengagement ,b14
+Major,Aggression - physical,b15
+Major,Aggression - verbal,b16
+Major,Bomb threat/false alarm,b17
+Major,Bullying/harassment,b18
+Major,Combustibles - use or possession,b19
+Major,Concerning sexual behaviour,b20
+Major,Defiance/non-compliance,b21
+Major,Disruption,b22
+Major,Dress code violation,b23
+Major,Drug-use or possession,b24
+Major,e-Crimes/cyber exploitation,b25
+Major,Plagiarism/forgery,b26
+Major,Technology violation,b27
+Major,Theft,b28
+Major,Truancy,b29
+Major,Vandalism/property damage,b30
+Major,Vape/cigarettes,b31
+Major,Weapons- use or possession,b32

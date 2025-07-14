@@ -1,78 +1,68 @@
 <!DOCTYPE html>
-<html lang="en" aria-label="Sophia College Out-of-Class Tracker">
+
+<html aria-label="Sophia College Out-of-Class Tracker" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sophia College Out-of-Class Tracker</title>
-  <link rel="icon" href="logo.ico" type="image/x-icon">
-  
-  <!-- Preload critical assets for better performance -->
-  <link rel="preload" href="crest.png" as="image">
-  <link rel="preload" href="sophia-logo.png" as="image">
-  <link rel="preload" href="/shared/sophia-unified-system.js" as="script">
-  
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
-  <!-- PapaParse CSV parser -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <!-- Unified Sophia System -->
-  <script src="/shared/sophia-unified-system.js"></script>
-  
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Sophia College Out-of-Class Logger</title>
+<link href="logo.ico" rel="icon" type="image/x-icon"/>
+<link href="shared/common-styles.css" rel="stylesheet"/>
+<link href="css/outofclass-styles.css" rel="stylesheet"/>
+<!-- Preload critical assets for better performance -->
+<link as="image" href="crest.png" rel="preload"/>
+<link as="image" href="sophia-logo.png" rel="preload"/>
+<link as="script" href="shared/sophia-unified-system.js" rel="preload"/>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+<!-- PapaParse CSV parser (still included for other potential uses in unified system) -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<!-- Unified Sophia System -->
+<script src="shared/sophia-unified-system.js"></script>
+<script src="js/critical-fixes.js"></script>
+<style>
     :root {
-      --nav-bg: #003057;
-      --nav-fg: #fff;
       --bg: linear-gradient(135deg, #fbecec 0%, #f0f4f8 100%);
       --card-bg: #fff;
-      --accent: #660000;
       --text: #2c2c2c;
+      --text-light: #64748b;
+      --text-muted: #94a3b8;
+      --border: #e2e8f0;
+      --border-light: #f1f5f9;
       --shadow: 0 4px 12px rgba(0,0,0,0.08);
       --shadow-hover: 0 8px 25px rgba(0,0,0,0.15);
       --border-radius: 12px;
-      --success: #28a745;
-      --warning: #ffc107;
-      --error: #dc3545;
-      --info: #17a2b8;
-      --orange: #fd7e14;
-      --purple: #6f42c1;
+      --success: #059669;
+      --warning: #d97706;
+      --error: #dc2626;
+      --info: #0284c7;
       --transition: all 0.3s ease;
       --max-width: 1200px;
-      --content-padding: 32px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+      --content-padding: 24px;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
     }
 
     body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      font-size: 14px;
     }
 
-    /* Optimized Animations */
+    /* Performance-optimized animations */
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
     @keyframes pulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
-    }
-
-    @keyframes alertGlow {
-      0%, 100% { box-shadow: 0 0 5px rgba(220, 53, 69, 0.3); }
-      50% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.8); }
     }
 
     @keyframes spin {
@@ -96,166 +86,19 @@
     }
 
     .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 4px solid var(--nav-bg);
-      border-top: 4px solid var(--accent);
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--accent);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      margin-bottom: var(--spacing-lg);
     }
 
     .loading-text {
       font-size: 1.1em;
       color: var(--nav-bg);
       font-weight: 500;
-    }
-
-    /* Navigation - Optimized */
-    .nav-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--nav-bg);
-      color: var(--nav-fg);
-      padding: 12px var(--content-padding);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: var(--shadow);
-    }
-
-    .nav-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .nav-logo {
-      height: 40px;
-      margin-right: 16px;
-      transition: var(--transition);
-    }
-
-    .nav-logo:hover {
-      transform: scale(1.05);
-    }
-
-    .nav-title {
-      font-size: 1.3em;
-      font-weight: 600;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    #staffName {
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      font-size: 0.95em;
-    }
-
-    .nav-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: var(--nav-fg);
-      font-size: 1.2em;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .nav-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-
-    .notification-badge {
-      position: absolute;
-      top: -4px;
-      right: -4px;
-      background: var(--error);
-      color: white;
-      border-radius: 50%;
-      width: 16px;
-      height: 16px;
-      font-size: 0.7em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      animation: pulse 2s infinite;
-    }
-
-    .dropdown {
-      position: relative;
-    }
-
-    .dropbtn {
-      background: rgba(255,255,255,0.1);
-      color: var(--nav-fg);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dropbtn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background: var(--card-bg);
-      min-width: 220px;
-      box-shadow: var(--shadow);
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.1);
-      animation: fadeInUp 0.2s ease;
-    }
-
-    .dropdown-content a,
-    .dropdown-content button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      text-decoration: none;
-      color: var(--nav-bg);
-      background: none;
-      border: none;
-      width: 100%;
-      text-align: left;
-      cursor: pointer;
-      font-size: 0.95em;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .dropdown-content a:hover,
-    .dropdown-content button:hover {
-      background: rgba(0,48,87,0.08);
-      transform: translateX(4px);
-    }
-
-    .dropdown:hover .dropdown-content {
-      display: block;
     }
 
     /* Main Container */
@@ -266,28 +109,54 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: var(--spacing-xl);
     }
 
-    /* Sections */
+    /* Enhanced Section Structure */
     .section {
       width: 100%;
       max-width: 1000px;
-      margin-bottom: 32px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-lg);
+      padding-bottom: var(--spacing-md);
+      border-bottom: 2px solid var(--border-light);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+      font-size: 1.5em;
+      font-weight: 600;
+      color: var(--nav-bg);
+      margin: 0;
+    }
+
+    .section-subtitle {
+      color: var(--text-light);
+      font-size: 0.9em;
+      margin: var(--spacing-xs) 0 0 0;
     }
 
     /* Header Section */
     .header-section {
       text-align: center;
-      padding: 40px 24px;
+      padding: var(--spacing-xl);
       background: var(--card-bg);
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       animation: fadeInUp 0.6s ease;
+      border: 1px solid var(--border);
     }
 
     .logo-center {
-      max-width: 200px;
-      margin: 0 auto 20px;
+      max-width: 180px;
+      margin: 0 auto var(--spacing-lg);
       display: block;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
       transition: var(--transition);
@@ -297,88 +166,88 @@
       transform: scale(1.02);
     }
 
-    h2 {
+    .header-title {
       color: var(--nav-bg);
-      margin: 0 0 12px 0;
+      margin: 0 0 var(--spacing-sm) 0;
       font-size: 2em;
       font-weight: 700;
     }
 
     .subtitle {
-      color: #666;
+      color: var(--text-light);
       font-size: 1.1em;
       margin: 0;
+      font-weight: 400;
     }
 
-    /* Enhanced Banners */
-    .banner {
-      padding: 16px 24px;
+    /* Enhanced Status Banner */
+    .status-banner {
+      padding: var(--spacing-md) var(--spacing-lg);
       border-radius: var(--border-radius);
-      margin-bottom: 24px;
+      margin-bottom: var(--spacing-lg);
       text-align: center;
       font-weight: 500;
       display: none;
+      border: 1px solid;
+      position: relative;
+      overflow: hidden;
     }
 
-    .loading-banner {
+    .status-banner::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .banner-loading {
       background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-      border: 1px solid #90caf9;
+      border-color: #90caf9;
       color: var(--nav-bg);
     }
 
-    .active-incidents-banner {
-      background: linear-gradient(135deg, var(--error) 0%, #e57373 100%);
-      color: white;
-      animation: alertGlow 2s infinite;
+    .banner-error {
+      background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
+      border-color: var(--error);
+      color: var(--error);
     }
 
-    .active-incidents-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      max-width: 600px;
-      margin: 0 auto;
+    .banner-success {
+      background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
+      border-color: var(--success);
+      color: var(--success);
     }
-
-    .view-active-btn {
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .view-active-btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
-
-    /* Enhanced Grid Layouts */
-    .grid {
-      display: grid;
-      gap: 20px;
-      width: 100%;
-      justify-items: center;
-    }
-
-    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
-    .grid-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 
     /* Enhanced Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      max-width: 250px;
+      margin: 0 auto;
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
     .stat-card {
       background: var(--card-bg);
-      padding: 24px;
+      padding: var(--spacing-lg);
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
       text-align: center;
       transition: var(--transition);
       position: relative;
       overflow: hidden;
-      width: 100%;
-      max-width: 220px;
+      border: 1px solid var(--border);
+      cursor: default;
     }
 
     .stat-card::before {
@@ -394,95 +263,154 @@
     .stat-card.warning::before { background: var(--warning); }
     .stat-card.success::before { background: var(--success); }
     .stat-card.info::before { background: var(--info); }
-    .stat-card.purple::before { background: var(--purple); }
 
     .stat-card:hover {
       transform: translateY(-4px);
       box-shadow: var(--shadow-hover);
     }
 
-    .stat-number {
+    .stat-icon {
       font-size: 2em;
+      margin-bottom: var(--spacing-sm);
+      opacity: 0.8;
+    }
+
+    .stat-number {
+      font-size: 2.2em;
       font-weight: 700;
       color: var(--accent);
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: var(--spacing-xs);
+      line-height: 1;
     }
 
     .stat-label {
       font-size: 0.9em;
-      color: #666;
+      color: var(--text-light);
       font-weight: 500;
     }
 
-    .stat-icon {
-      font-size: 1.5em;
-      margin-bottom: 12px;
-      opacity: 0.8;
+    /* Today's Breakdown Styles */
+    .today-analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-top: var(--spacing-lg);
     }
 
-    /* Form Section */
-    .form-section {
-      background: var(--card-bg);
-      padding: 40px;
+    .analysis-card {
+      background: var(--border-light);
+      padding: var(--spacing-md);
       border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      text-align: center;
+      border: 1px solid var(--border);
     }
 
-    .form-title {
-      font-size: 1.4em;
+    .analysis-title {
       font-weight: 600;
       color: var(--nav-bg);
-      margin-bottom: 32px;
+      margin: 0 0 var(--spacing-md) 0;
+      padding-bottom: var(--spacing-sm);
+      border-bottom: 1px solid var(--border);
+      font-size: 1.1em;
+    }
+
+    .analysis-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9em;
+    }
+
+    .analysis-item {
+      display: flex;
+      justify-content: space-between;
+      padding: var(--spacing-sm) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .analysis-item:last-child {
+      border-bottom: none;
+    }
+
+    .analysis-item .name {
+      font-weight: 500;
+    }
+
+    .analysis-item .count {
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 0.85em;
+    }
+
+    /* Enhanced Form Section */
+    .form-section {
+      background: var(--card-bg);
+      padding: var(--spacing-xl);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 24px;
-      margin-bottom: 32px;
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
     }
 
     .control-group {
       display: flex;
       flex-direction: column;
-      text-align: left;
     }
 
     .control-group label {
-      margin-bottom: 8px;
+      margin-bottom: var(--spacing-sm);
       font-weight: 600;
       color: var(--nav-bg);
-      font-size: 0.95em;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
     }
 
     .form-input {
-      padding: 12px 16px;
-      border: 2px solid #e0e0e0;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
       border-radius: 8px;
       font-size: 1em;
       transition: var(--transition);
-      background: #fafafa;
+      background: var(--card-bg);
       font-family: inherit;
+      position: relative;
     }
 
     .form-input:focus {
       border-color: var(--accent);
       outline: none;
-      background: #fff;
       box-shadow: 0 0 0 3px rgba(102,0,0,0.1);
+      background: #fff;
+    }
+
+    .form-input.valid {
+      border-color: var(--success);
+      background: #f8fff8;
+    }
+
+    .form-input.invalid {
+      border-color: var(--error);
+      background: #fff8f8;
     }
 
     .form-input.textarea {
       min-height: 100px;
       resize: vertical;
+      font-family: inherit;
     }
 
-    /* Student Search */
+    /* Enhanced Student Search */
     .student-search-container {
       position: relative;
     }
@@ -492,11 +420,11 @@
       top: 100%;
       left: 0;
       right: 0;
-      background: white;
-      border: 1px solid #ddd;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-top: none;
       border-radius: 0 0 8px 8px;
-      max-height: 200px;
+      max-height: 240px;
       overflow-y: auto;
       z-index: 1000;
       display: none;
@@ -504,38 +432,59 @@
     }
 
     .student-option {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-light);
       cursor: pointer;
       transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
     }
 
     .student-option:hover {
-      background: #f8f9fa;
+      background: var(--border-light);
     }
 
     .student-option:last-child {
       border-bottom: none;
     }
 
-    /* Submit Button */
+    .student-option .student-id {
+      color: var(--text-light);
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+
+    .student-option .student-house {
+      color: var(--accent);
+      font-size: 0.8em;
+      font-weight: 600;
+      background: rgba(102,0,0,0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: auto;
+    }
+
+    /* Enhanced Submit Button */
     .submit-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: var(--spacing-sm);
       margin: 0 auto;
       padding: 16px 32px;
       background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
       color: #fff;
       border: none;
       border-radius: var(--border-radius);
-      font-size: 1.2em;
+      font-size: 1.1em;
       font-weight: 600;
       cursor: pointer;
       transition: var(--transition);
       box-shadow: var(--shadow);
       min-width: 200px;
+      position: relative;
+      overflow: hidden;
     }
 
     .submit-btn:hover:not(:disabled) {
@@ -545,9 +494,10 @@
     }
 
     .submit-btn:disabled {
-      opacity: 0.5;
+      opacity: 0.6;
       cursor: not-allowed;
       transform: none;
+      background: var(--text-muted);
     }
 
     .btn-spinner {
@@ -560,246 +510,275 @@
       display: none;
     }
 
-    .submit-btn.loading .btn-spinner {
-      display: block;
-    }
-
     .submit-btn.loading .btn-text {
-      display: none;
+      opacity: 0;
+    }
+    
+    .submit-btn.loading .btn-spinner {
+        display: block;
+        position: absolute;
     }
 
-    /* Student Profile */
+    /* Enhanced Student Profile */
     .student-profile {
       background: var(--card-bg);
-      padding: 32px;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
-      display: none;
-      text-align: center;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition);
+      display: none; /* Hide by default */
+    }
+
+    .student-profile.visible {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
     }
 
     .profile-header {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 24px;
-      margin-bottom: 24px;
+      gap: var(--spacing-lg);
+      padding: var(--spacing-xl);
+      background: linear-gradient(135deg, var(--nav-bg) 0%, #004080 100%);
+      color: white;
+    }
+
+    .profile-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2em;
+      flex-shrink: 0;
     }
 
     .profile-photo img {
-      width: 120px;
-      height: 120px;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: var(--border-radius);
-      border: 3px solid #fff;
-      box-shadow: var(--shadow);
+    }
+    
+    .profile-photo .fallback-icon {
+        font-size: 2em;
+        display: none;
     }
 
     .profile-details h3 {
-      margin: 0 0 20px 0;
-      color: var(--nav-bg);
+      margin: 0 0 var(--spacing-sm) 0;
       font-size: 1.5em;
+      font-weight: 600;
     }
 
     .profile-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      max-width: 600px;
-      margin: 0 auto;
+      gap: var(--spacing-md);
+      padding: var(--spacing-xl);
     }
 
     .profile-item {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 12px;
-      background: #f8f9fa;
+      gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      background: var(--border-light);
       border-radius: 8px;
-      text-align: center;
+      transition: var(--transition);
+    }
+
+    .profile-item:hover {
+      background: var(--border);
+      transform: translateX(4px);
     }
 
     .profile-item .icon {
       font-size: 1.2em;
+      opacity: 0.8;
       width: 24px;
+      text-align: center;
     }
 
     .profile-item .label {
       font-weight: 600;
-      color: #666;
+      color: var(--text-light);
+      font-size: 0.85em;
+      min-width: 80px;
     }
 
     .profile-item .value {
+      font-weight: 500;
       color: var(--text);
-      font-weight: 500;
     }
 
-    /* Insights Cards */
-    .insights-card {
-      background: var(--card-bg);
-      padding: 32px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      width: 100%;
-    }
-
-    .insights-title {
-      font-size: 1.2em;
-      font-weight: 600;
-      color: var(--nav-bg);
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-align: center;
-    }
-
-    /* Active Incidents */
-    .active-incidents-section {
-      background: var(--card-bg);
-      padding: 32px;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      display: none;
-      text-align: center;
-    }
-
-    .active-incidents-header {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 24px;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-    }
-
-    .active-incidents-title {
-      font-size: 1.3em;
-      font-weight: 600;
-      color: var(--error);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .refresh-btn {
-      background: var(--info);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    .refresh-btn:hover {
-      background: #138496;
-      transform: translateY(-1px);
-    }
-
-    .active-incidents-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      justify-items: center;
-    }
-
-    .active-incident-card {
-      background: #fff5f5;
-      border: 1px solid #ffebee;
-      border-left: 4px solid var(--error);
-      padding: 20px;
-      border-radius: 8px;
-      transition: var(--transition);
-      width: 100%;
-      max-width: 350px;
-      text-align: left;
-    }
-
-    .active-incident-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
-    }
-
-    /* History Section */
+    /* Enhanced History Section */
     .history-section {
       background: var(--card-bg);
-      padding: 32px;
       border-radius: var(--border-radius);
       box-shadow: var(--shadow);
-      display: none;
+      border: 1px solid var(--border);
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border);
+      background: var(--border-light);
+    }
+
+    .history-title {
+      margin: 0;
+      font-size: 1.3em;
+      font-weight: 600;
+      color: var(--nav-bg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
+    }
+
+    .history-count {
+      background: var(--accent);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+      min-width: 24px;
       text-align: center;
     }
 
     .history-list {
       max-height: 400px;
       overflow-y: auto;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background: #fafafa;
-      max-width: 800px;
-      margin: 0 auto;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: var(--spacing-xl);
+      color: var(--text-muted);
+      font-style: italic;
     }
 
     .history-item {
-      padding: 16px;
-      border-bottom: 1px solid #e0e0e0;
+      padding: var(--spacing-lg);
+      border-bottom: 1px solid var(--border-light);
       transition: var(--transition);
-      text-align: left;
-    }
-
-    .history-item:hover {
-      background: #f0f0f0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--spacing-md);
+      align-items: center;
     }
 
     .history-item:last-child {
       border-bottom: none;
     }
 
-    /* Toast notifications handled by unified system - with better positioning */
-    .custom-toast {
-      position: fixed;
-      top: 80px; /* Lower position to avoid covering dropdown */
-      right: 24px;
-      padding: 16px 24px;
-      background: var(--success);
-      color: #fff;
-      border-radius: var(--border-radius);
-      z-index: 5000; /* Lower than dropdown */
-      box-shadow: var(--shadow);
-      font-weight: 500;
-      max-width: 350px;
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
-      word-wrap: break-word;
+    .history-item:hover {
+      background: var(--border-light);
     }
 
-    .custom-toast.show {
+    .history-timestamp {
+      font-size: 0.8em;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .history-details {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+    }
+
+    .history-reason {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .history-notes {
+      font-size: 0.85em;
+      color: var(--text-light);
+    }
+    
+    .refresh-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85em;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+    }
+
+    .refresh-btn:hover {
+      background: #880000;
+      transform: translateY(-1px);
+    }
+    
+    .refresh-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    
+    /* Enhanced Toast Notifications */
+    .toast {
+      position: fixed;
+      top: 80px;
+      right: var(--spacing-lg);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md) var(--spacing-lg);
+      box-shadow: var(--shadow-hover);
+      display: none;
+      z-index: 10000;
+      max-width: 400px;
+      transform: translateX(450px);
+      transition: var(--transition);
+      border-left: 4px solid var(--info);
+    }
+
+    .toast.show {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-sm);
       transform: translateX(0);
     }
 
-    .custom-toast.success { background: var(--success); }
-    .custom-toast.error { background: var(--error); }
-    .custom-toast.warning { background: var(--warning); color: #333; }
-    .custom-toast.info { background: var(--info); }
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--error); }
+    .toast.warning { border-left-color: var(--warning); }
 
-    .custom-toast .close-btn {
-      position: absolute;
-      top: 8px;
-      right: 10px;
+    .toast-close {
       background: none;
       border: none;
-      color: inherit;
-      font-size: 18px;
+      font-size: 1.2em;
       cursor: pointer;
       opacity: 0.7;
-      line-height: 1;
+      margin-left: auto;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .custom-toast .close-btn:hover {
+    .toast-close:hover {
       opacity: 1;
     }
 
@@ -807,20 +786,17 @@
     .footer {
       text-align: center;
       font-size: 0.9em;
-      color: #666;
-      margin-top: 40px;
-      padding: 24px;
-      border-top: 1px solid rgba(0,0,0,0.1);
-      max-width: 800px;
-      margin-left: auto;
-      margin-right: auto;
+      color: var(--text-muted);
+      margin-top: var(--spacing-xl);
+      padding: var(--spacing-xl);
+      border-top: 1px solid var(--border);
     }
 
     .footer a {
       color: var(--nav-bg);
       text-decoration: none;
       font-weight: 500;
-      margin: 0 8px;
+      margin: 0 var(--spacing-sm);
       transition: var(--transition);
     }
 
@@ -829,11 +805,36 @@
       text-decoration: underline;
     }
 
-    /* Dark Mode */
+    /* Validation Message Styles */
+    .validation-message {
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      margin-top: 6px;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+
+    .validation-message.error {
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: #dc2626;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dark Mode Support */
     .dark-mode {
       --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
       --card-bg: #2d2d2d;
       --text: #e0e0e0;
+      --text-light: #a0a0a0;
+      --text-muted: #808080;
+      --border: #404040;
+      --border-light: #353535;
       --shadow: 0 4px 12px rgba(0,0,0,0.3);
       --shadow-hover: 0 8px 25px rgba(0,0,0,0.4);
     }
@@ -856,28 +857,25 @@
     .dark-mode .student-option:hover {
       background: #4a4a4a;
     }
-
-    .dark-mode .profile-item {
-      background: #404040;
+    
+    .dark-mode .analysis-card {
+      background: #353535;
+      border-color: #404040;
+    }
+    
+    .dark-mode .analysis-title {
+        border-color: #404040;
     }
 
-    .dark-mode .history-list {
-      background: #404040;
-      border-color: #555;
-    }
-
-    .dark-mode .history-item {
-      border-color: #555;
-    }
-
-    .dark-mode .history-item:hover {
-      background: #4a4a4a;
+    .dark-mode .analysis-item {
+        border-color: #404040;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
       :root {
         --content-padding: 16px;
+        --spacing-xl: 24px;
       }
 
       .nav-bar {
@@ -890,78 +888,71 @@
 
       .container {
         padding: 16px;
+        gap: var(--spacing-lg);
       }
 
       .header-section,
       .form-section,
       .student-profile,
       .history-section,
-      .active-incidents-section,
-      .insights-card {
-        padding: 24px 20px;
+      .active-incidents-section {
+        padding: var(--spacing-lg);
       }
 
-      h2 {
-        font-size: 1.5em;
+      .header-title {
+        font-size: 1.6em;
       }
 
       .form-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: var(--spacing-md);
       }
 
       .profile-header {
-        gap: 16px;
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
       }
 
       .profile-grid {
         grid-template-columns: 1fr;
       }
 
-      .grid-stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .grid-2,
-      .grid-3 {
+      .stats-grid {
         grid-template-columns: 1fr;
-      }
-
-      .active-incidents-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .active-incidents-content {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .active-incidents-header {
-        flex-direction: column;
-        gap: 16px;
+        gap: var(--spacing-md);
       }
 
       #staffName {
         display: none;
       }
+
+      .toast {
+        right: var(--spacing-md);
+        left: var(--spacing-md);
+        max-width: none;
+        transform: translateY(-100px);
+      }
+
+      .toast.show {
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 480px) {
-      .grid-stats {
-        grid-template-columns: 1fr;
-      }
-
       .submit-btn {
         width: 100%;
-        max-width: 300px;
+        max-width: 280px;
       }
 
-      .stat-card {
-        max-width: none;
+      .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
       }
     }
 
-    /* Accessibility */
+    /* Accessibility Improvements */
     *:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
@@ -975,1413 +966,1058 @@
         transition-duration: 0.01ms !important;
       }
     }
-
-    /* High contrast support */
-    @media (prefers-contrast: high) {
-      .stat-card,
-      .insights-card,
-      .form-section,
-      .student-profile,
-      .history-section {
-        border: 2px solid var(--text);
-      }
-    }
   </style>
 </head>
-
 <body>
-  <!-- Loading State -->
-  <div id="loadingState" class="loading-state">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Loading Out-of-Class Tracker...</div>
-  </div>
-
-  <!-- Navigation -->
-  <nav class="nav-bar" role="navigation" aria-label="Main navigation" style="display: none;" id="navBar">
-    <div class="nav-left">
-      <img src="crest.png" class="nav-logo" alt="Sophia College Crest">
-      <div class="nav-title">🏫 Out-of-Class Tracker Pro</div>
-    </div>
-    <div class="nav-links">
-      <span id="staffName"></span>
-      <button class="nav-btn" id="notificationBtn" title="Notifications" aria-label="View notifications">
-        🔔
-        <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
-      </button>
-      <button class="nav-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-        🌓
-      </button>
-      <div class="dropdown">
-        <button class="dropbtn" aria-label="Navigation menu">
-          ☰ Menu
-        </button>
-        <div class="dropdown-content">
-          <a href="home.html" onclick="navigate('home.html'); return false;">🏠 Home</a>
-          <a href="staff.html" onclick="navigate('staff.html'); return false;">📝 Infringement Tracker</a>
-          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;">🔄 Re-Engagement Room</a>
-          <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;">👥 Admin Dashboard</a>
-          <button onclick="logout(); return false;">🚪 Logout</button>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <!-- Main Content Container -->
-  <main class="container" role="main" style="display: none;" id="mainContainer">
-    
-    <!-- Loading Banner -->
-    <div id="loadingBanner" class="banner loading-banner">
-      📚 Loading tracker data...
-    </div>
-
-    <!-- Active Incidents Alert Banner -->
-    <div id="activeIncidentsBanner" class="banner active-incidents-banner">
-      <div class="active-incidents-content">
-        <div class="active-incidents-text">
-          ⚠️ <span id="activeCount">0</span> students currently out of class
-        </div>
-        <button class="view-active-btn" onclick="OutOfClassSystem.toggleActiveIncidents()">View Details</button>
-      </div>
-    </div>
-
-    <!-- Header Section -->
-    <section class="section">
-      <div class="header-section">
-        <img src="sophia-logo.png" alt="Sophia College Logo" class="logo-center">
-        <h2>Out-of-Class Tracker Pro</h2>
-        <p class="subtitle">Advanced monitoring with real-time tracking and pattern detection</p>
-      </div>
-    </section>
-
-    <!-- Quick Stats -->
-    <section class="section">
-      <div class="grid grid-stats" id="quickStats" style="display:none;">
-        <div class="stat-card">
-          <div class="stat-icon">📊</div>
-          <span class="stat-number" id="todayCount">-</span>
-          <span class="stat-label">Today's Logs</span>
-        </div>
-        <div class="stat-card warning">
-          <div class="stat-icon">⏱️</div>
-          <span class="stat-number" id="activeIncidentsCount">-</span>
-          <span class="stat-label">Currently Out</span>
-        </div>
-        <div class="stat-card success">
-          <div class="stat-icon">⏰</div>
-          <span class="stat-number" id="avgDuration">-</span>
-          <span class="stat-label">Avg Duration</span>
-        </div>
-        <div class="stat-card info">
-          <div class="stat-icon">📅</div>
-          <span class="stat-number" id="weekCount">-</span>
-          <span class="stat-label">This Week</span>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🚽</div>
-          <span class="stat-number" id="toiletCount">-</span>
-          <span class="stat-label">Toilet Breaks</span>
-        </div>
-        <div class="stat-card purple">
-          <div class="stat-icon">📚</div>
-          <span class="stat-number" id="libraryCount">-</span>
-          <span class="stat-label">Library Visits</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Insights Section -->
-    <section class="section">
-      <div class="grid grid-2" id="insightsSection" style="display:none;">
-        <div class="insights-card">
-          <h3 class="insights-title">🔥 Frequent Flyers</h3>
-          <div class="frequent-flyers-list" id="frequentFlyersList">
-            <div style="text-align: center; color: #666; padding: 20px;">Loading patterns...</div>
-          </div>
-        </div>
-        <div class="insights-card">
-          <h3 class="insights-title">⚡ Pattern Alerts</h3>
-          <div class="patterns-list" id="patternsList">
-            <div style="text-align: center; color: #666; padding: 20px;">Analyzing behavior...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Active Incidents Section -->
-    <section class="section">
-      <div class="active-incidents-section" id="activeIncidentsSection">
-        <div class="active-incidents-header">
-          <h3 class="active-incidents-title">
-            🚨 Active Incidents
-          </h3>
-          <button class="refresh-btn" onclick="OutOfClassSystem.refreshActiveIncidents()">🔄 Refresh</button>
-        </div>
-        <div class="active-incidents-grid" id="activeIncidentsGrid">
-          <div style="text-align: center; color: #666; padding: 40px;">No active incidents</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Form Section -->
-    <section class="section">
-      <div class="form-section">
-        <h3 class="form-title">📝 Log New Incident</h3>
-        <form id="incidentForm">
-          <div class="form-grid">
-            <div class="control-group student-search-container">
-              <label for="searchInput">🔍 Search Student</label>
-              <input id="searchInput" type="text" class="form-input" placeholder="Type student name or ID..." autocomplete="off">
-              <div id="studentDropdown" class="student-dropdown"></div>
-              <input type="hidden" id="selectedStudentId">
-            </div>
-
-            <div class="control-group">
-              <label for="reasonSelect">📋 Reason for Leaving</label>
-              <select id="reasonSelect" class="form-input" aria-label="Select reason" required>
-                <option value="">Select reason...</option>
-              </select>
-            </div>
-
-            <div class="control-group">
-              <label for="detailsInput">📝 Additional Details</label>
-              <textarea id="detailsInput" class="form-input textarea" placeholder="Add any additional notes or context..." aria-label="Additional details"></textarea>
-            </div>
-          </div>
-
-          <button type="submit" id="logBtn" class="submit-btn" disabled>
-            <span class="btn-text">📥 Log Incident</span>
-            <div class="btn-spinner"></div>
+<!-- Skip to main content for accessibility -->
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<!-- Enhanced Loading State -->
+<div aria-label="Loading system" class="loading-state" id="loadingState" role="status">
+<div aria-hidden="true" class="loading-spinner"></div>
+<div class="loading-text">Loading Out-of-Class Logger...</div>
+</div>
+<!-- Enhanced Navigation -->
+<nav aria-label="Main navigation" class="nav-bar" role="navigation">
+<div class="nav-left">
+<img alt="College Crest" class="nav-logo" src="crest.png"/>
+</div>
+<div class="nav-title">🏫 Out-of-Class Logger</div>
+<div class="nav-right">
+<div class="nav-links">
+<span aria-live="polite" id="staffName"></span>
+<button aria-label="Toggle dark mode" class="theme-btn" id="themeToggle" title="Toggle dark mode">🌓</button>
+<div class="dropdown">
+<button aria-expanded="false" aria-haspopup="true" aria-label="Navigation menu" class="dropbtn">
+            ☰ Menu
           </button>
-        </form>
-      </div>
-    </section>
-
-    <!-- Student Profile -->
-    <section class="section">
-      <div class="student-profile" id="studentProfile" aria-labelledby="profile-title">
-        <div class="profile-header">
-          <div class="profile-photo">
-            <img id="studentPhoto" alt="Student Photo" src="">
+<div class="dropdown-content" role="menu">
+<a href="home.html" onclick="navigate('home.html'); return false;" role="menuitem">🏠 Home</a>
+<a href="staff.html" onclick="navigate('staff.html'); return false;" role="menuitem">📝 Infringement Tracker</a>
+<a href="outofclass.html" onclick="navigate('outofclass.html'); return false;" role="menuitem">🏫 Out-of-Class Logger</a>
+<a href="positiveaffirmations.html" onclick="navigate('positiveaffirmations.html'); return false;" role="menuitem">✨ Positive Affirmations</a>
+<a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;" role="menuitem">🔄 Re-Engagement Room</a>
+<a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;" role="menuitem">
+              👥 Admin Dashboard 
+              <span aria-label="notifications" class="badge" id="badge" style="display:none;"></span>
+</a>
+<button onclick="logout(); return false;" role="menuitem">🚪 Logout</button>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<!-- Main Container -->
+<main class="container" id="main-content" style="display: none;">
+<!-- Enhanced Status Banner -->
+<div class="status-banner banner-loading" id="statusBanner">
+<div id="statusText">🔄 Initializing system and loading data...</div>
+</div>
+<!-- Header Section -->
+<section class="section">
+<div class="header-section">
+<img alt="Sophia College" class="logo-center" src="sophia-logo.png"/>
+<h1 class="header-title">Out-of-Class Logger</h1>
+<p class="subtitle">Quickly log when a student leaves the classroom</p>
+</div>
+</section>
+<!-- Today's Breakdown Section -->
+<section class="section" id="statsSection" style="display: none;">
+<div class="section-header">
+<div>
+<h2 class="section-title">📊 Today's Breakdown</h2>
+<p class="section-subtitle">A real-time overview of today's logs and patterns</p>
+</div>
+<button aria-label="Refresh statistics" class="refresh-btn" onclick="refreshStats()">
+          🔄 Refresh
+        </button>
+</div>
+<div class="stats-grid" id="statsGrid">
+<div class="stat-card warning" id="todayLogsCard">
+<div class="stat-icon">📝</div>
+<span class="stat-number" id="todayLogs">0</span>
+<div class="stat-label">Today's Logs</div>
+</div>
+</div>
+<div class="today-analysis-grid">
+<div class="analysis-card" id="topReasons">
+<h4 class="analysis-title">Top Reasons Today</h4>
+<ul class="analysis-list" id="topReasonsList">
+<li style="text-align:center; color: var(--text-muted)">Loading...</li>
+</ul>
+</div>
+<div class="analysis-card" id="repeatLogs">
+<h4 class="analysis-title">Repeat Logs Today</h4>
+<ul class="analysis-list" id="repeatLogsList">
+<li style="text-align:center; color: var(--text-muted)">Loading...</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Enhanced Form Section -->
+<section class="section">
+<div class="form-section">
+<div class="section-header">
+<div>
+<h3 class="section-title">📝 Log a Student</h3>
+<p class="section-subtitle">Record a student leaving the class</p>
+</div>
+</div>
+<form id="incidentForm" novalidate="">
+<div class="form-grid">
+<div class="control-group student-search-container">
+<label for="searchInput">🔍 Search Student</label>
+<input aria-describedby="searchHelp" autocomplete="off" class="form-input" id="searchInput" placeholder="Type student name or ID..." required="" type="text"/>
+<div class="sr-only" id="searchHelp">Start typing to search for students by name or ID</div>
+<div aria-label="Student search results" class="student-dropdown" id="studentDropdown" role="listbox"></div>
+<input id="selectedStudentId" type="hidden"/>
+</div>
+<div class="control-group">
+<label for="reasonSelect">📋 Reason for Leaving</label>
+<select aria-label="Select reason for leaving class" class="form-input" id="reasonSelect" required="">
+<option value="">Loading reasons...</option>
+</select>
+</div>
+<div class="control-group">
+<label for="detailsInput">📝 Additional Details</label>
+<textarea aria-label="Additional details about the incident" class="form-input textarea" id="detailsInput" placeholder="Add any additional notes or context..." rows="4"></textarea>
+</div>
+</div>
+<button aria-describedby="submitHelp" class="submit-btn" disabled="" id="logBtn" type="submit">
+<span class="btn-text">Complete Form to Continue</span>
+<div aria-hidden="true" class="btn-spinner"></div>
+</button>
+<div class="sr-only" id="submitHelp">Complete all required fields to enable submission</div>
+</form>
+</div>
+</section>
+<!-- Enhanced Student Profile -->
+<section class="section">
+<div aria-labelledby="profile-title" class="student-profile" id="studentProfile">
+<div class="profile-header">
+<div class="profile-photo">
+<img alt="Student Photo" id="studentPhoto" src=""/>
+<div class="fallback-icon">👤</div>
+</div>
+<div class="profile-details">
+<h3 id="profile-title">Student Profile</h3>
+<p style="margin: 0; opacity: 0.9; font-size: 0.9em;">View comprehensive student information and history</p>
+</div>
+</div>
+<div class="profile-grid">
+<div class="profile-item">
+<span class="icon">👤</span>
+<span class="label">Name:</span>
+<span class="value" id="studentNameDetail">-</span>
+</div>
+<div class="profile-item">
+<span class="icon">🆔</span>
+<span class="label">BCE ID:</span>
+<span class="value" id="studentBCE">-</span>
+</div>
+<div class="profile-item">
+<span class="icon">🏠</span>
+<span class="label">House:</span>
+<span class="value" id="studentHouse">-</span>
+</div>
+<div class="profile-item">
+<span class="icon">🏫</span>
+<span class="label">Home Group:</span>
+<span class="value" id="studentHomeGroup">-</span>
+</div>
+<div class="profile-item">
+<span class="icon">📊</span>
+<span class="label">Year Level:</span>
+<span class="value" id="studentYear">-</span>
+</div>
+<div class="profile-item">
+<span class="icon">📈</span>
+<span class="label">Total Logs:</span>
+<span class="value" id="studentLogCount">-</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Enhanced History Section -->
+<section class="section">
+<div aria-labelledby="history-title" class="history-section" id="historySection">
+<div class="history-header">
+<h3 class="history-title" id="history-title">📜 Previous Logs</h3>
+<span aria-label="Number of previous logs" class="history-count" id="historyCount">0</span>
+</div>
+<div aria-live="polite" class="history-list" id="historyList" role="log">
+<div class="history-empty">
+            Select a student to view their history
           </div>
-          <div class="profile-details">
-            <h3 id="profile-title">Student Profile</h3>
-            <div class="profile-grid">
-              <div class="profile-item">
-                <span class="icon">👤</span>
-                <span class="label">Name:</span>
-                <span class="value" id="studentNameDetail">-</span>
-              </div>
-              <div class="profile-item">
-                <span class="icon">🆔</span>
-                <span class="label">BCE ID:</span>
-                <span class="value" id="studentBCE">-</span>
-              </div>
-              <div class="profile-item">
-                <span class="icon">🏠</span>
-                <span class="label">House:</span>
-                <span class="value" id="studentHouse">-</span>
-              </div>
-              <div class="profile-item">
-                <span class="icon">🏫</span>
-                <span class="label">Home Group:</span>
-                <span class="value" id="studentHomeGroup">-</span>
-              </div>
-              <div class="profile-item">
-                <span class="icon">📊</span>
-                <span class="label">Year Level:</span>
-                <span class="value" id="studentYear">-</span>
-              </div>
-              <div class="profile-item">
-                <span class="icon">📈</span>
-                <span class="label">Total Logs:</span>
-                <span class="value" id="studentLogCount">-</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- History Section -->
-    <section class="section">
-      <div class="history-section" id="historySection" aria-labelledby="history-title">
-        <div class="history-header">
-          <h3 class="history-title" id="history-title">
-            📜 Previous Incidents
-          </h3>
-          <span class="history-count" id="historyCount">0</span>
-        </div>
-        <div class="history-list" id="historyList">
-          <div class="history-empty">
-            No previous incidents recorded
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div>
-        © 2025 Sophia College | 
-        <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
-        <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a>
-      </div>
-      <div>Enhanced Out-of-Class Tracker Pro v3.1 with Unified System</div>
-    </footer>
-
-  </main>
-
-  <script>
+</div>
+</div>
+</section>
+</main>
+<!-- Enhanced Toast Notifications -->
+<div aria-live="assertive" class="toast" id="toast" role="alert">
+<span id="toastMessage"></span>
+<button aria-label="Close notification" class="toast-close" onclick="hideToast()">×</button>
+</div>
+<!-- Footer -->
+<footer class="footer">
+<div>
+      © 2025 Sophia College · 
+      <a href="https://www.sophiacollege.qld.edu.au/">College Homepage</a> ·  
+      <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a>
+</div>
+</footer>
+<script>
     'use strict';
+    
+    // --- GLOBAL STATE & CONFIGURATION ---
+    let sophiaSystem;
+    let studentData = [];
+    let selectedStudent = null;
+    let searchSystem, studentProfileManager, formValidationManager, dataManager;
 
-    // Out-of-Class Tracker System using Unified Sophia System
-    class OutOfClassTrackerSystem {
-      constructor() {
-        this.dataManager = null;
-        this.selectedStudent = null;
-        this.activeIncidents = [];
-        this.realtimeListeners = [];
-        this.constants = {
-          THEME_KEY: 'sophia_theme',
-          LAST_STUDENT_KEY: 'lastOutOfClassStudent',
-          NOTIFICATION_THRESHOLD: 15, // minutes
-          LONG_DURATION_THRESHOLD: 30, // minutes
-          VERY_LONG_DURATION_THRESHOLD: 60, // minutes
-        };
-        
-        this.reasonEmoji = {
-          'Library': '📚', 'Recess': '☀️', 'Other': '❓', 'Toilet': '🚽',
-          'Drink': '🥤', 'Locker': '🗄️', 'IT': '💻', 'Learning Common': '📖',
-          'Student Reception': '🛎️', 'Mentoring': '🤝', 'House Companion': '👥',
-          'Re-Engagement Room': '🔄'
-        };
-      }
+    // --- Student Photo Path ---
+    const STUDENT_PHOTO_PATH_TEMPLATE = '/students/{id}.jpg';
 
-      async initialize() {
-        console.log('🚀 Initializing Out-of-Class Tracker Pro v3.1');
-        
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', async () => {
         try {
-          // Wait for unified system to be available
-          if (typeof SophiaDataManager === 'undefined') {
-            throw new Error('Unified system not loaded');
-          }
+            updateStatus('🔄 Initializing system...', 'loading');
+            
+            await waitForSophiaSystem();
+            sophiaSystem = window.SophiaSystem;
+            await window.SophiaSystem.initializeSystem('outofclass');
 
-          // Initialize unified data manager
-          this.dataManager = new SophiaDataManager({
-            retryCount: 3,
-            retryDelay: 1000,
-            cacheTimeout: 20 * 60 * 1000 // 20 minutes for out-of-class tracker
-          });
+            // Initialize managers AFTER DOM is ready
+            searchSystem = new OptimizedOutOfClassSearch();
+            studentProfileManager = new StudentProfileManager();
+            dataManager = new OptimizedDataManager();
+            
+            // Setup new unified validator
+            formValidationManager = new UnifiedFormValidator('incidentForm');
+            formValidationManager.addRule('searchInput', (value) => document.getElementById('selectedStudentId').value !== '', 'Please select a student');
+            formValidationManager.addRule('reasonSelect', (value) => value !== '', 'Please select a reason');
+            
+            // Make them globally available
+            window.searchSystem = searchSystem;
+            window.studentProfileManager = studentProfileManager;
+            window.formValidationManager = formValidationManager;
+            window.dataManager = dataManager;
 
-          // Check authentication
-          await this.dataManager.checkAuthentication();
-
-          // Setup UI components
-          this.setupEventListeners();
-          this.initializeTheme();
-
-          // Load data
-          await this.loadSystemData();
-
-          // Request notification permission
-          await this.requestNotificationPermission();
-
-          // Show interface first
-          this.showInterface();
-
-          // Setup real-time monitoring after interface is shown
-          await this.setupRealtimeMonitoring();
-
-          // Load analytics
-          await this.loadAnalytics();
-
-          // Restore last selected student
-          this.restoreLastStudent();
-
-          // Show success notification (positioned lower) after everything is loaded
-          setTimeout(() => {
-            this.showToast('✅ Out-of-Class Tracker ready! All features active.', 'success', 4000);
-          }, 1000);
-
-          // Show index info if needed (only on first successful load)
-          if (!localStorage.getItem('indexInfoShown')) {
+            updateStatus('✅ System ready!', 'success');
+            
             setTimeout(() => {
-              this.showFirebaseIndexInfo();
-              localStorage.setItem('indexInfoShown', 'true');
-            }, 2000);
-          }
-
+                hideStatusBanner();
+                showMainInterface();
+                setupUI();
+                loadInitialData();
+            }, 500);
+            
         } catch (error) {
-          console.error('❌ Initialization failed:', error);
-          
-          // Show detailed error information
-          this.showToast(`❌ Initialization failed: ${error.message}`, 'error', 8000);
-          
-          // Show error state
-          const loadingState = document.getElementById('loadingState');
-          if (loadingState) {
-            loadingState.innerHTML = `
-              <div style="text-align: center; color: var(--error);">
-                <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
-                <div style="font-size: 1.2em; margin-bottom: 10px;">System Initialization Failed</div>
-                <div style="color: #666; margin-bottom: 20px;">${error.message}</div>
-                <div style="font-size: 0.9em; color: #888; margin-bottom: 20px;">
-                  Check console for detailed error information
-                </div>
-                <button onclick="location.reload()" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px;">
-                  🔄 Retry
-                </button>
-                <button onclick="this.parentElement.parentElement.style.display='none'; document.getElementById('navBar').style.display='flex'; document.getElementById('mainContainer').style.display='flex';" style="padding: 12px 24px; background: var(--info); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                  🚀 Continue Anyway
-                </button>
-              </div>
-            `;
-          }
-          
-          // Redirect to login on auth failure
-          if (error.message === 'Authentication required') {
-            setTimeout(() => window.location.href = 'index.html', 3000);
-          }
+            console.error('❌ Initialization failed:', error);
+            updateStatus('❌ System initialization failed. Please refresh.', 'error');
+            const loadingState = document.getElementById('loadingState');
+            if(loadingState) loadingState.style.display = 'none';
+        }
+    });
+
+    async function waitForSophiaSystem() {
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            const interval = setInterval(() => {
+                if (window.SophiaSystem && typeof window.SophiaSystem.initializeSystem === 'function') {
+                    clearInterval(interval);
+                    resolve();
+                } else if (attempts > 20) {
+                    clearInterval(interval);
+                    reject(new Error('Sophia Unified System failed to load.'));
+                }
+                attempts++;
+            }, 250);
+        });
+    }
+
+    async function loadInitialData() {
+        if (sophiaSystem && sophiaSystem.module && sophiaSystem.module.students) {
+            studentData = sophiaSystem.module.students;
+            console.log('✅ Loaded', studentData.length, 'students');
+        } else {
+            showToast('Student data not loaded from unified system.', 'warning');
+        }
+        refreshStats();
+    }
+
+    // --- UI SETUP & CONTROLS ---
+    function setupUI() {
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        const staffInfo = JSON.parse(localStorage.getItem('loggedInStaff') || '{}');
+        const staffNameEl = document.getElementById('staffName');
+        if (staffNameEl && staffInfo['staff name']) staffNameEl.textContent = staffInfo['staff name'];
+
+        document.getElementById('incidentForm')?.addEventListener('submit', handleFormSubmit);
+    }
+
+    function showMainInterface() {
+        const loadingState = document.getElementById('loadingState');
+        const navBar = document.getElementById('navBar');
+        const mainContent = document.getElementById('main-content');
+        const statsSection = document.getElementById('statsSection');
+
+        if (loadingState) loadingState.style.display = 'none';
+        if (navBar) {
+            navBar.style.display = 'flex';
+            navBar.style.animation = 'fadeIn 0.5s ease';
+        }
+        if (mainContent) {
+            mainContent.style.display = 'flex';
+            mainContent.style.animation = 'fadeInUp 0.6s ease';
+        }
+        if (statsSection) {
+            statsSection.style.display = 'block';
+        }
+    }
+
+    // --- FIXED STUDENT SEARCH SYSTEM ---
+    class OptimizedOutOfClassSearch {
+      constructor() {
+        this.searchCache = new Map();
+        this.searchResults = [];
+        this.selectedStudent = null;
+        
+        // Ensure DOM is ready
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', () => this.initialize());
+        } else {
+          this.initialize();
         }
       }
 
-      async loadSystemData() {
-        console.log('📚 Loading system data...');
+      initialize() {
+        console.log('🔍 Initializing search system...');
         
-        try {
-          console.log('🔍 Checking unified system availability...');
-          console.log('SophiaDataManager available:', typeof SophiaDataManager !== 'undefined');
-          console.log('DataManager instance:', this.dataManager);
-          console.log('Firebase available:', typeof firebase !== 'undefined');
-          
-          // Load students and out-of-class reasons in parallel
-          const [students, reasons] = await Promise.all([
-            this.dataManager.loadStudents(),
-            this.loadOutOfClassReasonsWithFallback()
-          ]);
+        // Cache DOM elements
+        this.dom = {
+          searchInput: document.getElementById('searchInput'),
+          dropdown: document.getElementById('studentDropdown'),
+          hiddenInput: document.getElementById('selectedStudentId'),
+          profile: document.getElementById('studentProfile')
+        };
+        
+        // Verify DOM elements exist
+        const missing = Object.entries(this.dom).filter(([key, el]) => !el).map(([key]) => key);
+        if (missing.length > 0) {
+          console.error('❌ Missing DOM elements:', missing);
+          return;
+        }
+        
+        console.log('✅ All DOM elements found');
+        this.setupEvents();
+      }
 
-          this.students = students;
-          console.log(`📊 Students loaded: ${students.length}`);
-          
-          // Setup student search
-          this.dataManager.createStudentSearch('searchInput', 'studentDropdown', (student) => {
-            this.selectStudent(student);
+      setupEvents() {
+        const debouncedSearch = this.debounce(this.performSearch.bind(this), 250);
+        
+        this.dom.searchInput.addEventListener('input', (e) => {
+          const query = e.target.value.trim();
+          console.log('🔍 Search input:', query);
+          debouncedSearch(query);
+        });
+
+        this.dom.searchInput.addEventListener('keydown', (e) => {
+          this.handleKeyNavigation(e);
+        });
+
+        // Close dropdown on outside click
+        document.addEventListener('click', (e) => {
+          if (!this.dom.searchInput.contains(e.target) && 
+              !this.dom.dropdown.contains(e.target)) {
+            this.hideDropdown();
+          }
+        });
+        
+        console.log('✅ Search events setup complete');
+      }
+
+      debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+        };
+      }
+
+      performSearch(query) {
+        console.log('🔍 Performing search for:', query);
+        
+        if (query.length < 2) {
+          this.hideDropdown();
+          return;
+        }
+
+        // Check cache first
+        const cacheKey = query.toLowerCase();
+        if (this.searchCache.has(cacheKey)) {
+          console.log('📋 Using cached results');
+          this.displayResults(this.searchCache.get(cacheKey));
+          return;
+        }
+
+        // Perform search
+        const results = studentData.filter(student => {
+          const fullName = `${student.FirstName} ${student.LegalSurname1}`.toLowerCase();
+          const bceid = student.BCEID1?.toLowerCase() || '';
+          return fullName.includes(cacheKey) || bceid.includes(cacheKey);
+        }).slice(0, 8);
+
+        console.log('🔍 Found', results.length, 'results for:', query);
+        
+        // Cache results
+        this.searchCache.set(cacheKey, results);
+        this.displayResults(results);
+      }
+
+      displayResults(results) {
+        this.searchResults = results;
+        this.dom.dropdown.innerHTML = '';
+
+        if (results.length === 0) {
+          this.dom.dropdown.innerHTML = `
+            <div class="student-option no-results">
+              <span>🔍 No students found</span>
+            </div>`;
+        } else {
+          results.forEach((student, index) => {
+            const option = document.createElement('div');
+            option.className = 'student-option';
+            option.setAttribute('data-index', index);
+            option.setAttribute('role', 'option');
+            option.setAttribute('tabindex', '0');
+            
+            option.innerHTML = `
+              <div class="student-info">
+                <strong>${student.FirstName} ${student.LegalSurname1}</strong>
+                <div class="student-id">${student.BCEID1}</div>
+              </div>
+              <div class="student-meta">
+                <span class="student-house">${student.HouseName || 'N/A'}</span>
+              </div>`;
+            
+            // Fixed event handler
+            option.addEventListener('click', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              console.log('👆 Student clicked:', student.FirstName, student.LegalSurname1);
+              this.selectStudent(index);
+            });
+            
+            this.dom.dropdown.appendChild(option);
           });
+        }
 
-          // Populate reason dropdown
-          this.populateReasonSelect(reasons);
-          console.log(`📋 Reasons loaded: ${reasons.length}`);
+        this.showDropdown();
+      }
 
-          console.log(`✅ System data loaded successfully`);
+      selectStudent(index) {
+        console.log('✅ Selecting student at index:', index);
+        
+        if (!this.searchResults[index]) {
+          console.error('❌ Student not found at index:', index);
+          return;
+        }
+
+        this.selectedStudent = this.searchResults[index];
+        selectedStudent = this.selectedStudent; // Update global
+        
+        const fullName = `${this.selectedStudent.FirstName} ${this.selectedStudent.LegalSurname1}`;
+        
+        console.log('📝 Updating UI for:', fullName);
+        
+        // Update search input
+        this.dom.searchInput.value = fullName;
+        
+        // Update hidden input
+        this.dom.hiddenInput.value = this.selectedStudent.BCEID1;
+        
+        console.log('✅ Hidden input value set to:', this.dom.hiddenInput.value);
+        
+        this.hideDropdown();
+        
+        // Show profile
+        if (window.studentProfileManager) {
+          window.studentProfileManager.showProfile(this.selectedStudent);
+        }
+        
+        // Force form validation
+        if (formValidationManager) {
+          setTimeout(() => {
+            console.log('🔄 Triggering form validation...');
+            formValidationManager.validateForm();
+          }, 100);
+        }
+        
+        showToast(`✅ Selected ${fullName}`, 'success', 2000);
+      }
+
+      handleKeyNavigation(e) {
+        if (!this.dom.dropdown.style.display === 'block') return;
+        
+        const options = this.dom.dropdown.querySelectorAll('.student-option:not(.no-results)');
+        if (options.length === 0) return;
+        
+        const currentFocus = this.dom.dropdown.querySelector('.student-option.focused');
+        let index = currentFocus ? Array.from(options).indexOf(currentFocus) : -1;
+
+        switch (e.key) {
+          case 'ArrowDown':
+            e.preventDefault();
+            index = Math.min(index + 1, options.length - 1);
+            this.focusOption(options, index);
+            break;
+          case 'ArrowUp':
+            e.preventDefault();
+            index = Math.max(index - 1, 0);
+            this.focusOption(options, index);
+            break;
+          case 'Enter':
+            e.preventDefault();
+            if (currentFocus) {
+              const studentIndex = parseInt(currentFocus.dataset.index);
+              this.selectStudent(studentIndex);
+            }
+            break;
+          case 'Escape':
+            this.hideDropdown();
+            break;
+        }
+      }
+
+      focusOption(options, index) {
+        options.forEach(opt => opt.classList.remove('focused'));
+        if (options[index]) {
+          options[index].classList.add('focused');
+          options[index].scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      showDropdown() {
+        this.dom.dropdown.style.display = 'block';
+        this.dom.dropdown.setAttribute('aria-expanded', 'true');
+      }
+
+      hideDropdown() {
+        this.dom.dropdown.style.display = 'none';
+        this.dom.dropdown.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    // The FormValidationManager class has been removed and is now handled by
+    // the UnifiedFormValidator in js/critical-fixes.js
+
+    // --- STUDENT PROFILE MANAGER ---
+    class StudentProfileManager {
+      constructor() {
+        this.currentStudent = null;
+        this.profileCache = new Map();
+      }
+
+      async showProfile(student) {
+        if (!student) return;
+        
+        this.currentStudent = student;
+        const profile = document.getElementById('studentProfile');
+        if (!profile) return;
+
+        try {
+          const profileData = await this.getProfileData(student);
+          await this.animateProfileUpdate(profileData);
+          await this.loadStudentHistory(student);
+        } catch (error) {
+          console.error('Error loading profile:', error);
+          showToast('Failed to load student profile', 'error');
+        }
+      }
+
+      async getProfileData(student) {
+        const cacheKey = student.BCEID1;
+        
+        if (this.profileCache.has(cacheKey)) {
+          return this.profileCache.get(cacheKey);
+        }
+
+        const possibleYearFields = [
+          'YearLevelName', 'YearLevel', 'Year', 'year', 'YearGroup', 
+          'yeargroup', 'Grade', 'grade', 'Level', 'level'
+        ];
+
+        let yearValue = 'Unknown';
+        for (const field of possibleYearFields) {
+          if (student[field] && student[field] !== '') {
+            yearValue = student[field];
+            break;
+          }
+        }
+
+        const profileData = {
+          name: `${student.FirstName} ${student.LegalSurname1}`,
+          bceid: student.BCEID1,
+          house: student.HouseName || 'N/A',
+          homeGroup: student.HomeGroup || 'N/A',
+          year: yearValue,
+          photoUrl: this.getPhotoUrl(student.BCEID1)
+        };
+
+        this.profileCache.set(cacheKey, profileData);
+        return profileData;
+      }
+
+      getPhotoUrl(bceid) {
+        const finalPhotoId = bceid.toLowerCase().startsWith('s') ? bceid : `s${bceid}`;
+        return STUDENT_PHOTO_PATH_TEMPLATE.replace('{id}', finalPhotoId);
+      }
+
+      async animateProfileUpdate(profileData) {
+        const profile = document.getElementById('studentProfile');
+        if (!profile) return;
+
+        const newContent = `
+          <div class="profile-header">
+            <div class="profile-photo">
+              <img id="studentPhoto" alt="Student Photo" src="${profileData.photoUrl}">
+              <div class="fallback-icon">👤</div>
+            </div>
+            <div class="profile-details">
+              <h3 id="profile-title">${profileData.name}</h3>
+              <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">Student Profile & History</p>
+            </div>
+          </div>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="icon">👤</span>
+              <span class="label">Name:</span>
+              <span class="value">${profileData.name}</span>
+            </div>
+            <div class="profile-item">
+              <span class="icon">🆔</span>
+              <span class="label">BCE ID:</span>
+              <span class="value">${profileData.bceid}</span>
+            </div>
+            <div class="profile-item">
+              <span class="icon">🏠</span>
+              <span class="label">House:</span>
+              <span class="value">${profileData.house}</span>
+            </div>
+            <div class="profile-item">
+              <span class="icon">🏫</span>
+              <span class="label">Home Group:</span>
+              <span class="value">${profileData.homeGroup}</span>
+            </div>
+            <div class="profile-item">
+              <span class="icon">📊</span>
+              <span class="label">Year Level:</span>
+              <span class="value">${profileData.year}</span>
+            </div>
+            <div class="profile-item">
+              <span class="icon">📈</span>
+              <span class="label">Total Logs:</span>
+              <span class="value" id="studentLogCount">Loading...</span>
+            </div>
+          </div>
+        `;
+
+        profile.innerHTML = newContent;
+        profile.classList.add('visible');
+        
+        // Handle photo loading
+        const photo = document.getElementById('studentPhoto');
+        const fallback = photo.nextElementSibling;
+        
+        photo.onload = () => {
+          photo.style.display = 'block';
+          fallback.style.display = 'none';
+        };
+        
+        photo.onerror = () => {
+          photo.style.display = 'none';
+          fallback.style.display = 'flex';
+        };
+      }
+
+      async loadStudentHistory(student) {
+        const historyList = document.getElementById('historyList');
+        const historyCount = document.getElementById('historyCount');
+        if (!historyList || !historyCount) return;
+
+        try {
+            const historyData = await window.dataManager.getStudentHistory(student.BCEID1);
+            
+            const count = historyData.length;
+            historyCount.textContent = count;
+            document.getElementById('studentLogCount').textContent = count;
+
+            if (count === 0) {
+                historyList.innerHTML = `
+                  <div class="history-empty">
+                    <div style="font-size: 2em; margin-bottom: 8px;">📝</div>
+                    <div>No logs found for this student</div>
+                  </div>`;
+                return;
+            }
+            
+            const historyItems = historyData.map((log, index) => {
+                const timestamp = log.timestamp;
+                return `
+                  <div class="history-item">
+                    <div class="history-timestamp">
+                      ${timestamp.toLocaleDateString()} 
+                      ${timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </div>
+                    <div class="history-details">
+                      <div class="history-reason">${log.reason || 'N/A'}</div>
+                      ${log.details ? `<div class="history-notes">${log.details}</div>` : ''}
+                ${log.staff || log.submittedBy ? `
+                    <div style="font-size:0.75em;color:var(--text-muted);margin-top:4px;">
+                        By: ${log.staff || log.submittedBy}
+                    </div>` : ''}
+                    </div>
+                  </div>`;
+            }).join('');
+
+            historyList.innerHTML = historyItems;
 
         } catch (error) {
-          console.error('❌ Error loading system data:', error);
-          console.error('Error details:', {
-            name: error.name,
-            message: error.message,
-            stack: error.stack
-          });
+            console.error('Error loading history:', error);
+            historyList.innerHTML = `
+                <div class="history-empty" style="color:var(--error)">
+                  <div style="font-size: 2em; margin-bottom: 8px;">⚠️</div>
+                  <div>Error loading history</div>
+                </div>`;
+        }
+      }
+    }
+
+    // --- DATA MANAGER ---
+    class OptimizedDataManager {
+      constructor() {
+        this.cache = new Map();
+        this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+      }
+
+      async submitLog(data) {
+        const batch = firebase.firestore().batch();
+        const docRef = firebase.firestore().collection('outofclass').doc();
+        
+        const optimizedData = {
+          ...data,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          submissionId: this.generateSubmissionId()
+        };
+
+        batch.set(docRef, optimizedData);
+        
+        try {
+          await batch.commit();
+          this.invalidateCache(`student_${data.student}`);
+          this.invalidateCache('todayStats');
+          return docRef.id;
+        } catch (error) {
+          console.error('Batch write failed:', error);
           throw error;
         }
       }
 
-      async loadOutOfClassReasonsWithFallback() {
+      async getTodayStats() {
+        const cacheKey = 'todayStats';
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+          return cached.data;
+        }
+
         try {
-          // Try to load from unified system first
-          return await this.dataManager.loadOutOfClassReasons();
-        } catch (error) {
-          console.warn('⚠️ Error loading reasons from unified system, using fallback:', error);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
           
-          try {
-            // Fallback: try to load CSV directly with better error handling
-            const response = await fetch('outofclass.csv');
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const csvText = await response.text();
-            
-            const parsed = Papa.parse(csvText, {
-              header: true,
-              skipEmptyLines: true,
-              trimHeaders: true,
-              dynamicTyping: false, // Keep as strings to avoid type issues
-              transform: (value) => value ? value.trim() : '', // Clean up values
-              transformHeader: (header) => header.trim(), // Clean up headers
-              error: (error) => {
-                console.warn('CSV parsing error:', error);
-              },
-              complete: (results) => {
-                if (results.errors && results.errors.length > 0) {
-                  console.warn('CSV parsing completed with warnings:', results.errors);
-                  // Filter out only critical errors
-                  const criticalErrors = results.errors.filter(error => 
-                    error.type === 'FieldMismatch' || error.type === 'Delimiter'
-                  );
-                  if (criticalErrors.length > 0) {
-                    console.error('Critical CSV errors:', criticalErrors);
-                  }
+          const snapshot = await firebase.firestore()
+            .collection('outofclass')
+            .where('timestamp', '>=', today)
+            .orderBy('timestamp', 'desc')
+            .limit(100)
+            .get();
+
+          const data = this.processStatsData(snapshot);
+          this.cache.set(cacheKey, { data, timestamp: Date.now() });
+          
+          return data;
+        } catch (error) {
+          console.error('Error loading stats:', error);
+          return { count: 0, reasons: {}, repeats: {} };
+        }
+      }
+
+      async getStudentHistory(studentId, limit = 15) {
+        const cacheKey = `student_${studentId}`;
+        const cached = this.cache.get(cacheKey);
+        
+        if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+          return cached.data;
+        }
+
+        try {
+          const possibleFields = ['student', 'studentBCEID', 'BCEID', 'studentId'];
+          const studentIdVariants = [
+            studentId,
+            studentId.toLowerCase().startsWith('s') ? studentId.substring(1) : `s${studentId}`,
+          ];
+          
+          for (const field of possibleFields) {
+            for (const idVariant of studentIdVariants) {
+              try {
+                const snapshot = await firebase.firestore()
+                  .collection('outofclass')
+                  .where(field, '==', idVariant)
+                  .orderBy('timestamp', 'desc')
+                  .limit(limit)
+                  .get();
+
+                if (snapshot.size > 0) {
+                  const data = snapshot.docs.map(doc => {
+                    const docData = doc.data();
+                    return {
+                      id: doc.id,
+                      ...docData,
+                      timestamp: docData.timestamp?.toDate() || new Date()
+                    };
+                  });
+
+                  this.cache.set(cacheKey, { data, timestamp: Date.now() });
+                  return data;
                 }
-              }
-            });
-            
-            // Handle parsing warnings gracefully
-            if (parsed.errors && parsed.errors.length > 0) {
-              const warningCount = parsed.errors.length;
-              console.warn(`📋 CSV parsed with ${warningCount} non-critical warnings`);
-              
-              // Only show user notification for critical errors
-              const criticalErrors = parsed.errors.filter(error => 
-                error.type === 'FieldMismatch' || error.type === 'Delimiter'
-              );
-              
-              if (criticalErrors.length > 0) {
-                this.showToast(`⚠️ CSV format issues detected (${criticalErrors.length})`, 'warning', 3000);
+              } catch (queryError) {
+                console.log(`Query failed for ${field}:`, queryError.message);
               }
             }
-            
-            // Get the first field as the reason field, or use column header
-            const firstField = parsed.meta.fields?.[0] || 'reason';
-            const reasons = [...new Set(
-              parsed.data
-                .map(row => row[firstField])
-                .filter(Boolean)
-                .filter(reason => reason.length > 0)
-            )];
-            
-            console.log(`📋 Reasons loaded from CSV fallback: ${reasons.length}`);
-            return reasons;
-            
-          } catch (csvError) {
-            console.error('❌ CSV fallback also failed:', csvError);
-            
-            // Ultimate fallback: use default reasons
-            const defaultReasons = Object.keys(this.reasonEmoji);
-            console.log(`📋 Using default reasons: ${defaultReasons.length}`);
-            return defaultReasons;
           }
-        }
-      }
-
-      populateReasonSelect(reasons) {
-        const select = document.getElementById('reasonSelect');
-        if (!select) return;
-
-        select.innerHTML = '<option value="">Select reason...</option>';
-        
-        reasons.forEach(reason => {
-          const emoji = this.reasonEmoji[reason] || '📝';
-          const option = new Option(`${emoji} ${reason}`, reason);
-          select.add(option);
-        });
-      }
-
-      setupEventListeners() {
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-          themeToggle.addEventListener('click', () => this.toggleTheme());
-        }
-
-        // Notification button
-        const notificationBtn = document.getElementById('notificationBtn');
-        if (notificationBtn) {
-          notificationBtn.addEventListener('click', () => this.toggleActiveIncidents());
-        }
-
-        // Form elements
-        const reasonSelect = document.getElementById('reasonSelect');
-        if (reasonSelect) {
-          reasonSelect.addEventListener('change', () => this.validateForm());
-        }
-
-        const detailsInput = document.getElementById('detailsInput');
-        if (detailsInput) {
-          detailsInput.addEventListener('input', () => this.validateForm());
-        }
-
-        // Form submission
-        const incidentForm = document.getElementById('incidentForm');
-        if (incidentForm) {
-          incidentForm.addEventListener('submit', (e) => this.handleFormSubmit(e));
-        }
-
-        // Page visibility change for notifications
-        document.addEventListener('visibilitychange', () => this.handleVisibilityChange());
-      }
-
-      initializeTheme() {
-        const savedTheme = localStorage.getItem(this.constants.THEME_KEY);
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-          document.body.classList.add('dark-mode');
-        }
-      }
-
-      toggleTheme() {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem(this.constants.THEME_KEY, isDark ? 'dark' : 'light');
-        this.showToast(`🎨 Switched to ${isDark ? 'dark' : 'light'} mode`, 'info');
-      }
-
-      async requestNotificationPermission() {
-        if ('Notification' in window && Notification.permission === 'default') {
-          try {
-            const permission = await Notification.requestPermission();
-            this.notificationPermission = permission === 'granted';
-            if (this.notificationPermission) {
-              this.showToast('🔔 Notifications enabled for overdue students', 'info');
-            }
-          } catch (error) {
-            console.warn('Notification permission error:', error);
-          }
-        } else {
-          this.notificationPermission = Notification.permission === 'granted';
-        }
-      }
-
-      setupRealtimeMonitoring() {
-        console.log('🔴 Setting up real-time monitoring...');
-        console.log('DataManager DB available:', !!this.dataManager?.db);
-        console.log('Firebase SDK available:', typeof firebase !== 'undefined');
-        
-        // Check if Firebase is properly initialized
-        if (!this.dataManager || !this.dataManager.db) {
-          console.warn('⚠️ Firebase not available via unified system, initializing manually...');
-          try {
-            // Manual Firebase initialization as fallback
-            if (typeof firebase !== 'undefined') {
-              // Check if already initialized
-              if (firebase.apps.length === 0) {
-                firebase.initializeApp({
-                  apiKey: 'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU',
-                  authDomain: 'sophia-infringements.firebaseapp.com',
-                  projectId: 'sophia-infringements'
-                });
-              }
-              this.db = firebase.firestore();
-              console.log('✅ Firebase manually initialized');
-              console.log('Firestore instance:', this.db);
-            } else {
-              console.error('❌ Firebase SDK not loaded');
-              this.showToast('❌ Firebase SDK not available', 'error');
-              return;
-            }
-          } catch (error) {
-            console.error('❌ Firebase initialization failed:', error);
-            this.showToast('❌ Firebase initialization failed', 'error');
-            return;
-          }
-        } else {
-          this.db = this.dataManager.db;
-          console.log('✅ Using unified system Firebase connection');
-        }
-
-        try {
-          console.log('🔗 Setting up Firestore listeners...');
           
-          // Monitor active incidents (students currently out)
-          const activeListener = this.db.collection('outofclass')
-            .where('status', '==', 'out')
-            .onSnapshot(snapshot => {
-              console.log(`📊 Active incidents update: ${snapshot.size} students out`);
-              this.updateActiveIncidents(snapshot);
-              this.checkForOverdueStudents();
-            }, error => {
-              console.error('❌ Active incidents listener error:', error);
-              this.showToast('❌ Real-time monitoring failed', 'error');
-            });
-
-          // Monitor today's incidents for live stats
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          console.log('📅 Setting up today listener for date:', today);
-          
-          const todayListener = this.db.collection('outofclass')
-            .where('timestamp', '>=', today)
-            .onSnapshot(snapshot => {
-              console.log(`📈 Today's stats update: ${snapshot.size} total incidents`);
-              this.updateTodayStats(snapshot);
-            }, error => {
-              console.warn('⚠️ Today listener error:', error);
-            });
-
-          this.realtimeListeners.push(activeListener, todayListener);
-          console.log('✅ Real-time monitoring active with', this.realtimeListeners.length, 'listeners');
-
-          // Load initial data
-          this.loadInitialFirebaseData();
-
+          return [];
         } catch (error) {
-          console.error('❌ Real-time monitoring setup failed:', error);
-          this.showToast('⚠️ Real-time monitoring unavailable', 'warning');
+          console.error('Error loading student history:', error);
+          return [];
         }
       }
 
-      async loadInitialFirebaseData() {
-        console.log('🔍 Loading initial Firebase data...');
+      processStatsData(snapshot) {
+        const reasonCounts = {};
+        const studentCounts = {};
         
-        try {
-          // Load today's stats
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          console.log('📅 Querying incidents since:', today);
-          
-          const todaySnapshot = await this.db.collection('outofclass')
-            .where('timestamp', '>=', today)
-            .get();
-            
-          console.log(`📊 Today's incidents found: ${todaySnapshot.size}`);
-          this.updateTodayStats(todaySnapshot);
-          
-          // Load active incidents
-          console.log('🔍 Querying active incidents...');
-          const activeSnapshot = await this.db.collection('outofclass')
-            .where('status', '==', 'out')
-            .get();
-            
-          console.log(`🚨 Active incidents found: ${activeSnapshot.size}`);
-          this.updateActiveIncidents(activeSnapshot);
-          
-          console.log('✅ Initial Firebase data loaded successfully');
-          
-          // Don't show success toast here - will be shown later to avoid dropdown conflict
-          
-        } catch (error) {
-          console.error('❌ Error loading initial Firebase data:', error);
-          console.error('Error details:', {
-            name: error.name,
-            message: error.message,
-            code: error.code
-          });
-          
-          // Show user-friendly error message
-          let errorMessage = 'Error loading Firebase data';
-          if (error.code === 'permission-denied') {
-            errorMessage = 'Permission denied - check Firebase security rules';
-          } else if (error.code === 'unavailable') {
-            errorMessage = 'Firebase service temporarily unavailable';
-          }
-          
-          this.showToast(`⚠️ ${errorMessage}`, 'warning');
-        }
-      }
-
-      showFirebaseIndexInfo() {
-        // Show helpful information about Firebase indexing
-        const indexInfo = document.createElement('div');
-        indexInfo.style.cssText = `
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          background: white;
-          padding: 30px;
-          border-radius: 12px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-          max-width: 500px;
-          z-index: 10000;
-          border: 1px solid #e0e0e0;
-        `;
-        
-        indexInfo.innerHTML = `
-          <div style="text-align: center; margin-bottom: 20px;">
-            <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
-            <h3 style="margin: 0; color: var(--nav-bg);">Firebase Index Optional</h3>
-          </div>
-          
-          <p style="margin-bottom: 15px; line-height: 1.5;">
-            The system is working perfectly! For even faster student history loading, 
-            you can optionally create a Firebase index.
-          </p>
-          
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <strong>Current Status:</strong><br>
-            ✅ Data loading works<br>
-            ✅ Real-time monitoring active<br>
-            ✅ All features functional<br>
-            ⚡ History sorting happens client-side
-          </div>
-          
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="this.parentElement.parentElement.remove()" 
-              style="padding: 10px 20px; background: var(--success); color: white; border: none; border-radius: 6px; cursor: pointer;">
-              ✅ Continue As-Is
-            </button>
-            <button onclick="window.open('https://console.firebase.google.com/v1/r/project/sophia-infringements/firestore/indexes?create_composite=Cldwcm9qZWN0cy9zb3BoaWEtaW5mcmluZ2VtZW50cy9kYXRhYmFzZXMvKGRlZmF1bHQpL2NvbGxlY3Rpb25Hcm91cHMvb3V0b2ZjbGFzcy9pbmRleGVzL18QARoLCgdzdHVkZW50EAEaDQoJdGltZXN0YW1wEAIaDAoIX19uYW1lX18QAg', '_blank'); this.parentElement.parentElement.remove();" 
-              style="padding: 10px 20px; background: var(--info); color: white; border: none; border-radius: 6px; cursor: pointer;">
-              🚀 Create Index
-            </button>
-          </div>
-        `;
-        
-        document.body.appendChild(indexInfo);
-        
-        // Auto-close after 30 seconds
-        setTimeout(() => {
-          if (indexInfo.parentElement) {
-            indexInfo.remove();
-          }
-        }, 30000);
-      }
-
-      updateActiveIncidents(snapshot) {
-        this.activeIncidents = [];
-        
-        snapshot.forEach(doc => {
+        snapshot.docs.forEach(doc => {
           const data = doc.data();
-          const student = this.students.find(s => s.BCEID1 === data.student);
-          
-          if (student) {
-            const incident = {
-              id: doc.id,
-              ...data,
-              studentData: student,
-              duration: this.calculateDuration(data.timestamp)
-            };
-            
-            this.activeIncidents.push(incident);
+          if (data.reason) {
+            reasonCounts[data.reason] = (reasonCounts[data.reason] || 0) + 1;
+          }
+          if (data.studentName) {
+            studentCounts[data.studentName] = (studentCounts[data.studentName] || 0) + 1;
           }
         });
-        
-        // Update UI
-        this.updateActiveIncidentsDisplay();
-        this.updateActiveIncidentsBanner();
-        this.updateNotificationBadge();
-        
-        // Update stats
-        const activeCountElement = document.getElementById('activeIncidentsCount');
-        if (activeCountElement) {
-          activeCountElement.textContent = this.activeIncidents.length;
-        }
-      }
 
-      updateActiveIncidentsDisplay() {
-        const grid = document.getElementById('activeIncidentsGrid');
-        if (!grid) return;
-        
-        if (this.activeIncidents.length === 0) {
-          grid.innerHTML = '<div style="text-align: center; color: #666; padding: 40px;">No active incidents</div>';
-          return;
-        }
-        
-        grid.innerHTML = '';
-        
-        this.activeIncidents.forEach(incident => {
-          const card = this.createActiveIncidentCard(incident);
-          grid.appendChild(card);
-        });
-      }
-
-      createActiveIncidentCard(incident) {
-        const card = document.createElement('div');
-        card.className = 'active-incident-card';
-        
-        const duration = incident.duration;
-        const isOverdue = duration.minutes > this.constants.NOTIFICATION_THRESHOLD;
-        const isVeryOverdue = duration.minutes > this.constants.VERY_LONG_DURATION_THRESHOLD;
-        
-        if (isVeryOverdue) {
-          card.style.borderLeftColor = 'var(--error)';
-          card.style.animation = 'alertGlow 2s infinite';
-        } else if (isOverdue) {
-          card.style.borderLeftColor = 'var(--warning)';
-        }
-        
-        const emoji = this.reasonEmoji[incident.reason] || '📝';
-        
-        card.innerHTML = `
-          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-            <div style="font-weight: 600; font-size: 1.1em;">${incident.studentData.FirstName} ${incident.studentData.LegalSurname1}</div>
-            <div style="text-align: right;">
-              <div style="font-size: 0.85em; color: #666;">${incident.timestamp?.toDate?.()?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || 'Unknown'}</div>
-              <div style="font-weight: 600; color: var(--error);">${duration.text}</div>
-            </div>
-          </div>
-          <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(102,0,0,0.1); padding: 6px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 500; color: var(--accent); margin-bottom: 12px;">
-            <span>${emoji}</span>
-            <span>${incident.reason}</span>
-          </div>
-          ${incident.details ? `<div style="color: #666; font-size: 0.9em; margin-bottom: 16px; font-style: italic;">"${incident.details}"</div>` : ''}
-          <button onclick="OutOfClassSystem.markStudentReturned('${incident.id}', '${incident.student}')" style="background: var(--success); color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; transition: var(--transition);">
-            ✅ Mark as Returned
-          </button>
-        `;
-        
-        return card;
-      }
-
-      updateActiveIncidentsBanner() {
-        const banner = document.getElementById('activeIncidentsBanner');
-        const activeCount = document.getElementById('activeCount');
-        
-        if (!banner || !activeCount) return;
-        
-        const count = this.activeIncidents.length;
-        
-        if (count > 0) {
-          activeCount.textContent = count;
-          banner.style.display = 'block';
-        } else {
-          banner.style.display = 'none';
-        }
-      }
-
-      updateNotificationBadge() {
-        const notificationBadge = document.getElementById('notificationBadge');
-        if (!notificationBadge) return;
-        
-        const overdueCount = this.activeIncidents.filter(incident => 
-          incident.duration.minutes > this.constants.NOTIFICATION_THRESHOLD
-        ).length;
-        
-        if (overdueCount > 0) {
-          notificationBadge.textContent = overdueCount;
-          notificationBadge.style.display = 'block';
-        } else {
-          notificationBadge.style.display = 'none';
-        }
-      }
-
-      checkForOverdueStudents() {
-        if (!this.notificationPermission) return;
-        
-        this.activeIncidents.forEach(incident => {
-          const duration = incident.duration;
-          
-          if (duration.minutes === this.constants.NOTIFICATION_THRESHOLD || 
-              duration.minutes === this.constants.VERY_LONG_DURATION_THRESHOLD) {
-            
-            const title = duration.minutes === this.constants.NOTIFICATION_THRESHOLD ? 
-              '⚠️ Student Overdue' : '🚨 Student Very Overdue';
-            
-            const message = `${incident.studentData.FirstName} ${incident.studentData.LegalSurname1} has been out for ${duration.text} (${incident.reason})`;
-            
-            this.showBrowserNotification(title, message);
-          }
-        });
-      }
-
-      showBrowserNotification(title, message) {
-        if (!this.notificationPermission) return;
-        
-        try {
-          const notification = new Notification(title, {
-            body: message,
-            icon: 'crest.png',
-            badge: 'crest.png',
-            tag: 'overdue-student',
-            requireInteraction: true
-          });
-          
-          notification.onclick = () => {
-            window.focus();
-            this.toggleActiveIncidents(true);
-            notification.close();
-          };
-          
-          setTimeout(() => notification.close(), 10000);
-          
-        } catch (error) {
-          console.warn('Notification error:', error);
-        }
-      }
-
-      calculateDuration(timestamp) {
-        if (!timestamp) return { minutes: 0, text: 'Unknown' };
-        
-        const startTime = timestamp.toDate();
-        const now = new Date();
-        const diffMs = now - startTime;
-        const diffMins = Math.floor(diffMs / 60000);
-        
-        if (diffMins < 1) return { minutes: 0, text: 'Just now' };
-        if (diffMins < 60) return { minutes: diffMins, text: `${diffMins}m` };
-        
-        const hours = Math.floor(diffMins / 60);
-        const mins = diffMins % 60;
-        return { 
-          minutes: diffMins, 
-          text: mins > 0 ? `${hours}h ${mins}m` : `${hours}h` 
+        return {
+          count: snapshot.size,
+          reasons: reasonCounts,
+          repeats: Object.fromEntries(
+            Object.entries(studentCounts).filter(([, count]) => count > 1)
+          )
         };
       }
 
-      selectStudent(student) {
-        this.selectedStudent = student;
-        this.showStudentProfile(student);
-        this.loadStudentHistory(student.BCEID1);
-        this.validateForm();
-        
-        // Store for restoration
-        localStorage.setItem(this.constants.LAST_STUDENT_KEY, student.BCEID1);
-      }
-
-      showStudentProfile(student) {
-        const profile = document.getElementById('studentProfile');
-        if (!profile) return;
-        
-        // Update profile information
-        this.updateElement('studentNameDetail', `${student.LegalSurname1}, ${student.FirstName}`);
-        this.updateElement('studentBCE', student.BCEID1);
-        this.updateElement('studentHouse', student.HouseName || 'N/A');
-        this.updateElement('studentHomeGroup', student.HomeGroup || 'N/A');
-        this.updateElement('studentYear', student.YearLevelName || 'N/A');
-        
-        // Update photo with fallback
-        const photo = document.getElementById('studentPhoto');
-        if (photo) {
-          photo.src = `students/${student.BCEID1}.jpg`;
-          photo.onerror = function() {
-            this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" fill="%23f0f0f0"/><text x="60" y="65" text-anchor="middle" fill="%23666" font-size="14">No Photo</text></svg>';
-          };
-        }
-        
-        profile.style.display = 'block';
-      }
-
-      updateElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-          element.textContent = value;
-        }
-      }
-
-      async loadStudentHistory(studentId) {
-        const historySection = document.getElementById('historySection');
-        const historyList = document.getElementById('historyList');
-        
-        if (!historySection || !historyList) return;
-        
-        try {
-          historySection.style.display = 'block';
-          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">Loading history...</div>';
-          
-          // Use unified system's Firebase utilities
-          if (this.dataManager.db) {
-            const snapshot = await this.dataManager.db.collection('outofclass')
-              .where('student', '==', studentId)
-              .orderBy('timestamp', 'desc')
-              .limit(20)
-              .get();
-            
-            this.displayStudentHistory(snapshot);
-          } else {
-            historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">History unavailable (Firebase not connected)</div>';
-          }
-          
-        } catch (error) {
-          console.warn('❌ Error loading history:', error);
-          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--error);">Error loading history</div>';
-        }
-      }
-
-      displayStudentHistory(snapshot) {
-        const historyList = document.getElementById('historyList');
-        const historyCount = document.getElementById('historyCount');
-        const studentLogCount = document.getElementById('studentLogCount');
-        
-        if (!historyList) return;
-        
-        if (historyCount) historyCount.textContent = snapshot.size;
-        if (studentLogCount) studentLogCount.textContent = snapshot.size;
-        
-        if (snapshot.empty) {
-          historyList.innerHTML = '<div style="padding: 40px; text-align: center; color: #666; font-style: italic;">No previous incidents recorded</div>';
-          return;
-        }
-        
-        historyList.innerHTML = '';
-        
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const item = this.createHistoryItem(data);
-          historyList.appendChild(item);
-        });
-      }
-
-      createHistoryItem(data) {
-        const item = document.createElement('div');
-        item.className = 'history-item';
-        
-        const date = data.timestamp?.toDate?.()?.toLocaleDateString() || 'Unknown Date';
-        const time = data.timestamp?.toDate?.()?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '';
-        const emoji = this.reasonEmoji[data.reason] || '📝';
-        
-        // Calculate duration if returned
-        let durationDisplay = '';
-        if (data.returnedAt && data.timestamp) {
-          const duration = data.returnedAt.toDate() - data.timestamp.toDate();
-          const minutes = Math.floor(duration / 60000);
-          
-          let durationClass = '';
-          if (minutes > this.constants.VERY_LONG_DURATION_THRESHOLD) {
-            durationClass = 'very-long';
-          } else if (minutes > this.constants.LONG_DURATION_THRESHOLD) {
-            durationClass = 'long';
-          }
-          
-          durationDisplay = `<div style="position: absolute; top: 16px; right: 16px; background: var(--info); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;" class="${durationClass}">${minutes}m</div>`;
-          item.classList.add('completed');
-        } else if (data.status === 'out') {
-          // Still out - calculate current duration
-          const currentDuration = this.calculateDuration(data.timestamp);
-          if (currentDuration.minutes > this.constants.NOTIFICATION_THRESHOLD) {
-            item.classList.add('overdue');
-            durationDisplay = `<div style="position: absolute; top: 16px; right: 16px; background: var(--error); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">⏰ ${currentDuration.text}</div>`;
-          }
-        }
-        
-        item.innerHTML = `
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-weight: 600; color: var(--nav-bg);">${date} ${time}</div>
-            <div style="display: flex; align-items: center; gap: 8px; background: rgba(102,0,0,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.9em; font-weight: 500; color: var(--accent);">
-              <span>${emoji}</span>
-              <span>${data.reason || 'Unknown'}</span>
-            </div>
-          </div>
-          ${durationDisplay}
-          ${data.details ? `<div style="color: #666; font-style: italic; margin-top: 8px;">"${data.details}"</div>` : ''}
-          <div style="font-size: 0.85em; color: #888; margin-top: 4px;">Logged by: ${data.staff || 'Unknown'}</div>
-        `;
-        
-        return item;
-      }
-
-      restoreLastStudent() {
-        const lastStudentId = localStorage.getItem(this.constants.LAST_STUDENT_KEY);
-        if (lastStudentId && this.students) {
-          const student = this.students.find(s => s.BCEID1 === lastStudentId);
-          if (student) {
-            this.selectStudent(student);
-          }
-        }
-      }
-
-      validateForm() {
-        const studentId = this.selectedStudent?.BCEID1;
-        const reason = document.getElementById('reasonSelect')?.value;
-        
-        const isValid = studentId && reason;
-        
-        const logBtn = document.getElementById('logBtn');
-        if (logBtn) {
-          logBtn.disabled = !isValid;
-        }
-      }
-
-      async handleFormSubmit(event) {
-        event.preventDefault();
-        
-        if (!this.selectedStudent) {
-          this.showToast('❌ Please select a student', 'error');
-          return;
-        }
-
-        const reason = document.getElementById('reasonSelect')?.value;
-        const details = document.getElementById('detailsInput')?.value || '';
-
-        if (!reason) {
-          this.showToast('❌ Please select a reason', 'error');
-          return;
-        }
-
-        try {
-          // Show loading state
-          const logBtn = document.getElementById('logBtn');
-          if (logBtn) {
-            logBtn.classList.add('loading');
-            logBtn.disabled = true;
-          }
-
-          // Get database reference
-          const db = this.db || this.dataManager?.db;
-          if (!db) {
-            throw new Error('Database not available');
-          }
-
-          // Get staff info
-          const staff = JSON.parse(localStorage.getItem('loggedInStaff'));
-          if (!staff) {
-            throw new Error('Staff information not found');
-          }
-
-          // Submit incident
-          const incidentData = {
-            student: this.selectedStudent.BCEID1,
-            reason,
-            details,
-            staff: staff['staff name'],
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'out',
-            returnedAt: null
-          };
-
-          await db.collection('outofclass').add(incidentData);
-
-          this.showToast('✅ Incident logged successfully!', 'success');
-
-          // Reset form
-          document.getElementById('reasonSelect').value = '';
-          document.getElementById('detailsInput').value = '';
-
-          // Refresh history
-          this.loadStudentHistory(this.selectedStudent.BCEID1);
-
-          // Refresh analytics
-          setTimeout(() => this.loadAnalytics(), 1000);
-
-        } catch (error) {
-          console.error('❌ Error logging incident:', error);
-          this.showToast(`❌ Error logging incident: ${error.message}`, 'error');
-        } finally {
-          // Reset submit button
-          const logBtn = document.getElementById('logBtn');
-          if (logBtn) {
-            logBtn.classList.remove('loading');
-            this.validateForm();
-          }
-        }
-      }
-
-      showToast(message, type = 'info', duration = 4000) {
-        // Use custom toast with better positioning to avoid dropdown conflicts
-        const existingToast = document.querySelector('.custom-toast');
-        if (existingToast) {
-          existingToast.remove();
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `custom-toast ${type}`;
-        toast.innerHTML = `
-          ${message}
-          <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
-        `;
-
-        document.body.appendChild(toast);
-
-        // Show toast
-        requestAnimationFrame(() => {
-          toast.classList.add('show');
-        });
-
-        // Auto remove
-        setTimeout(() => {
-          toast.classList.remove('show');
-          setTimeout(() => {
-            if (toast.parentElement) {
-              toast.remove();
-            }
-          }, 300);
-        }, duration);
-      }
-
-      async markStudentReturned(incidentId, studentId) {
-        try {
-          const db = this.db || this.dataManager?.db;
-          if (!db) {
-            throw new Error('Database not available');
-          }
-
-          await db.collection('outofclass').doc(incidentId).update({
-            status: 'returned',
-            returnedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-
-          this.showToast('✅ Student marked as returned', 'success');
-
-          // Refresh student history if same student is selected
-          if (this.selectedStudent && this.selectedStudent.BCEID1 === studentId) {
-            this.loadStudentHistory(studentId);
-          }
-
-        } catch (error) {
-          console.error('❌ Error marking student as returned:', error);
-          this.showToast('❌ Error updating status. Please try again.', 'error');
-        }
-      }
-
-      toggleActiveIncidents(forceShow = false) {
-        const activeIncidentsSection = document.getElementById('activeIncidentsSection');
-        if (!activeIncidentsSection) return;
-        
-        const isVisible = activeIncidentsSection.style.display === 'block';
-        
-        if (forceShow || !isVisible) {
-          activeIncidentsSection.style.display = 'block';
-          this.refreshActiveIncidents();
+      invalidateCache(key) {
+        if (key) {
+          this.cache.delete(key);
         } else {
-          activeIncidentsSection.style.display = 'none';
+          this.cache.clear();
         }
       }
 
-      refreshActiveIncidents() {
-        if (!this.dataManager.db) return;
-        
-        this.dataManager.db.collection('outofclass')
-          .where('status', '==', 'out')
-          .get()
-          .then(snapshot => {
-            this.updateActiveIncidents(snapshot);
-            this.dataManager.showToast('🔄 Active incidents refreshed', 'info');
-          })
-          .catch(error => {
-            console.error('Error refreshing active incidents:', error);
-            this.dataManager.showToast('❌ Error refreshing data', 'error');
-          });
+      generateSubmissionId() {
+        return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
+    }
 
-      async loadAnalytics() {
+    // --- FORM SUBMISSION ---
+    async function handleFormSubmit(e) {
+        e.preventDefault();
+        if (!formValidationManager.validateForm()) {
+            showToast('Please fill out all required fields.', 'warning');
+            return;
+        }
+
+        const logBtn = document.getElementById('logBtn');
+        logBtn.classList.add('loading');
+        logBtn.disabled = true;
+
+        await ErrorHandler.safeAsync(async () => {
+            const staffInfo = JSON.parse(localStorage.getItem('loggedInStaff') || '{}');
+            const incidentData = {
+                student: selectedStudent.BCEID1,
+                studentName: `${selectedStudent.FirstName} ${selectedStudent.LegalSurname1}`,
+                reason: document.getElementById('reasonSelect').value,
+                details: document.getElementById('detailsInput').value,
+                status: 'logged',
+                house: selectedStudent.HouseName || '',
+                yearLevel: selectedStudent.YearLevelName || '',
+                staff: staffInfo['staff name'] || 'Unknown Staff',
+                staffName: staffInfo['staff name'] || 'Unknown Staff',
+                staffEmail: staffInfo['email'] || 'unknown@example.com'
+            };
+
+            await dataManager.submitLog(incidentData);
+            showToast('✅ Movement logged successfully!', 'success');
+            resetForm();
+            await refreshStats();
+        }, null, 'Submitting Log');
+
+        logBtn.classList.remove('loading');
+        formValidationManager.validateForm(); // Re-validate to reset button state
+    }
+
+    // --- UTILITY FUNCTIONS ---
+    async function refreshStats() {
+        const btn = document.querySelector('#statsSection .refresh-btn');
+        if (btn) btn.disabled = true;
+
         try {
-          // Show stats section
-          const quickStats = document.getElementById('quickStats');
-          if (quickStats) {
-            quickStats.style.display = 'grid';
-          }
-
-          const insightsSection = document.getElementById('insightsSection');
-          if (insightsSection) {
-            insightsSection.style.display = 'grid';
-          }
-
-          // TODO: Implement advanced analytics using unified system
-          
-        } catch (error) {
-          console.warn('Analytics loading error:', error);
+            const stats = await window.dataManager.getTodayStats();
+            document.getElementById('todayLogs').textContent = stats.count;
+            displayTopReasons(stats.reasons);
+            displayRepeatLogs(stats.repeats);
+        } catch (err) {
+            console.error("Error refreshing stats", err);
+            showToast("Could not refresh statistics.", "error");
+        } finally {
+            if (btn) btn.disabled = false;
         }
-      }
-
-      updateTodayStats(snapshot) {
-        const todayCount = document.getElementById('todayCount');
-        if (todayCount) {
-          todayCount.textContent = snapshot.size;
-        }
-      }
-
-      handleVisibilityChange() {
-        if (!document.hidden) {
-          this.updateNotificationBadge();
-        }
-      }
-
-      showInterface() {
-        // Hide loading state
-        const loadingState = document.getElementById('loadingState');
-        if (loadingState) {
-          loadingState.style.display = 'none';
-        }
-
-        // Show main interface
-        const navBar = document.getElementById('navBar');
-        const mainContainer = document.getElementById('mainContainer');
+    }
+    
+    function displayTopReasons(counts) {
+        const list = document.getElementById('topReasonsList');
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
         
-        if (navBar) {
-          navBar.style.display = 'flex';
-          navBar.style.animation = 'fadeIn 0.5s ease';
+        if (sorted.length === 0) {
+            list.innerHTML = `<li style="text-align:center; color: var(--text-muted)">No reasons logged yet today.</li>`;
+            return;
         }
         
-        if (mainContainer) {
-          mainContainer.style.display = 'flex';
-          mainContainer.style.animation = 'fadeInUp 0.6s ease';
-        }
+        list.innerHTML = sorted.map(([reason, count]) => `
+            <li class="analysis-item">
+                <span class="name">${reason}</span>
+                <span class="count">${count}</span>
+            </li>`).join('');
+    }
 
-        // Hide loading banner
-        const loadingBanner = document.getElementById('loadingBanner');
-        if (loadingBanner) {
-          loadingBanner.style.display = 'none';
-        }
-      }
+    function displayRepeatLogs(counts) {
+        const list = document.getElementById('repeatLogsList');
+        const repeats = Object.entries(counts).filter(([name, count]) => count > 1).sort((a,b) => b[1] - a[1]).slice(0, 3);
 
-      cleanup() {
-        // Clean up listeners
-        this.realtimeListeners.forEach(listenerId => {
-          if (this.dataManager && this.dataManager.listeners.has(listenerId)) {
-            const unsubscribe = this.dataManager.listeners.get(listenerId);
-            if (typeof unsubscribe === 'function') {
-              unsubscribe();
-            }
-          }
+        if (repeats.length === 0) {
+            list.innerHTML = `<li style="text-align:center; color: var(--text-muted)">No repeat logs today.</li>`;
+            return;
+        }
+        
+        list.innerHTML = repeats.map(([name, count]) => `
+            <li class="analysis-item">
+                <span class="name">${name}</span>
+                <span class="count">${count}</span>
+            </li>`).join('');
+    }
+
+    function resetForm() {
+        document.getElementById('incidentForm')?.reset();
+        document.getElementById('selectedStudentId').value = '';
+        
+        if (searchSystem) {
+            searchSystem.selectedStudent = null;
+        }
+        selectedStudent = null;
+        
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.classList.remove('field-valid', 'field-invalid');
+        }
+        
+        const profile = document.getElementById('studentProfile');
+        if (profile) {
+            profile.classList.remove('visible');
+        }
+        
+        const historyList = document.getElementById('historyList');
+        if (historyList) {
+            historyList.innerHTML = '<div class="history-empty">Select a student to view their history</div>';
+        }
+        
+        const historyCount = document.getElementById('historyCount');
+        if (historyCount) {
+            historyCount.textContent = '0';
+        }
+        
+        if (formValidationManager) {
+            formValidationManager.validateForm();
+        }
+    }
+    
+    function updateStatus(message, type) {
+        const banner = document.getElementById('statusBanner');
+        const text = document.getElementById('statusText');
+        if (banner && text) {
+            text.textContent = message;
+            banner.className = `status-banner banner-${type}`;
+            banner.style.display = 'block';
+        }
+    }
+
+    function hideStatusBanner() {
+        const banner = document.getElementById('statusBanner');
+        if (banner) {
+            banner.style.opacity = '0';
+            setTimeout(() => { banner.style.display = 'none'; }, 300);
+        }
+    }
+
+    // The old showToast and hideToast functions have been removed.
+    // The new UnifiedToast system is now active via critical-fixes.js.
+    window.navigate = (url) => window.location.href = url;
+    window.logout = () => {
+        localStorage.clear();
+        showToast('👋 Logged out successfully', 'info');
+        setTimeout(() => navigate('index.html'), 1000);
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply performance optimizations immediately
+        PerformanceOptimizer.addCriticalCSS();
+        
+        // Initialize toast system
+        UnifiedToast.init();
+        
+        // Add global error handling
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            ErrorHandler.showUserFriendlyError(error, 'Global Error');
+            return false;
+        };
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            ErrorHandler.showUserFriendlyError(event.reason, 'Promise Rejection');
+            event.preventDefault();
         });
-
-        // Clean up data manager
-        if (this.dataManager) {
-          this.dataManager.cleanup();
-        }
-
-        console.log('🧹 Out-of-Class system cleanup completed');
-      }
-    }
-
-    // Navigation functions
-    function navigate(url) {
-      window.location.href = url;
-    }
-
-    function logout() {
-      // Clean up system if available
-      if (window.OutOfClassSystem) {
-        OutOfClassSystem.cleanup();
-      }
-      
-      // Clear authentication
-      localStorage.removeItem('loggedInStaff');
-      
-      // Show logout message and redirect
-      if (window.OutOfClassSystem) {
-        OutOfClassSystem.showToast('👋 Logged out successfully', 'info');
-      }
-      
-      setTimeout(() => navigate('index.html'), 1000);
-    }
-
-    // Initialize the system when DOM is loaded
-    document.addEventListener('DOMContentLoaded', async () => {
-      // Create global instance
-      window.OutOfClassSystem = new OutOfClassTrackerSystem();
-      
-      try {
-        await OutOfClassSystem.initialize();
-      } catch (error) {
-        console.error('🚨 System initialization failed:', error);
         
-        // Show error state
-        const loadingState = document.getElementById('loadingState');
-        if (loadingState) {
-          loadingState.innerHTML = `
-            <div style="text-align: center; color: var(--error);">
-              <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
-              <div style="font-size: 1.2em; margin-bottom: 10px;">System Initialization Failed</div>
-              <div style="color: #666; margin-bottom: 20px;">${error.message}</div>
-              <button onclick="location.reload()" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                🔄 Retry
-              </button>
-            </div>
-          `;
-        }
-      }
+        console.log('✅ Critical fixes applied successfully');
     });
-
-    // Global navigation functions - available immediately
-    window.navigate = navigate;
-    window.logout = logout;
-
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-      if (window.OutOfClassSystem) {
-        OutOfClassSystem.cleanup();
-      }
-    });
-
-    // Error handling
-    window.addEventListener('error', (event) => {
-      console.error('🚨 Application error:', event.error);
-      if (window.OutOfClassSystem && window.OutOfClassSystem.dataManager) {
-        OutOfClassSystem.dataManager.showToast('❌ An error occurred. Please refresh the page.', 'error');
-      }
-    });
-
-    console.log('✅ Out-of-Class Tracker Pro v3.1 script loaded');
   </script>
 </body>
 </html>

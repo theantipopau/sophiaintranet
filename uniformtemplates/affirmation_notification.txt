@@ -1,0 +1,15 @@
+Subject: Positive Affirmation for {studentName} at Sophia College
+
+Dear {parentName},
+
+We are delighted to share a positive affirmation that was recently submitted for {studentName}:
+
+"{affirmationText}"
+
+This recognition was submitted by: {staffName}.
+
+We believe in celebrating the positive contributions and achievements of our students. Well done, {studentName}!
+
+Kind regards,
+
+Sophia College

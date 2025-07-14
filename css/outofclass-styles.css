@@ -1,0 +1,228 @@
+/* Performance-focused CSS optimizations */
+:root {
+  /* Consolidate animations */
+  --animation-fast: 0.15s ease;
+  --animation-medium: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --animation-slow: 0.6s ease;
+  
+  /* Optimize gradients */
+  --gradient-primary: linear-gradient(135deg, #fbecec 0%, #f0f4f8 100%);
+  --gradient-card: linear-gradient(135deg, var(--nav-bg) 0%, #004080 100%);
+  
+  /* Critical performance values */
+  --will-change-transform: transform;
+  --contain-layout: layout style paint;
+}
+
+/* Critical above-the-fold styles */
+.loading-state {
+  contain: strict;
+  will-change: opacity, transform;
+}
+
+/* Optimize heavy elements */
+.student-dropdown,
+.history-list,
+.stats-grid {
+  contain: var(--contain-layout);
+}
+
+/* Lazy load non-critical animations */
+.student-profile,
+.history-section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}
+
+/* Reduce repaints */
+.stat-card:hover {
+  will-change: var(--will-change-transform);
+}
+
+/* Validation Styles */
+.validation-message {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-top: 6px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+
+.validation-message.error {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.form-input.valid {
+  border-color: var(--success);
+  background: rgba(5, 150, 105, 0.05);
+}
+
+.form-input.invalid {
+  border-color: var(--error);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.submit-btn.ready {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  transform: scale(1.02);
+}
+
+.submit-btn.ready:hover {
+  transform: scale(1.05) translateY(-2px);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Profile Animation Styles */
+.profile-loading {
+  padding: var(--spacing-xl);
+}
+
+.profile-skeleton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.skeleton-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.skeleton-item {
+  padding: var(--spacing-md);
+  background: var(--border-light);
+  border-radius: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.small { width: 30%; }
+.skeleton-line.medium { width: 60%; }
+.skeleton-line.large { width: 80%; }
+
+.profile-item {
+  animation: fadeInUp 0.3s ease both;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Enhanced Mobile Styles */
+@media (max-width: 768px) {
+  /* Touch-friendly buttons */
+  .student-option {
+    padding: 16px;
+    min-height: 60px;
+    border-bottom: 2px solid var(--border-light);
+  }
+
+  .submit-btn {
+    padding: 18px 24px;
+    font-size: 1.1em;
+    min-height: 56px;
+  }
+
+  /* Improved form layout */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .control-group label {
+    font-size: 1em;
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-input {
+    padding: 16px;
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 48px;
+  }
+
+  /* Better dropdown behavior */
+  .student-dropdown {
+    max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+
+  /* Touch gestures for history items */
+  .history-item {
+    padding: var(--spacing-lg) var(--spacing-md);
+    min-height: 80px;
+    border-radius: 8px;
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .history-item:active {
+    transform: scale(0.98);
+    background: var(--border);
+  }
+
+  /* Floating action style submit */
+  .submit-btn {
+    position: sticky;
+    bottom: var(--spacing-lg);
+    z-index: 100;
+    margin: var(--spacing-lg) auto 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+}
+
+/* Pull-to-refresh indicator */
+.pull-indicator {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-100px);
+  background: var(--card-bg);
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  z-index: 1000;
+}
+
+.pull-indicator.visible {
+  transform: translateX(-50%) translateY(0);
+}

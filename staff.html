@@ -4,680 +4,579 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sophia College Infringement Tracker</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="../logo.ico" type="image/x-icon">
+  <link rel="icon" href="logo.ico" type="image/x-icon">
+  <link rel="stylesheet" href="shared/common-styles.css">
+  <link rel="stylesheet" href="css/staff-styles.css">
   
-  <!-- Firebase SDKs v11.7.1 -->
   <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
-  <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <!-- Unified Sophia System -->
   <script src="/shared/sophia-unified-system.js"></script>
+  <script src="js/critical-fixes.js"></script>
   
   <style>
-    /* Keep existing styles from original file */
     :root { 
-      --nav-bg: #003057; 
-      --nav-fg: #fff; 
-      --bg: linear-gradient(135deg, #fbecec 0%, #f8fafc 100%); 
       --card: #ffffff; 
-      --accent: #660000; 
       --text: #2c2c2c;
       --text-light: #64748b;
       --text-muted: #94a3b8;
       --border: #e2e8f0;
       --border-light: #f1f5f9;
-      --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 20px rgba(0,0,0,0.12);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
       --border-radius: 12px;
       --border-radius-lg: 16px;
-      --success: #059669;
-      --warning: #d97706;
-      --danger: #dc2626;
-      --info: #0284c7;
+      --success: #28a745;
+      --warning: #ffc107;
+      --error: #dc3545;
+      --info: #17a2b8;
       --spacing-xs: 4px;
       --spacing-sm: 8px;
       --spacing-md: 16px;
       --spacing-lg: 24px;
       --spacing-xl: 32px;
       --spacing-2xl: 48px;
+      --font-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    /* Include all the existing CSS styles from the original file */
-    * { box-sizing: border-box; }
-    
     body { 
-      margin: 0; 
-      font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif; 
+      font-family: var(--font-primary); 
       background: var(--bg); 
       color: var(--text);
       line-height: 1.6;
       font-size: 14px;
-    }
-    
-    /* Enhanced Navigation */
-    .nav-bar { 
-      display: flex; 
-      align-items: center; 
-      background: var(--nav-bg); 
-      color: var(--nav-fg); 
-      padding: var(--spacing-md) var(--spacing-lg); 
-      position: sticky; 
-      top: 0; 
-      z-index: 100;
-      box-shadow: var(--shadow-lg);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .nav-logo { 
-      height: 36px; 
-      margin-right: var(--spacing-md);
-      transition: transform 0.2s ease;
-    }
-    
-    .nav-logo:hover { transform: scale(1.05); }
-    
-    .nav-title { 
-      font-size: 1.25rem; 
-      font-weight: 600;
-      letter-spacing: -0.025em;
-    }
-    
-    .nav-links { 
-      margin-left: auto; 
-      display: flex; 
-      align-items: center; 
-      gap: var(--spacing-md); 
-    }
-    
-    #staffName { 
-      font-weight: 500; 
-      color: rgba(255,255,255,0.9);
-      font-size: 0.875rem;
-    }
-    
-    .dropdown { position: relative; }
-    
-    .dropbtn { 
-      background: rgba(255,255,255,0.1); 
-      color: var(--nav-fg); 
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: var(--spacing-sm) var(--spacing-md); 
-      border-radius: var(--spacing-sm); 
-      cursor: pointer;
-      font-weight: 500;
-      transition: all 0.2s ease;
-      font-size: 0.875rem;
-    }
-    
-    .dropbtn:hover { 
-      background: rgba(255,255,255,0.2); 
-      transform: translateY(-1px);
-    }
-    
-    .dropdown-content { 
-      display: none; 
-      position: absolute; 
-      right: 0; 
-      background: var(--card); 
-      min-width: 200px; 
-      box-shadow: var(--shadow-lg); 
-      border-radius: var(--border-radius); 
-      overflow: hidden;
-      z-index: 1000;
-      border: 1px solid var(--border);
-      margin-top: var(--spacing-xs);
-    }
-    
-    .dropdown-content a, .dropdown-content button { 
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      padding: var(--spacing-md); 
-      text-decoration: none; 
-      color: var(--text); 
-      background: none; 
-      border: none; 
-      width: 100%; 
-      text-align: left; 
-      cursor: pointer;
-      font-size: 0.875rem;
-      font-weight: 500;
-      transition: background 0.15s ease;
-      border-bottom: 1px solid var(--border-light);
-    }
-    
-    .dropdown-content a:last-child, .dropdown-content button:last-child {
-      border-bottom: none;
-    }
-    
-    .dropdown-content a:hover, .dropdown-content button:hover { 
-      background: var(--border-light);
-    }
-    
-    .dropdown:hover .dropdown-content { display: block; }
-    
-    /* Main Container */
-    .main-container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: var(--spacing-lg);
-      display: grid;
-      gap: var(--spacing-lg);
-    }
-    
-    /* Page Header */
-    .page-header {
-      background: var(--card);
-      border-radius: var(--border-radius-lg);
-      padding: var(--spacing-2xl) var(--spacing-lg) var(--spacing-xl);
-      text-align: center;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-    
-    .page-header .logo {
-      width: 200px;
-      height: auto;
-      margin-bottom: var(--spacing-lg);
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
-    }
-    
-    .page-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--nav-bg);
-      margin: 0 0 var(--spacing-sm) 0;
-      letter-spacing: -0.025em;
-    }
-    
-    .page-subtitle {
-      font-size: 1rem;
-      color: var(--text-light);
-      margin: 0;
-      font-weight: 400;
-    }
-
-    /* Student search dropdown */
-    .student-search-container {
-      position: relative;
-    }
-
-    .student-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #ddd;
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      z-index: 1000;
-      max-height: 300px;
-      overflow-y: auto;
-      display: none;
-    }
-
-    .student-option {
-      padding: 12px;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      transition: background-color 0.2s ease;
-    }
-
-    .student-option:hover {
-      background-color: #f0f7ff;
-    }
-
-    .student-option:last-child {
-      border-bottom: none;
-    }
-
-    /* Form sections */
-    .filters-section,
-    .selection-section,
-    .submit-section {
-      background: var(--card);
-      border-radius: var(--border-radius);
-      padding: var(--spacing-lg);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-sm);
-      margin-bottom: var(--spacing-lg);
-    }
-
-    .section-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--text);
-      margin: 0;
-    }
-
-    .filters-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: var(--spacing-lg);
-    }
-
-    .form-group {
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-
-    .form-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text);
-      margin-bottom: var(--spacing-sm);
+    
+    .main-container { 
+      max-width: 1400px; margin: 0 auto; padding: var(--spacing-lg);
+      display: grid; gap: var(--spacing-lg); flex: 1; 
     }
+    
+    .page-header {
+      background: var(--card); border-radius: var(--border-radius-lg);
+      padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-md); 
+      text-align: center; box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .page-header .logo { width: 200px; height: auto; margin-bottom: var(--spacing-md); filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1)); }
+    .page-title { font-size: 2rem; font-weight: 700; color: var(--nav-bg); margin: 0 0 var(--spacing-xs) 0; letter-spacing: -0.025em; }
+    .page-subtitle { font-size: 1rem; color: var(--text-light); margin: 0 0 var(--spacing-md) 0; font-weight: 400; }
+    .weekly-stats-counter { 
+      text-align: center; font-size: 1rem; color: var(--text); background-color: rgba(255,255,255,0.7);
+      padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--border-radius);
+      display: inline-block; margin-bottom: var(--spacing-lg); box-shadow: var(--shadow);
+    }
+    .weekly-stats-counter span { font-weight: bold; color: var(--accent); }
 
+    .student-search-container { position: relative; }
+    .student-dropdown {
+      position: absolute; top: 100%; left: 0; right: 0; background: white;
+      border: 1px solid #ddd; border-top: none; border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 1000; max-height: 300px;
+      overflow-y: auto; display: none;
+    }
+    .student-option { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; transition: background-color 0.2s ease; }
+    .student-option:hover { background-color: #f0f7ff; }
+    .student-option:last-child { border-bottom: none; }
+
+    .filters-section, .selection-section, .submit-section, .infringement-history-section {
+      background: var(--card); border-radius: var(--border-radius); padding: var(--spacing-xl);
+      box-shadow: var(--shadow); border: 1px solid var(--border); transition: all 0.2s ease;
+    }
+    .filters-section:hover, .selection-section:hover, .submit-section:hover, .infringement-history-section:hover {
+      box-shadow: var(--shadow-lg); transform: translateY(-2px);
+    }
+        
+    .selected-students-container { 
+        background: var(--card); border-radius: var(--border-radius); padding: var(--spacing-md); 
+        box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: var(--spacing-lg); 
+    }
+    .selected-students { 
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: var(--spacing-md); margin-top: var(--spacing-xs); min-height: 60px; 
+    }
+    .student-card { 
+      display: flex; flex-direction: column; align-items: center; background: var(--card);
+      padding: var(--spacing-md); border-radius: var(--border-radius); box-shadow: var(--shadow);
+      border: 1px solid var(--border); position: relative; transition: transform 0.2s ease;
+    }
+    .student-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .student-photo {
+      width: 60px; height: 60px; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--accent); margin-bottom: var(--spacing-sm);
+    }
+    .student-name { font-weight: 600; text-align: center; color: var(--text); font-size: 0.9rem; margin-bottom: var(--spacing-xs); }
+    .student-details { font-size: 0.8rem; color: var(--text-light); text-align: center; }
+    .remove-student { 
+      position: absolute; top: 5px; right: 5px; background: var(--danger); color: white;
+      border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
+      font-size: 12px; line-height: 1; display:flex; align-items:center; justify-content:center;
+    }
+    .remove-student:hover { opacity: 0.8; }
+
+    .section-header { display: flex; align-items: center; gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); }
+    .section-title { font-size: 1.125rem; font-weight: 600; color: var(--text); margin: 0; }
+    .filters-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg); }
+    .form-group { display: flex; flex-direction: column; }
+    .form-label { font-size: 0.875rem; font-weight: 500; color: var(--text); margin-bottom: var(--spacing-sm); }
     .form-input, .form-select {
-      padding: var(--spacing-md);
-      border: 1px solid var(--border);
-      border-radius: var(--spacing-sm);
-      font-size: 0.875rem;
-      background: var(--card);
-      color: var(--text);
-      transition: all 0.15s ease;
+      padding: var(--spacing-md); border: 1px solid var(--border); border-radius: var(--spacing-sm);
+      font-size: 0.875rem; background: var(--card); color: var(--text); transition: all 0.15s ease;
     }
+    .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(102, 0, 0, 0.1); }
 
-    .form-input:focus, .form-select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(102, 0, 0, 0.1);
-    }
-
-    /* Submit button */
     .submit-btn {
-      padding: var(--spacing-md) var(--spacing-2xl);
-      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
-      color: white;
-      border: none;
-      border-radius: var(--spacing-sm);
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
+      padding: var(--spacing-md) var(--spacing-2xl); background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
+      color: white; border: none; border-radius: var(--spacing-sm); font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow); min-width: 200px;
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-sm);
+    }
+    .submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .submit-btn:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; box-shadow: none; }
+    
+    .loading-spinner {
+      border: 4px solid var(--border); border-top: 4px solid var(--accent); border-radius: 50%;
+      width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .history-list-item {
+      background: var(--border-light); padding: var(--spacing-sm); border-radius: var(--border-radius);
+      margin-bottom: var(--spacing-sm); border-left: 4px solid var(--info);
+    }
+    #infringementHistoryList {
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .history-list-item p { margin: var(--spacing-xs) 0; }
+    .history-list-item strong { color: var(--accent); }
+    .history-list-item .infringement-type-history { font-style: italic; color: var(--text-light); }
+
+    /* Enhanced Student Profile */
+    .student-profile {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
       box-shadow: var(--shadow);
-      min-width: 200px;
-      display: inline-flex;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: var(--transition-medium);
+      display: none; /* Hide by default */
+    }
+
+    .student-profile.visible {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg);
+      padding: var(--spacing-xl);
+      background: linear-gradient(135deg, var(--nav-bg) 0%, #004080 100%);
+      color: white;
+    }
+
+    .profile-photo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1);
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-sm);
+      font-size: 2em;
+      flex-shrink: 0;
     }
 
-    .submit-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .submit-btn:disabled {
-      background: var(--border);
-      color: var(--text-muted);
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    /* Student profile */
-    .student-panel {
-      background: var(--card);
-      border-radius: var(--border-radius);
-      padding: var(--spacing-lg);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      display: none;
-    }
-
-    .student-grid {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: var(--spacing-lg);
-      align-items: start;
-    }
-
-    .student-photo {
-      width: 120px;
-      height: 120px;
-      border-radius: var(--border-radius);
-      border: 3px solid var(--border);
+    .profile-photo img {
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      box-shadow: var(--shadow);
+    }
+    
+    .profile-photo .fallback-icon {
+        font-size: 2em;
+        display: none;
     }
 
-    .student-info {
+    .profile-details h3 {
+      margin: 0 0 var(--spacing-sm) 0;
+      font-size: 1.5em;
+      font-weight: 600;
+    }
+
+    .profile-grid {
       display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: var(--spacing-md);
+      padding: var(--spacing-xl);
     }
 
-    .info-row {
+    .profile-item {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
+      padding: var(--spacing-md);
+      background: var(--border-light);
+      border-radius: 8px;
+      transition: var(--transition);
     }
 
-    .info-label {
-      font-size: 0.875rem;
-      color: var(--text-light);
-      font-weight: 500;
-      min-width: 100px;
+    .profile-item:hover {
+      background: var(--border);
+      transform: translateX(4px);
     }
 
-    .info-value {
-      font-size: 0.875rem;
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    /* Loading state */
-    .loading-state {
+    .profile-item .icon {
+      font-size: 1.2em;
+      opacity: 0.8;
+      width: 24px;
       text-align: center;
-      padding: 2rem;
+    }
+
+    .profile-item .label {
+      font-weight: 600;
       color: var(--text-light);
+      font-size: 0.85em;
+      min-width: 80px;
     }
 
-    .loading-spinner {
-      border: 4px solid var(--border);
-      border-top: 4px solid var(--accent);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
+    .profile-item .value {
+      font-weight: 500;
+      color: var(--text);
     }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    .toast {
+      position: fixed; top: calc(var(--nav-height) + 20px); right: 20px; background: var(--card-bg); 
+      border: 1px solid #e0e0e0; border-radius: 12px; padding: 16px 20px; box-shadow: var(--shadow-lg);
+      display: none; z-index: 10000; max-width: 400px; transform: translateX(450px); 
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); backdrop-filter: blur(10px); 
     }
+    .toast.show { display: block; transform: translateX(0); }
+    .toast.success { border-left: 4px solid var(--success); background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(40, 167, 69, 0.02)); }
+    .toast.error { border-left: 4px solid var(--error); background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.02)); }
+    .toast.warning { border-left: 4px solid var(--warning); background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02)); }
+    .toast.info { border-left: 4px solid var(--info); background: linear-gradient(135deg, rgba(23, 162, 184, 0.05), rgba(23, 162, 184, 0.02)); }
+    .toast-close { 
+      position: absolute; top: 8px; right: 12px; background: none; border: none; font-size: 1.4em;
+      cursor: pointer; color: #999; line-height: 1; padding: 4px; border-radius: 4px; transition: var(--transition);
+    }
+    .toast-close:hover { background: rgba(0,0,0,0.1); color: #666; }
 
-    /* Responsive design */
     @media (max-width: 768px) {
-      .main-container {
-        padding: var(--spacing-md);
-      }
-      
-      .filters-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .student-grid {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
+      .main-container { padding: var(--spacing-md); }
+      .filters-grid { grid-template-columns: 1fr; }
+      .toast { right: 16px; left: 16px; max-width: none; transform: translateY(-100px); }
+      .toast.show { transform: translateY(0); }
     }
+    
+    .dark-mode {
+      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); --card-bg: #2d2d2d;
+      --text: #e0e0e0; --border: #444; --border-light: #383838;
+    }
+    .dark-mode .form-input, .dark-mode .form-select, .dark-mode .student-dropdown,
+    .dark-mode .student-option:hover, .dark-mode .filters-section, .dark-mode .selection-section,
+    .dark-mode .submit-section, .dark-mode .page-header, .dark-mode .weekly-stats-counter,
+    .dark-mode .selected-students-container, .dark-mode .student-card, .dark-mode .infringement-history-section,
+    .dark-mode .history-list-item {
+      background-color: var(--card-bg); color: var(--text); border-color: var(--border);
+    }
+    .dark-mode .student-option:hover { background-color: #404040; }
+    .dark-mode .page-subtitle, .dark-mode .info-label { color: #aaa; }
+    .dark-mode .toast { background: var(--card-bg); border-color: #444; }
+    .dark-mode .dropdown-content { background-color: #2c2c2c; border-color: #444; }
+    .dark-mode .dropdown-content a, .dark-mode .dropdown-content button { color: #ffffff; }
+    .dark-mode .dropdown-content a:hover, .dark-mode .dropdown-content button:hover { background-color: var(--secondary); }
+    .dark-mode .dropbtn { background: #404040; color: var(--nav-fg); }
+    .dark-mode .dropbtn:hover { background-color: #555; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-  <!-- Navigation -->
-  <nav class="nav-bar">
-    <img src="crest.png" class="nav-logo" alt="College Crest">
-    <div class="nav-title">✏️ Student Infringement Tracker</div>
-    <div class="nav-links">
-      <span id="staffName"></span>
-      <div class="dropdown">
-        <button class="dropbtn" aria-label="Menu">☰ Menu</button>
-        <div class="dropdown-content">
-          <a href="home.html" onclick="navigate('home.html');return false;">🏠 Home</a>
-          <a href="outofclass.html" onclick="navigate('outofclass.html');return false;">🏫 Out of Class Tracker</a>
-          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html');return false;">🔄 Re-Engagement Room</a>
-          <a href="admin.html" id="adminLink" onclick="navigate('admin.html');return false;">👥 Admin Access</a>
-          <button onclick="SophiaSystem.logout();return false;">🚪 Logout</button>
+  <!-- Enhanced Navigation -->
+  <nav class="nav-bar" role="navigation" aria-label="Main navigation">
+    <div class="nav-left">
+      <img src="crest.png" alt="College Crest" class="nav-logo">
+    </div>
+    <div class="nav-title">📝 Infringement Tracker</div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <span id="staffName" aria-live="polite"></span>
+        <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Navigation menu" aria-expanded="false" aria-haspopup="true">
+            ☰ Menu
+          </button>
+          <div class="dropdown-content" role="menu">
+            <a href="home.html" onclick="navigate('home.html'); return false;" role="menuitem">🏠 Home</a>
+            <a href="staff.html" onclick="navigate('staff.html'); return false;" role="menuitem">📝 Infringement Tracker</a>
+            <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;" role="menuitem">🏫 Out-of-Class Logger</a>
+            <a href="positiveaffirmations.html" onclick="navigate('positiveaffirmations.html'); return false;" role="menuitem">✨ Positive Affirmations</a>
+            <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;" role="menuitem">🔄 Re-Engagement Room</a>
+            <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;" role="menuitem">
+              👥 Admin Dashboard 
+              <span id="badge" class="badge" style="display:none;" aria-label="notifications"></span>
+            </a>
+            <button onclick="logout(); return false;" role="menuitem">🚪 Logout</button>
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Main Container -->
   <div class="main-container">
-    
-    <!-- Loading State -->
+    <!-- Improved Loading State -->
     <div id="loadingState" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>Loading system data...</p>
+      <div class="skeleton-loader">
+        <div class="skeleton-header"></div>
+        <div class="skeleton-cards">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- Page Header -->
     <div class="page-header" style="display: none;" id="pageHeader">
       <img src="sophia-logo.png" class="logo" alt="Infringement Tracker">
       <h1 class="page-title">Student Infringement Tracker</h1>
       <p class="page-subtitle">Record and track student uniform and behavior infringements with ease</p>
+      <div class="weekly-stats-counter">Infringements This Week: <span id="totalWeeklyInfringementsCount">0</span></div>
     </div>
 
-    <!-- Filters Section -->
     <div class="filters-section" style="display: none;" id="filtersSection">
-      <div class="section-header">
-        <span class="section-icon">🔍</span>
-        <h2 class="section-title">Search & Filter Students</h2>
-      </div>
-      
+      <div class="section-header"><span class="section-icon">🔍</span><h2 class="section-title">Search & Filter Students</h2></div>
       <div class="filters-grid">
         <div class="form-group student-search-container">
           <label class="form-label" for="searchInput">🔍 Search Students</label>
           <input type="text" id="searchInput" class="form-input" placeholder="Type student name or ID...">
           <div id="studentDropdown" class="student-dropdown"></div>
         </div>
-        
         <div class="form-group">
           <label class="form-label" for="homegroupFilter">🏫 Home Group</label>
-          <select id="homegroupFilter" class="form-select">
-            <option value="">All Homegroups</option>
-          </select>
+          <select id="homegroupFilter" class="form-select"><option value="">All Homegroups</option></select>
         </div>
-        
         <div class="form-group">
           <label class="form-label" for="houseFilter">🏠 House</label>
-          <select id="houseFilter" class="form-select">
-            <option value="">All Houses</option>
-          </select>
+          <select id="houseFilter" class="form-select"><option value="">All Houses</option></select>
         </div>
-        
         <div class="form-group">
           <label class="form-label" for="yearFilter">📚 Year Level</label>
-          <select id="yearFilter" class="form-select">
-            <option value="">All Years</option>
-          </select>
+          <select id="yearFilter" class="form-select"><option value="">All Years</option></select>
         </div>
       </div>
     </div>
+    
+    <div class="selected-students-container" id="selectedStudentsContainer" style="display: none;">
+        <div class="section-header"><span class="section-icon">👤</span><h2 class="section-title">Selected Students</h2></div>
+        <div class="selected-students" id="selectedStudentsDisplayArea">
+            <p style="color: var(--text-muted); font-style: italic; text-align:center; width:100%;">No students selected yet.</p>
+        </div>
+    </div>
 
-    <!-- Selection Section -->
-    <div class="selection-section" style="display: none;" id="selectionSection">
-      <div class="section-header">
-        <span class="section-icon">⚠️</span>
-        <h2 class="section-title">Select Infringement Type</h2>
+    <!-- Enhanced Student Profile -->
+    <section class="section">
+      <div class="student-profile" id="studentProfile" aria-labelledby="profile-title">
+        <div class="profile-header">
+          <div class="profile-photo">
+            <img id="studentPhoto" alt="Student Photo" src="">
+            <div class="fallback-icon">👤</div>
+          </div>
+          <div class="profile-details">
+            <h3 id="profile-title">Student Profile</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.9em;">View comprehensive student information and history</p>
+          </div>
+        </div>
+        <div class="profile-grid">
+          <div class="profile-item">
+            <span class="icon">👤</span>
+            <span class="label">Name:</span>
+            <span class="value" id="studentNameDetail">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="icon">🆔</span>
+            <span class="label">BCE ID:</span>
+            <span class="value" id="studentBCE">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="icon">🏠</span>
+            <span class="label">House:</span>
+            <span class="value" id="studentHouse">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="icon">🏫</span>
+            <span class="label">Home Group:</span>
+            <span class="value" id="studentHomeGroup">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="icon">📊</span>
+            <span class="label">Year Level:</span>
+            <span class="value" id="studentYear">-</span>
+          </div>
+          <div class="profile-item">
+            <span class="icon">📈</span>
+            <span class="label">Total Infringements:</span>
+            <span class="value" id="studentLogCount">-</span>
+          </div>
+        </div>
       </div>
-      
+    </section>
+
+    <div class="infringement-history-section" id="infringementHistorySection" style="display: none;">
+        <div class="section-header">
+            <span class="section-icon">📜</span>
+            <h2 class="section-title">Student Infringement History</h2>
+        </div>
+        <div id="infringementHistoryList">
+            <p style="color: var(--text-muted); text-align: center;">Select a single student to view their history.</p>
+        </div>
+    </div>
+
+    <div class="selection-section" style="display: none;" id="selectionSection">
+      <div class="section-header"><span class="section-icon">⚠️</span><h2 class="section-title">Select Infringement Type</h2></div>
       <div class="form-group">
         <label class="form-label" for="infringementSelect">Infringement Type</label>
-        <select id="infringementSelect" class="form-select">
-          <option value="">Select infringement type...</option>
-        </select>
+        <select id="infringementSelect" class="form-select"><option value="">Select infringement type...</option></select>
       </div>
     </div>
 
-    <!-- Submit Section -->
     <div class="submit-section" style="display: none;" id="submitSection">
-      <button id="submitBtn" class="submit-btn" disabled>
-        📝 Log Infringement
-      </button>
-      <p style="margin: var(--spacing-md) 0 0 0; font-size: 0.875rem; color: var(--text-light); text-align: center;">
-        Select students and an infringement type to continue
-      </p>
-    </div>
-
-    <!-- Student Profile -->
-    <div class="student-panel" id="studentPanel">
-      <div class="section-header">
-        <span class="section-icon">👤</span>
-        <h2 class="section-title">Student Details</h2>
-      </div>
-      
-      <div class="student-grid">
-        <img id="studentPhoto" class="student-photo" alt="Student Photo">
-        
-        <div class="student-info">
-          <div class="info-row">
-            <span class="info-label">Name:</span>
-            <span class="info-value" id="studentNameDetail">-</span>
-          </div>
-          
-          <div class="info-row">
-            <span class="info-label">BCE ID:</span>
-            <span class="info-value" id="studentBCE">-</span>
-          </div>
-          
-          <div class="info-row">
-            <span class="info-label">House:</span>
-            <span class="info-value" id="studentHouse">-</span>
-          </div>
-          
-          <div class="info-row">
-            <span class="info-label">Home Group:</span>
-            <span class="info-value" id="studentHomeGroup">-</span>
-          </div>
-        </div>
+      <div style="text-align: center;">
+        <button id="submitBtn" class="submit-btn" disabled>📝 Log Infringement</button>
+        <p style="margin: var(--spacing-md) 0 0 0; font-size: 0.875rem; color: var(--text-light);">
+          Select student(s) and an infringement type to continue
+        </p>
       </div>
     </div>
-
   </div>
 
+  <div id="toast" class="toast" role="alert" aria-live="assertive">
+    <button class="toast-close" onclick="closeToast()" aria-label="Close notification">&times;</button>
+    <div id="toastMessage"></div>
+  </div>
+
+  <!-- Enhanced Footer -->
+  <footer class="footer">
+    <p>© 2025 Sophia College | 
+      <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+      <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
+      Enhanced Version 2.2
+    </p>
+  </footer>
+
   <script>
-    // Enhanced Staff Infringement System using Unified Data Manager
     class StaffInfringementSystem {
       constructor() {
-        this.dataManager = null;
-        this.selectedStudents = [];
-        this.filteredStudents = [];
-        this.allStudents = [];
-        this.infringementTypes = [];
+        this.dataManager = null; this.selectedStudents = []; this.filteredStudents = [];
+        this.allStudents = []; this.infringementTypes = []; this.loggedInStaffDetails = null; 
+        this.THEME_KEY = 'sophia_theme'; 
       }
 
       async initialize() {
         try {
-          // Show loading state
-          this.showSection('loadingState');
-
-          // Initialize unified data manager
+          this.showSection('loadingState', true); 
           this.dataManager = new SophiaDataManager();
+          this.dbOptimizer = new DatabaseOptimizer(this.dataManager.db);
           
-          // Check authentication
-          await this.dataManager.checkAuthentication();
-          
-          // Load all required data
+          this.loggedInStaffDetails = JSON.parse(localStorage.getItem('loggedInStaff'));
+          if (!this.loggedInStaffDetails) {
+            localStorage.setItem('redirectUrlAfterLogin', window.location.href);
+            window.location.href = 'index.html'; return;
+          }
+          this.initializeTheme(); 
+
           await this.loadSystemData();
-          
-          // Setup UI components
+          await this.displayTotalWeeklyInfringements();
           this.setupUI();
-          
-          // Setup event listeners
           this.setupEventListeners();
-          
-          // Show main interface
-          this.showMainInterface();
-          
+          this.showMainInterface(); 
           this.dataManager.showToast('✅ System ready!', 'success');
-          
         } catch (error) {
           console.error('❌ Initialization failed:', error);
-          if (this.dataManager) {
-            this.dataManager.showToast(`❌ Initialization failed: ${error.message}`, 'error');
-          }
-          // Redirect to login on auth failure
-          if (error.message === 'Authentication required') {
+          if (this.dataManager) this.dataManager.showToast(`❌ Initialization failed: ${error.message}`, 'error');
+          if (error.message === 'Authentication required' || !this.loggedInStaffDetails) {
             setTimeout(() => window.location.href = 'index.html', 2000);
           }
         }
       }
 
       async loadSystemData() {
-        console.log('📚 Loading system data...');
-        
-        // Load students and infringement types in parallel
+        const staffNameElement = document.getElementById('staffName');
+        if (this.loggedInStaffDetails && staffNameElement) {
+            staffNameElement.textContent = this.loggedInStaffDetails['staff name'] || 'Staff Member';
+            setTimeout(() => { staffNameElement.classList.add('loaded'); }, 100);
+        } else if (staffNameElement) staffNameElement.textContent = 'Staff Member';
+
         const [students, infringementTypes] = await Promise.all([
-          this.dataManager.loadStudents(),
-          this.dataManager.loadInfringementTypes()
+          this.dataManager.loadStudents(), this.dataManager.loadInfringementTypes()
         ]);
-
-        this.allStudents = students;
-        this.filteredStudents = students;
-        this.infringementTypes = infringementTypes;
-
-        // Setup filter dropdowns
+        this.allStudents = students; this.filteredStudents = students; this.infringementTypes = infringementTypes;
         const filters = this.dataManager.createFilterDropdowns(students);
         this.dataManager.populateSelect('homegroupFilter', filters.homeGroups, 'All Homegroups');
         this.dataManager.populateSelect('houseFilter', filters.houses, 'All Houses');
         this.dataManager.populateSelect('yearFilter', filters.yearLevels, 'All Years');
-        
-        // Setup infringement dropdown with emojis
         this.populateInfringementSelect();
-
-        console.log(`✅ Loaded ${students.length} students and ${infringementTypes.length} infringement types`);
       }
 
       populateInfringementSelect() {
         const select = document.getElementById('infringementSelect');
         if (!select) return;
-
-        const emojiMap = {
-          'No Hat': '🧢', 'Shirt': '👔', 'No Blazer': '🧥', 'Belt': '🧷',
-          'Shoes': '👞', 'Jewellery': '💍', 'Hair Accessories': '🎀',
-          'Nails / Tan / Eyelashes': '💅', 'Facial Hair': '🧔', 'Hair': '💇',
-          'Socks': '🧦', 'Tie': '👔', 'Gum': '🍬', 'No Diary': '📔',
-          'No Laptop': '💻', 'Missing key learning equipment': '📚', 'Trousers': '👖'
-        };
-
         select.innerHTML = '<option value="">Select infringement type...</option>';
-        
-        this.infringementTypes.forEach(infringement => {
-          const emoji = emojiMap[infringement] || '⚠️';
-          const option = new Option(`${emoji} ${infringement}`, infringement);
-          select.add(option);
-        });
+        const emojiMap = {'No Hat': '🧢', 'Shirt': '👔', 'No Blazer': '🧥', 'Belt': '🧷', 'Shoes': '👞', 'Jewellery': '💍', 'Hair Accessories': '🎀', 'Nails / Tan / Eyelashes': '💅', 'Facial Hair': '🧔', 'Hair': '💇', 'Socks': '🧦', 'Tie': '👔', 'Gum': '🍬', 'No Diary': '📔', 'No Laptop': '💻', 'Missing key learning equipment': '📚', 'Trousers': '👖', 'Late to Class': '⌚'};
+        this.infringementTypes.forEach(inf => select.add(new Option(`${emojiMap[inf] || '⚠️'} ${inf}`, inf)));
       }
 
       setupUI() {
-        // Setup student search with unified system
-        this.dataManager.createStudentSearch('searchInput', 'studentDropdown', (student) => {
-          this.selectStudent(student);
-        });
+        this.optimizedSearch = new OptimizedSearch(this);
+        if (this.loggedInStaffDetails && this.loggedInStaffDetails.adminaccess !== 'Y') {
+          const adminLink = document.getElementById('adminLink');
+          if (adminLink) adminLink.style.display = 'none';
+        }
       }
 
       setupEventListeners() {
-        // Filter change listeners
-        ['homegroupFilter', 'houseFilter', 'yearFilter'].forEach(filterId => {
-          const element = document.getElementById(filterId);
-          if (element) {
-            element.addEventListener('change', () => this.applyFilters());
+        console.log('Setting up event listeners...');
+        ['homegroupFilter', 'houseFilter', 'yearFilter'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.addEventListener('change', () => this.applyFilters());
+            console.log(`Listener attached to ${id}`);
           }
         });
-
-        // Infringement selection
-        const infringementSelect = document.getElementById('infringementSelect');
-        if (infringementSelect) {
-          infringementSelect.addEventListener('change', () => this.validateForm());
+        const infSelect = document.getElementById('infringementSelect');
+        if (infSelect) {
+          infSelect.addEventListener('change', () => this.validateForm());
+          console.log('Listener attached to infringementSelect');
         }
-
-        // Submit button
         const submitBtn = document.getElementById('submitBtn');
         if (submitBtn) {
           submitBtn.addEventListener('click', () => this.submitInfringement());
+          console.log('Listener ATTACHED to submitBtn.');
+        } else {
+          console.error('Submit button NOT FOUND.');
+        }
+        const themeToggleBtn = document.getElementById('themeToggle');
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener('click', () => this.toggleTheme());
+          console.log('Listener attached to themeToggleBtn');
         }
       }
 
       selectStudent(student) {
-        console.log('👤 Student selected:', student.FirstName, student.LegalSurname1);
-        
-        // Toggle student selection
         const existingIndex = this.selectedStudents.findIndex(s => s.BCEID1 === student.BCEID1);
-        
         if (existingIndex >= 0) {
           this.selectedStudents.splice(existingIndex, 1);
           this.dataManager.showToast(`Removed ${student.FirstName} ${student.LegalSurname1}`, 'info');
@@ -685,208 +584,603 @@
           this.selectedStudents.push(student);
           this.dataManager.showToast(`Added ${student.FirstName} ${student.LegalSurname1}`, 'success');
         }
-
-        // Show student profile for single selection
-        if (this.selectedStudents.length === 1) {
-          this.showStudentProfile(this.selectedStudents[0]);
-        } else {
-          this.hideStudentProfile();
-        }
-
+        this.updateSelectedStudentsDisplay(); 
         this.validateForm();
+        document.getElementById('searchInput').value = ''; 
+        document.getElementById('studentDropdown').style.display = 'none';
       }
+      
+      updateSelectedStudentsDisplay() {
+          const container = document.getElementById('selectedStudentsDisplayArea');
+          const containerWrapper = document.getElementById('selectedStudentsContainer');
+          const historySection = document.getElementById('infringementHistorySection');
+
+          if (!container || !containerWrapper || !historySection) return;
+
+          if (this.selectedStudents.length === 0) {
+              container.innerHTML = '<p style="color: var(--text-muted); font-style: italic; text-align:center; width:100%;">No students selected yet.</p>';
+              containerWrapper.style.display = 'none'; 
+              historySection.style.display = 'none'; 
+              return;
+          }
+          
+          containerWrapper.style.display = 'block'; 
+          container.innerHTML = this.selectedStudents.map(student => `
+              <div class="student-card" onmouseenter="window.StaffSystem.showHoveredStudentProfile('${student.BCEID1}')" onmouseleave="window.StaffSystem.showLastSelectedStudentProfile()">
+                  <img src="students/${student.BCEID1}.jpg" 
+                       class="student-photo"
+                       onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\"http://www.w3.org/2000/svg\\" width=\\"60\\" height=\\"60\\" viewBox=\\"0 0 60 60\\"%3E%3Crect width=\\"60\\" height=\\"60\\" fill=\\"%23f0f0f0\\" rx=\\"30\\"%3E%3C/rect%3E%3Ctext x=\\"30\\" y=\\"38\\" text-anchor=\\"middle\\" fill=\\"%23999\\" font-size=\\"20\\" font-family=\\"sans-serif\\"%3E👤%3C/text%3E%3C/svg%3E';"
+                       alt="${student.FirstName} ${student.LegalSurname1}">
+                  <div class="student-name">${student.LegalSurname1}, ${student.FirstName}</div>
+                  <div class="student-details">${student.BCEID1}</div>
+                  <button class="remove-student" onclick="window.StaffSystem.removeSelectedStudent('${student.BCEID1}')" 
+                          aria-label="Remove ${student.FirstName} ${student.LegalSurname1}">×</button>
+              </div>
+          `).join('');
+
+          if (this.selectedStudents.length > 0) {
+            const lastSelected = this.selectedStudents[this.selectedStudents.length - 1];
+            this.showStudentProfile(lastSelected);
+            document.getElementById('studentProfile').style.display = 'block';
+            if (this.selectedStudents.length === 1) {
+              historySection.style.display = 'block';
+              this.loadStudentInfringementHistory(lastSelected.BCEID1);
+            } else {
+              historySection.style.display = 'none';
+              document.getElementById('infringementHistoryList').innerHTML = '<p style="color: var(--text-muted); text-align: center;">Hover over a student to see their history.</p>';
+            }
+          } else {
+            document.getElementById('studentProfile').style.display = 'none';
+          }
+      }
+
+      removeSelectedStudent(bceid) { 
+          this.selectedStudents = this.selectedStudents.filter(s => s.BCEID1 !== bceid);
+          this.updateSelectedStudentsDisplay();
+          this.validateForm();
+          this.dataManager.showToast(`Student removed`, 'info');
+      }
+
+      showStudentProfile(student) {
+        const profile = document.getElementById('studentProfile');
+        if (!profile) return;
+        
+        const update = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value || '-';
+        };
+
+        update('studentNameDetail', `${student.FirstName} ${student.LegalSurname1}`);
+        update('studentBCE', student.BCEID1);
+        update('studentHouse', student.HouseName);
+        update('studentHomeGroup', student.HomeGroup);
+        update('studentYear', student.YearLevelName);
+        
+        const photo = document.getElementById('studentPhoto');
+        const fallback = photo.nextElementSibling;
+        
+        let photoId = student.BCEID1;
+        if (!photoId.toLowerCase().startsWith('s')) {
+            photoId = 's' + photoId;
+        }
+        photo.src = `students/${photoId}.jpg`;
+        photo.style.display = 'block';
+        fallback.style.display = 'none';
+        
+        photo.onerror = () => {
+            photo.style.display = 'none';
+            fallback.style.display = 'flex';
+        };
+
+        profile.classList.add('visible');
+    }
+
+    showHoveredStudentProfile(bceid) {
+        const student = this.allStudents.find(s => s.BCEID1 === bceid);
+        if (student) {
+            this.showStudentProfile(student);
+            this.loadStudentInfringementHistory(bceid);
+            document.getElementById('infringementHistorySection').style.display = 'block';
+        }
+    }
+
+    showLastSelectedStudentProfile() {
+        if (this.selectedStudents.length > 0) {
+            const lastSelected = this.selectedStudents[this.selectedStudents.length - 1];
+            this.showStudentProfile(lastSelected);
+            if (this.selectedStudents.length > 1) {
+                document.getElementById('infringementHistorySection').style.display = 'none';
+            }
+        }
+    }
+
+      async loadStudentInfringementHistory(studentBCEID) {
+        const historyListDiv = document.getElementById('infringementHistoryList');
+        if (!historyListDiv || !this.dataManager || !this.dataManager.db) return;
+        historyListDiv.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Loading history...</p>';
+        try {
+            const records = await this.dbOptimizer.getStudentHistory(studentBCEID);
+            this.displayStudentInfringementHistory(records);
+            document.getElementById('studentLogCount').textContent = records.length;
+        } catch (error) {
+            console.error("Error loading student infringement history: ", error);
+            historyListDiv.innerHTML = '<p style="color: var(--error); text-align: center;">Error loading history.</p>';
+        }
+      }
+
+      displayStudentInfringementHistory(records) {
+        const historyListDiv = document.getElementById('infringementHistoryList');
+        if (!historyListDiv) return;
+
+        if (records.length === 0) {
+            historyListDiv.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No infringements found for this student.</p>';
+            return;
+        }
+        historyListDiv.innerHTML = records.map(record => `
+            <div class="history-list-item">
+              <p><strong>Type:</strong> <span class="infringement-type-history">"${record.infringementType || 'N/A'}"</span></p>
+              <p><strong>By:</strong> ${record.staffName || 'N/A'} 
+                 <strong>On:</strong> ${record.timestamp ? new Date(record.timestamp).toLocaleDateString() : 'N/A'}
+              </p>
+            </div>
+        `).join('');
+      }
+
 
       applyFilters() {
         const homegroup = document.getElementById('homegroupFilter')?.value;
         const house = document.getElementById('houseFilter')?.value;
         const year = document.getElementById('yearFilter')?.value;
-
-        this.filteredStudents = this.allStudents.filter(student => {
-          return (!homegroup || student.HomeGroup === homegroup) &&
-                 (!house || student.HouseName === house) &&
-                 (!year || student.YearLevelName === year);
-        });
-
-        console.log(`🔍 Filters applied: ${this.filteredStudents.length} students match criteria`);
-      }
-
-      showStudentProfile(student) {
-        console.log('📋 Showing profile for:', student.BCEID1);
-
-        // Update photo
-        const photo = document.getElementById('studentPhoto');
-        if (photo) {
-          photo.src = `students/${student.BCEID1}.jpg`;
-          photo.onerror = () => {
-            photo.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" fill="%23f0f0f0"/><text x="60" y="65" text-anchor="middle" fill="%23666" font-size="14">No Photo</text></svg>`;
-          };
-        }
-
-        // Update profile details
-        const updateElement = (id, value) => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.textContent = value || 'N/A';
-          }
-        };
-
-        updateElement('studentNameDetail', `${student.FirstName} ${student.LegalSurname1}`);
-        updateElement('studentBCE', student.BCEID1);
-        updateElement('studentHouse', student.HouseName);
-        updateElement('studentHomeGroup', student.HomeGroup);
-
-        // Show profile
-        const profile = document.getElementById('studentPanel');
-        if (profile) {
-          profile.style.display = 'block';
-        }
-      }
-
-      hideStudentProfile() {
-        const profile = document.getElementById('studentPanel');
-        if (profile) {
-          profile.style.display = 'none';
+        this.filteredStudents = this.allStudents.filter(s => 
+          (!homegroup || s.HomeGroup === homegroup) &&
+          (!house || s.HouseName === house) &&
+          (!year || s.YearLevelName === year)
+        );
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && searchInput.value.trim().length >=2) {
+            this.dataManager.filterStudentDropdown(searchInput.value.trim().toLowerCase(), this.filteredStudents);
         }
       }
 
       validateForm() {
-        const hasStudents = this.selectedStudents.length > 0;
-        const hasInfringement = document.getElementById('infringementSelect')?.value;
-        
-        const submitBtn = document.getElementById('submitBtn');
-        if (submitBtn) {
-          const isValid = hasStudents && hasInfringement;
-          submitBtn.disabled = !isValid;
-          
-          if (isValid) {
-            const count = this.selectedStudents.length;
-            submitBtn.textContent = `📝 Log Infringement (${count} student${count !== 1 ? 's' : ''})`;
-          } else {
-            submitBtn.textContent = '📝 Log Infringement';
-          }
-        }
+        this.formValidator.validateForm();
       }
 
       async submitInfringement() {
-        if (this.selectedStudents.length === 0) {
-          this.dataManager.showToast('❌ Please select at least one student', 'error');
-          return;
+        console.log('--- submitInfringement CALLED ---');
+        
+        console.log('Checking selected students. Count:', this.selectedStudents.length);
+        if (this.selectedStudents.length === 0) { 
+          this.dataManager.showToast('❌ Please select at least one student', 'error'); 
+          console.log('Validation FAIL: No students selected.');
+          return; 
+        }
+        
+        const infringementType = document.getElementById('infringementSelect')?.value;
+        console.log('Checking infringement type. Value:', infringementType);
+        if (!infringementType) { 
+          this.dataManager.showToast('❌ Please select an infringement type', 'error'); 
+          console.log('Validation FAIL: No infringement type selected.');
+          return; 
         }
 
-        const infringementType = document.getElementById('infringementSelect')?.value;
-        if (!infringementType) {
-          this.dataManager.showToast('❌ Please select an infringement type', 'error');
-          return;
-        }
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Logging...';
+        console.log('UI Updated: Button disabled, text changed to Logging...');
 
         try {
-          // Show loading state on submit button
-          const submitBtn = document.getElementById('submitBtn');
-          const originalText = submitBtn.textContent;
-          submitBtn.disabled = true;
-          submitBtn.textContent = '⏳ Logging...';
+          const timestamp = new Date().toISOString(); 
+          
+          console.log('Checking staff details. LoggedInStaff:', JSON.stringify(this.loggedInStaffDetails)); 
+          const staffName = this.loggedInStaffDetails ? this.loggedInStaffDetails['staff name'] : 'Unknown Staff';
+          const staffEmail = this.loggedInStaffDetails ? this.loggedInStaffDetails['email'] : 'unknown@example.com';
 
-          // Submit each student's infringement
-          const submissions = this.selectedStudents.map(student => 
-            this.dataManager.submitToFirebase('infringements', {
-              student: student.BCEID1,
-              infringement: infringementType
-            })
-          );
+          if (!this.loggedInStaffDetails || !staffEmail || !staffName || staffEmail === 'unknown@example.com') {
+            this.dataManager.showToast('❌ Error: Staff details not found or invalid. Please log in again.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            console.log('Validation FAIL: Staff details missing or invalid.');
+            return;
+          }
+          console.log(`Staff details retrieved: Name - ${staffName}, Email - ${staffEmail}`);
+          console.log('Preparing submissions. Selected students:', JSON.stringify(this.selectedStudents.map(s => s.BCEID1)));
 
+
+          const submissions = this.selectedStudents.map(student => {
+            const record = {
+              studentBCEID: student.BCEID1, 
+              studentName: `${student.FirstName} ${student.LegalSurname1}`,
+              studentHouse: student.HouseName || 'N/A', // Add House
+              studentYearLevel: student.YearLevelName || 'N/A', // Add Year Level
+              infringementType: infringementType, 
+              staffName: staffName, 
+              staffEmail: staffEmail, 
+              timestamp: timestamp 
+            };
+            console.log('Submitting record:', JSON.stringify(record)); 
+            return this.dataManager.submitToFirebase('infringements', record);
+          });
+          
           await Promise.all(submissions);
+          console.log('All submissions complete.');
 
-          // Success feedback
+          await this.displayTotalWeeklyInfringements(); 
           const studentCount = this.selectedStudents.length;
-          const studentText = studentCount === 1 ? 'student' : 'students';
-          this.dataManager.showToast(
-            `✅ Infringement logged for ${studentCount} ${studentText}`, 
-            'success'
-          );
-
-          // Reset form
+          this.dataManager.showToast(`✅ Infringement logged for ${studentCount} student${studentCount !== 1 ? 's' : ''}`, 'success');
           this.resetForm();
-
         } catch (error) {
-          console.error('❌ Error submitting infringement:', error);
+          console.error('💥 FULL ERROR in submitInfringement:', error, error.stack); 
           this.dataManager.showToast('❌ Error logging infringement. Please try again.', 'error');
         } finally {
-          // Reset submit button
-          const submitBtn = document.getElementById('submitBtn');
           submitBtn.disabled = false;
-          this.validateForm();
+          this.validateForm(); 
+          console.log('submitInfringement finished.');
         }
       }
 
       resetForm() {
-        // Clear selections
         this.selectedStudents = [];
-        
-        // Reset form elements
-        const infringementSelect = document.getElementById('infringementSelect');
-        if (infringementSelect) {
-          infringementSelect.value = '';
-        }
-
+        this.updateSelectedStudentsDisplay(); 
+        const infSelect = document.getElementById('infringementSelect');
+        if (infSelect) infSelect.value = '';
         const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-          searchInput.value = '';
-        }
-
-        // Hide student profile
-        this.hideStudentProfile();
-        
-        // Revalidate form
+        if (searchInput) searchInput.value = '';
         this.validateForm();
       }
 
-      showSection(sectionId) {
-        // Hide all sections first
-        ['loadingState', 'pageHeader', 'filtersSection', 'selectionSection', 'submitSection'].forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.style.display = 'none';
-          }
+      showSection(sectionId, isLoading = false) {
+        const sections = ['loadingState', 'pageHeader', 'filtersSection', 'selectedStudentsContainer', 'infringementHistorySection', 'selectionSection', 'submitSection'];
+        sections.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = (id === sectionId && isLoading) || (id !== 'loadingState' && !isLoading) ? 'block' : 'none';
         });
-
-        // Show target section
-        const targetSection = document.getElementById(sectionId);
-        if (targetSection) {
-          targetSection.style.display = 'block';
+         if (!isLoading && this.selectedStudents.length === 0) {
+            const selectedContainer = document.getElementById('selectedStudentsContainer');
+            if(selectedContainer) selectedContainer.style.display = 'none';
+            const historyContainer = document.getElementById('infringementHistorySection');
+            if(historyContainer) historyContainer.style.display = 'none';
+        } else if (!isLoading && this.selectedStudents.length !== 1) {
+            const historyContainer = document.getElementById('infringementHistorySection');
+            if(historyContainer) historyContainer.style.display = 'none';
         }
       }
-
+      
       showMainInterface() {
-        // Show all main interface sections
-        ['pageHeader', 'filtersSection', 'selectionSection', 'submitSection'].forEach(id => {
-          const element = document.getElementById(id);
-          if (element) {
-            element.style.display = 'block';
-          }
-        });
+        this.showSection('pageHeader', false); 
+      }
 
-        // Hide loading state
-        const loadingState = document.getElementById('loadingState');
-        if (loadingState) {
-          loadingState.style.display = 'none';
+
+      initializeTheme() {
+        const savedTheme = localStorage.getItem(this.THEME_KEY);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const themeToggleBtn = document.getElementById('themeToggle');
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+          document.body.classList.add('dark-mode');
+          if (themeToggleBtn) themeToggleBtn.textContent = '☀️';
+        } else {
+          if (themeToggleBtn) themeToggleBtn.textContent = '🌓';
+        }
+      }
+
+      toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem(this.THEME_KEY, isDark ? 'dark' : 'light');
+        const themeToggleBtn = document.getElementById('themeToggle');
+        if (themeToggleBtn) {
+          themeToggleBtn.textContent = isDark ? '☀️' : '🌓';
+          themeToggleBtn.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+          themeToggleBtn.style.transform = 'scale(0.9)';
+          setTimeout(() => { themeToggleBtn.style.transform = 'scale(1)'; }, 150);
+        }
+        this.dataManager.showToast(`🎨 Switched to ${isDark ? 'dark' : 'light'} mode`, 'success', 2000);
+      }
+
+      async displayTotalWeeklyInfringements() {
+        const countElement = document.getElementById('totalWeeklyInfringementsCount');
+        if (!countElement || !this.dataManager || !this.dataManager.db) return;
+        try {
+            const count = await this.dbOptimizer.getWeeklyInfringements();
+            countElement.textContent = count;
+        } catch (error) {
+          console.error("Error loading total weekly infringements: ", error);
+          countElement.textContent = "N/A";
+          this.dataManager.showToast("Could not load weekly infringement count.", "error");
         }
       }
     }
 
-    // Navigation functions
-    function navigate(url) {
-      window.location.href = url;
+    function navigate(url) { window.location.href = url; }
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        localStorage.removeItem('loggedInStaff'); localStorage.removeItem('loginTimestamp');
+        localStorage.removeItem('rememberMe'); sessionStorage.clear();
+        window.location.href = 'index.html';
+      }
+    }
+    function showToast(message, type = 'info', duration = 3000) {
+        const toast = document.getElementById('toast');
+        const messageElement = document.getElementById('toastMessage');
+        if (!toast || !messageElement) { alert(`${type.toUpperCase()}: ${message}`); return; }
+        toast.className = `toast ${type}`; messageElement.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => closeToast(), duration);
+    }
+    function closeToast() {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            const isMobile = window.innerWidth <= 768;
+            toast.style.transform = isMobile ? 'translateY(-100px)' : 'translateX(450px)';
+            setTimeout(() => { toast.classList.remove('show'); toast.style.transform = ''; }, 300);
+        }
     }
 
-    // Initialize the system when DOM is loaded
+// Optimized Database Queries
+class DatabaseOptimizer {
+  constructor(db) {
+    this.db = db;
+    this.cache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+  }
+
+  async getWeeklyInfringements() {
+    const cacheKey = 'weeklyInfringements';
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.data;
+    }
+
+    try {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      
+      // Use composite index for better performance
+      const snapshot = await this.db.collection('infringements')
+        .where('timestamp', '>=', weekAgo.toISOString())
+        .orderBy('timestamp', 'desc')
+        .get();
+      
+      const count = snapshot.size;
+      this.cache.set(cacheKey, { data: count, timestamp: Date.now() });
+      return count;
+    } catch (error) {
+      console.error('Error loading weekly infringements:', error);
+      return 0;
+    }
+  }
+
+  async getStudentHistory(studentBCEID, limit = 5) {
+    const cacheKey = `studentHistory_${studentBCEID}`;
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.data;
+    }
+
+    try {
+      const snapshot = await this.db.collection('infringements')
+        .where('studentBCEID', '==', studentBCEID)
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .get();
+      
+      const records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      this.cache.set(cacheKey, { data: records, timestamp: Date.now() });
+      return records;
+    } catch (error) {
+      console.error('Error loading student history:', error);
+      return [];
+    }
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
+}
+
+// Enhanced Form Validation
+class FormValidator {
+  constructor(staffSystem) {
+    this.staffSystem = staffSystem;
+    this.validationRules = {
+      students: () => this.staffSystem.selectedStudents.length > 0,
+      infringement: () => document.getElementById('infringementSelect')?.value
+    };
+  }
+
+  validateForm() {
+    const validation = this.getValidationState();
+    this.updateSubmitButton(validation);
+    this.updateValidationMessages(validation);
+    return validation.isValid;
+  }
+
+  getValidationState() {
+    const hasStudents = this.validationRules.students();
+    const hasInfringement = this.validationRules.infringement();
+    
+    return {
+      isValid: hasStudents && hasInfringement,
+      errors: {
+        students: !hasStudents ? 'Please select at least one student' : null,
+        infringement: !hasInfringement ? 'Please select an infringement type' : null
+      },
+      studentCount: this.staffSystem.selectedStudents.length
+    };
+  }
+
+  updateSubmitButton(validation) {
+    const submitBtn = document.getElementById('submitBtn');
+    if (!submitBtn) return;
+
+    submitBtn.disabled = !validation.isValid;
+    
+    if (validation.isValid) {
+      const count = validation.studentCount;
+      submitBtn.innerHTML = `
+        <span>📝 Log Infringement</span>
+        <small>(${count} student${count !== 1 ? 's' : ''})</small>
+      `;
+      submitBtn.className = 'submit-btn submit-btn-ready';
+    } else {
+      submitBtn.innerHTML = '<span>📝 Complete Form to Continue</span>';
+      submitBtn.className = 'submit-btn';
+    }
+  }
+
+  updateValidationMessages(validation) {
+    // Update student selection message
+    this.updateValidationMessage('student-validation', validation.errors.students);
+    
+    // Update infringement selection message
+    this.updateValidationMessage('infringement-validation', validation.errors.infringement);
+  }
+
+  updateValidationMessage(elementId, message) {
+    let msgElement = document.getElementById(elementId);
+    
+    if (message) {
+      if (!msgElement) {
+        msgElement = document.createElement('div');
+        msgElement.id = elementId;
+        msgElement.className = 'validation-message error';
+        
+        // Insert after appropriate form element
+        const targetElement = elementId.includes('student') ? 
+          document.getElementById('selectedStudentsContainer') : 
+          document.getElementById('infringementSelect');
+          
+        if (targetElement && targetElement.parentNode) {
+          targetElement.parentNode.insertBefore(msgElement, targetElement.nextSibling);
+        }
+      }
+      msgElement.textContent = message;
+      msgElement.style.display = 'block';
+    } else if (msgElement) {
+      msgElement.style.display = 'none';
+    }
+  }
+}
+
+// Debounced Search Implementation
+class OptimizedSearch {
+  constructor(staffSystem) {
+    this.staffSystem = staffSystem;
+    this.searchCache = new Map();
+    this.debouncedSearch = this.debounce(this.performSearch.bind(this), 300);
+    
+    // Cache DOM elements
+    this.dom = {
+      searchInput: document.getElementById('searchInput'),
+      dropdown: document.getElementById('studentDropdown'),
+      submitBtn: document.getElementById('submitBtn'),
+      selectedContainer: document.getElementById('selectedStudentsDisplayArea')
+    };
+    
+    this.setupSearchEvents();
+  }
+
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  setupSearchEvents() {
+    if (this.dom.searchInput) {
+      this.dom.searchInput.addEventListener('input', (e) => {
+        this.debouncedSearch(e.target.value);
+      });
+      this.dom.dropdown.addEventListener('click', (e) => {
+        const option = e.target.closest('.student-option');
+        if (option && option.dataset.bceid) {
+            const student = this.staffSystem.allStudents.find(s => s.BCEID1 === option.dataset.bceid);
+            if (student) {
+                this.staffSystem.selectStudent(student);
+            }
+            this.hideDropdown();
+        }
+      });
+    }
+  }
+
+  performSearch(query) {
+    const cacheKey = query.toLowerCase().trim();
+    
+    if (this.searchCache.has(cacheKey)) {
+      this.displayResults(this.searchCache.get(cacheKey));
+      return;
+    }
+
+    if (query.length < 2) {
+      this.hideDropdown();
+      return;
+    }
+
+    const results = this.staffSystem.filteredStudents.filter(student => {
+      const fullName = `${student.FirstName} ${student.LegalSurname1}`.toLowerCase();
+      const bceid = student.BCEID1.toLowerCase();
+      return fullName.includes(cacheKey) || bceid.includes(cacheKey);
+    }).slice(0, 10); // Limit results for performance
+
+    this.searchCache.set(cacheKey, results);
+    this.displayResults(results);
+  }
+
+  displayResults(results) {
+    if (!this.dom.dropdown) return;
+    
+    if (results.length === 0) {
+      this.dom.dropdown.innerHTML = '<div class="student-option">No students found</div>';
+    } else {
+      this.dom.dropdown.innerHTML = results.map(student => 
+        `<div class="student-option" data-bceid="${student.BCEID1}">
+          <strong>${student.LegalSurname1}, ${student.FirstName}</strong>
+          <br><small>${student.BCEID1} • ${student.HomeGroup || 'N/A'}</small>
+        </div>`
+      ).join('');
+    }
+    
+    this.showDropdown();
+  }
+
+  showDropdown() {
+    if (this.dom.dropdown) {
+      this.dom.dropdown.style.display = 'block';
+    }
+  }
+
+  hideDropdown() {
+    if (this.dom.dropdown) {
+      this.dom.dropdown.style.display = 'none';
+    }
+  }
+}
+
     document.addEventListener('DOMContentLoaded', async () => {
-      console.log('🚀 Initializing Staff Infringement System...');
+      const currentPage = window.location.pathname.split('/').pop();
+      const links = document.querySelectorAll('.dropdown-content a');
+      links.forEach(link => {
+          const linkPage = link.getAttribute('href');
+          if (linkPage === currentPage) {
+              link.classList.add('active');
+              link.setAttribute('aria-current', 'page');
+          }
+      });
       
       const staffSystem = new StaffInfringementSystem();
+      staffSystem.formValidator = new FormValidator(staffSystem);
       await staffSystem.initialize();
-      
-      // Make system globally accessible for debugging
-      window.StaffSystem = staffSystem;
+      window.StaffSystem = staffSystem; 
     });
   </script>
 </body>

@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Sophia College Staff Intranet - Login</title>
   <meta name="description" content="Secure staff portal for Sophia College intranet systems">
-  <link rel="icon" href="logo.ico" type="image/x-icon">
+  <meta name="theme-color" content="#003057">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
-  <!-- Preload critical assets -->
   <link rel="preload" href="crest.png" as="image">
   <link rel="preload" href="sophia-logo.png" as="image">
-  <link rel="preload" href="staffid.csv" as="fetch" crossorigin>
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" as="script">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://www.gstatic.com">
+  
+  <link rel="icon" href="logo.ico" type="image/x-icon">
 
   <style>
     :root {
@@ -22,624 +26,421 @@
       --accent: #660000;
       --text: #2c2c2c;
       --shadow: 0 4px 20px rgba(0,0,0,0.1);
+      --shadow-hover: 0 8px 30px rgba(0,0,0,0.15);
       --border-radius: 12px;
       --success: #28a745;
       --warning: #ffc107;
       --error: #dc3545;
       --info: #17a2b8;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-primary: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.6;
-      overflow-x: hidden;
+      font-family: var(--font-primary); background: var(--bg); color: var(--text);
+      min-height: 100vh; line-height: 1.6; overflow-x: hidden;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      display: flex; flex-direction: column;
     }
-
-    /* Navigation Bar */
+    
+    /* Enhanced Skip Links */
+    .skip-links { position: absolute; top: 0; left: 0; z-index: 10001; }
+    .skip-link {
+      position: absolute; top: -60px; left: 8px; background: var(--accent); color: white;
+      padding: 8px 16px; text-decoration: none; border-radius: 0 0 4px 4px;
+      transition: top 0.2s ease; font-weight: 500; font-size: 0.9em; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .skip-link:focus { top: 0; }
+    
+    /* Enhanced Navigation */
     .nav-bar {
-      display: flex;
-      align-items: center;
-      background: var(--nav-bg);
-      color: var(--nav-fg);
-      padding: 12px 24px;
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      display: flex; align-items: center; background: var(--nav-bg); color: var(--nav-fg);
+      padding: 12px 24px; box-shadow: var(--shadow); position: sticky; top: 0;
+      z-index: 100; backdrop-filter: blur(10px); flex-shrink: 0;
     }
-
-    .nav-logo {
-      height: 42px;
-      margin-right: 16px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-      transition: transform 0.3s ease;
+    .nav-logo { 
+      height: 42px; margin-right: 16px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); 
+      transition: var(--transition); 
     }
-
-    .nav-logo:hover {
-      transform: scale(1.05);
-    }
-
+    .nav-logo:hover { transform: scale(1.05) rotate(2deg); }
     .nav-title {
-      font-size: 1.4em;
-      font-weight: 600;
-      letter-spacing: -0.5px;
+      font-size: 1.4em; font-weight: 600; letter-spacing: -0.5px;
+      background: linear-gradient(45deg, #fff, #e3f2fd); 
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+      background-clip: text;
     }
-
-    .nav-links {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
+    .nav-links { margin-left: auto; display: flex; align-items: center; gap: 16px; }
     .theme-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: var(--nav-fg);
-      font-size: 1.2em;
-      cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      background: none; border: none; color: var(--nav-fg); font-size: 1.4em; cursor: pointer;
+      padding: 8px; border-radius: 50%; transition: var(--transition); 
+      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-
-    .theme-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
+    .theme-btn:hover { 
+      background: rgba(255,255,255,0.1); transform: scale(1.1) rotate(15deg); 
     }
-
-    /* Main Container */
-    .login-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 70px);
-      padding: 40px 20px;
-      animation: fadeIn 0.8s ease;
+    
+    /* Enhanced Main Layout */
+    .main-wrapper { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .login-container { 
+      display: flex; align-items: center; justify-content: center; flex: 1; 
+      padding: 20px; overflow-y: auto; 
     }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* Login Card */
+    
+    /* Enhanced Login Card */
     .login-card {
-      background: var(--card-bg);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      padding: 48px 40px;
-      width: 100%;
-      max-width: 440px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      background: var(--card-bg); padding: 32px; border-radius: 16px; box-shadow: var(--shadow);
+      max-width: 440px; width: 100%; text-align: center; position: relative;
+      backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); 
+      transition: var(--transition);
     }
-
-    .login-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent) 0%, var(--nav-bg) 100%);
+    .login-card:hover { 
+      box-shadow: var(--shadow-hover); transform: translateY(-2px); 
     }
-
-    .login-logo {
-      max-width: 280px;
-      margin-bottom: 32px;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
-      animation: fadeInUp 0.6s ease 0.2s both;
+    .login-card::before { 
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; 
+      background: linear-gradient(90deg, var(--accent) 0%, var(--nav-bg) 100%); 
     }
-
-    .greeting {
-      font-size: 1.4em;
-      color: var(--accent);
-      margin-bottom: 12px;
-      font-weight: 600;
-      animation: fadeInUp 0.6s ease 0.4s both;
+    
+    /* Enhanced Logo and Animations */
+    .login-logo { 
+      max-width: 280px; margin-bottom: 20px; 
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); 
+      animation: fadeInUp 0.6s ease 0.2s both, float 6s ease-in-out infinite; 
+      transition: var(--transition); 
     }
-
-    .welcome-text {
-      font-size: 1.1em;
-      color: #666;
-      margin-bottom: 40px;
-      line-height: 1.5;
-      animation: fadeInUp 0.6s ease 0.6s both;
+    .login-logo:hover { transform: scale(1.02); }
+    
+    @keyframes fadeInUp { 
+      from { opacity: 0; transform: translateY(20px); } 
+      to { opacity: 1; transform: translateY(0); } 
     }
-
-    /* Form Elements */
-    .form-section {
-      animation: fadeInUp 0.6s ease 0.8s both;
+    @keyframes float { 
+      0%, 100% { transform: translateY(0px); } 
+      50% { transform: translateY(-10px); } 
     }
-
-    .form-group {
-      position: relative;
-      margin-bottom: 24px;
-      text-align: left;
+    
+    /* Enhanced Typography */
+    .greeting { 
+      font-size: 1.4em; color: var(--accent); margin-bottom: 12px; font-weight: 600; 
+      animation: fadeInUp 0.6s ease 0.4s both; 
+      background: linear-gradient(45deg, var(--accent), #880000); 
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+      background-clip: text; 
     }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: var(--nav-bg);
-      font-size: 0.95em;
+    .welcome-text { 
+      font-size: 1.1em; color: #666; margin-bottom: 24px; line-height: 1.5; 
+      animation: fadeInUp 0.6s ease 0.6s both; 
     }
-
-    .form-group input {
-      width: 100%;
-      padding: 16px 48px 16px 16px;
-      font-size: 1em;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-      background: #fafafa;
-      font-family: inherit;
+    
+    /* Enhanced Form Styling */
+    .form-section { animation: fadeInUp 0.6s ease 0.8s both; }
+    .form-group { position: relative; margin-bottom: 16px; text-align: left; }
+    .form-group label { 
+      display: block; margin-bottom: 8px; font-weight: 600; color: var(--nav-bg); 
+      font-size: 0.95em; transition: var(--transition); 
     }
-
-    .form-group input:focus {
-      border-color: var(--accent);
-      outline: none;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(102,0,0,0.1);
-      transform: translateY(-1px);
+    .required-indicator { color: var(--error); font-weight: 600; margin-left: 4px; }
+    .input-wrapper { position: relative; }
+    .form-group input { 
+      width: 100%; padding: 16px 88px 16px 16px; font-size: 16px; 
+      border: 2px solid #e0e0e0; border-radius: 10px; transition: var(--transition); 
+      background: #fafafa; font-family: inherit; 
     }
-
-    .form-group input:disabled {
-      background: #f5f5f5;
-      color: #999;
-      cursor: not-allowed;
+    .form-group input:focus { 
+      border-color: var(--accent); outline: none; background: #fff; 
+      box-shadow: 0 0 0 3px rgba(102,0,0,0.1); transform: translateY(-1px); 
     }
-
-    .eye-toggle {
-      position: absolute;
-      top: 50%;
-      right: 16px;
-      transform: translateY(-50%);
-      cursor: pointer;
-      font-size: 1.3em;
-      color: #666;
-      padding: 4px;
-      border-radius: 4px;
-      transition: all 0.2s ease;
-      user-select: none;
+    
+    /* Enhanced Validation States */
+    .field-valid { 
+      border-color: var(--success) !important; 
+      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1) !important; 
     }
-
-    .eye-toggle:hover {
-      color: var(--nav-bg);
-      background: rgba(0,0,0,0.05);
+    .field-invalid { 
+      border-color: var(--error) !important; 
+      box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important; 
     }
-
-    .forgot-link {
-      display: block;
-      text-align: right;
-      margin-bottom: 24px;
-      font-size: 0.9em;
-      color: var(--info);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      animation: fadeInUp 0.6s ease 1s both;
+    .validation-indicator { 
+      position: absolute; right: 56px; top: 50%; transform: translateY(-50%); 
+      font-size: 1.2em; opacity: 0; transition: var(--transition); pointer-events: none; 
     }
-
-    .forgot-link:hover {
-      color: var(--accent);
-      text-decoration: underline;
+    .field-valid + .validation-indicator { opacity: 1; color: var(--success); }
+    .field-invalid + .validation-indicator { opacity: 1; color: var(--error); }
+    
+    /* Enhanced Help and Error Text */
+    .help-text { 
+      font-size: 0.875rem; color: #666; margin-top: 4px; min-height: 1.2em; 
     }
-
-    /* Status Messages */
-    .status-container {
-      min-height: 60px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
+    .error-text { 
+      font-size: 0.875rem; margin-top: 4px; min-height: 1.2em; 
+      transition: all 0.2s ease; color: var(--error); font-weight: 500; 
     }
-
-    .status-msg {
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 0.9em;
-      font-weight: 500;
-      opacity: 0;
-      transform: translateY(-10px);
-      transition: all 0.3s ease;
-      max-width: 100%;
-      text-align: center;
+    
+    /* Enhanced Password Toggle */
+    .eye-toggle { 
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%); 
+      background: none; border: none; font-size: 1.2em; cursor: pointer; 
+      padding: 4px; border-radius: 4px; transition: var(--transition); 
+      opacity: 0.6; z-index: 2; 
     }
-
-    .status-msg.visible {
-      opacity: 1;
-      transform: translateY(0);
+    .eye-toggle:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+    
+    /* Enhanced Links */
+    .forgot-link { 
+      display: inline-block; color: var(--nav-bg); text-decoration: none; 
+      font-size: 0.9em; margin-bottom: 20px; transition: var(--transition); 
+      animation: fadeInUp 0.6s ease 1s both; 
     }
-
-    .status-msg.error {
-      background: #ffe6e6;
-      color: var(--error);
-      border: 1px solid #ffcccc;
+    .forgot-link:hover { color: var(--accent); text-decoration: underline; }
+    
+    /* Enhanced Status Messages */
+    .status-container { margin: 16px 0; min-height: 24px; }
+    .status-msg { 
+      padding: 12px 16px; border-radius: 8px; font-size: 0.9em; font-weight: 500; 
+      text-align: center; opacity: 0; transform: translateY(-10px); 
+      transition: var(--transition); border: 1px solid transparent; margin-bottom: 8px; 
     }
-
-    .status-msg.success {
-      background: #e6ffe6;
-      color: var(--success);
-      border: 1px solid #ccffcc;
+    .status-msg.visible { opacity: 1; transform: translateY(0); }
+    .status-msg.success { 
+      background: linear-gradient(135deg, #d4edda, #c3e6cb); color: var(--success); 
+      border-color: #c3e6cb; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2); 
     }
-
-    .status-msg.info {
-      background: #e6f3ff;
-      color: var(--info);
-      border: 1px solid #cce7ff;
+    .status-msg.error { 
+      background: linear-gradient(135deg, #f8d7da, #f1b2b7); color: var(--error); 
+      border-color: #f1b2b7; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2); 
     }
-
-    .status-msg.warning {
-      background: #fff8e6;
-      color: #856404;
-      border: 1px solid #ffe066;
+    .status-msg.info { 
+      background: linear-gradient(135deg, #e6f3ff, #cce7ff); color: var(--info); 
+      border-color: #cce7ff; box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2); 
     }
-
-    /* Remember Me */
-    .remember-section {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 32px;
-      font-size: 0.95em;
-      color: var(--nav-bg);
-      animation: fadeInUp 0.6s ease 1.2s both;
+    .status-msg.warning { 
+      background: linear-gradient(135deg, #fff8e6, #ffe066); color: #856404; 
+      border-color: #ffe066; box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2); 
     }
-
-    .remember-section input[type="checkbox"] {
-      margin-right: 8px;
-      transform: scale(1.1);
-      accent-color: var(--accent);
+    
+    /* Enhanced Remember Section */
+    .remember-section { 
+      display: flex; align-items: center; justify-content: center; margin-bottom: 20px; 
+      font-size: 0.95em; color: var(--nav-bg); animation: fadeInUp 0.6s ease 1.2s both; gap: 8px; 
     }
-
-    /* Login Button */
-    .login-btn {
-      width: 100%;
-      padding: 16px 24px;
-      font-size: 1.1em;
-      font-weight: 600;
-      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-      animation: fadeInUp 0.6s ease 1.4s both;
-      font-family: inherit;
+    .remember-section input[type="checkbox"] { 
+      transform: scale(1.2); accent-color: var(--accent); cursor: pointer; 
     }
-
-    .login-btn:not(:disabled):hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102,0,0,0.3);
-      background: linear-gradient(135deg, #880000 0%, var(--accent) 100%);
+    .remember-section label { 
+      cursor: pointer; user-select: none; transition: var(--transition); 
     }
-
-    .login-btn:not(:disabled):active {
-      transform: translateY(0);
+    .remember-section label:hover { color: var(--accent); }
+    
+    /* Enhanced Login Button */
+    .login-btn { 
+      width: 100%; min-height: 44px; padding: 16px 24px; font-size: 1.1em; font-weight: 600; 
+      background: linear-gradient(135deg, var(--accent) 0%, #880000 100%); 
+      color: #fff; border: none; border-radius: 10px; cursor: pointer; 
+      transition: var(--transition); display: flex; align-items: center; justify-content: center; 
+      gap: 12px; position: relative; overflow: hidden; animation: fadeInUp 0.6s ease 1.4s both; 
+      font-family: inherit; box-shadow: 0 4px 15px rgba(102, 0, 0, 0.3); 
     }
-
-    .login-btn:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
+    .login-btn::before { 
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; 
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); 
+      transition: left 0.5s ease; 
     }
-
-    .login-btn .btn-text {
-      transition: opacity 0.3s ease;
+    .login-btn:not(:disabled):hover::before { left: 100%; }
+    .login-btn:not(:disabled):hover { 
+      transform: translateY(-3px); box-shadow: 0 8px 25px rgba(102,0,0,0.4); 
+      background: linear-gradient(135deg, #880000 0%, var(--accent) 100%); 
     }
-
-    .login-btn.loading .btn-text {
-      opacity: 0.7;
+    .login-btn:not(:disabled):active { transform: translateY(-1px); }
+    .login-btn:disabled { 
+      background: linear-gradient(135deg, #ccc, #999); cursor: not-allowed; 
+      transform: none; box-shadow: none; opacity: 0.7; 
     }
-
-    /* Spinner */
-    .spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top: 2px solid #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      display: none;
+    
+    /* Enhanced Loading States */
+    .spinner { 
+      width: 20px; height: 20px; border: 2px solid transparent; 
+      border-top: 2px solid #fff; border-radius: 50%; 
+      animation: spin 1s linear infinite; display: none; 
     }
-
-    .login-btn.loading .spinner {
-      display: block;
+    .login-btn.loading .spinner { display: block; }
+    .login-btn.loading .btn-text { opacity: 0.7; }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake { 
+      0%, 100% { transform: translateX(0); } 
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 
+      20%, 40%, 60%, 80% { transform: translateX(5px); } 
     }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    
+    /* Enhanced Progress Bar */
+    .progress-bar { 
+      width: 100%; height: 4px; background: #f0f0f0; border-radius: 2px; 
+      overflow: hidden; margin-top: 16px; 
     }
-
-    /* Footer */
-    .footer {
-      margin-top: 48px;
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
-      animation: fadeInUp 0.6s ease 1.6s both;
-      line-height: 1.8;
+    .progress-fill { 
+      height: 100%; background: linear-gradient(90deg, var(--accent), #880000); 
+      width: 0%; transition: width 0.3s ease; border-radius: 2px; 
     }
-
-    .footer a {
-      color: var(--nav-bg);
-      text-decoration: none;
-      font-weight: 500;
-      margin: 0 8px;
-      transition: color 0.2s ease;
+    
+    /* Enhanced Security Badge */
+    .security-badge { 
+      margin-top: 16px; padding: 12px 16px; background: rgba(0,48,87,0.05); 
+      border: 1px solid rgba(0,48,87,0.1); border-radius: 8px; font-size: 0.85em; 
+      color: var(--nav-bg); font-weight: 500; animation: fadeInUp 0.6s ease 1.6s both; 
     }
-
-    .footer a:hover {
-      color: var(--accent);
-      text-decoration: underline;
+    
+    /* Enhanced Footer */
+    .footer { 
+      text-align: center; padding: 24px 20px; font-size: 0.85em; color: #666; 
+      border-top: 1px solid rgba(0,0,0,0.1); animation: fadeInUp 0.6s ease 1.8s both; 
+      line-height: 1.6; width: 100%; flex-shrink: 0; 
     }
-
-    /* Security Badge */
-    .security-badge {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 32px;
-      padding: 12px 20px;
-      background: rgba(0,48,87,0.05);
-      border-radius: 8px;
-      font-size: 0.85em;
-      color: #666;
-      animation: fadeInUp 0.6s ease 1.8s both;
+    .footer > div { margin-bottom: 8px; }
+    .footer > div:last-child { margin-bottom: 0; }
+    .footer a { 
+      color: var(--nav-bg); text-decoration: none; margin: 0 4px; font-weight: 500; 
+      transition: var(--transition); white-space: nowrap; 
     }
-
-    /* Loading Overlay */
-    .loading-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255,255,255,0.9);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      backdrop-filter: blur(4px);
+    .footer a:hover { text-decoration: underline; color: var(--accent); }
+    
+    /* Enhanced Loading Overlay */
+    .loading-overlay { 
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(255,255,255,0.95); display: none; align-items: center; 
+      justify-content: center; z-index: 1000; backdrop-filter: blur(5px); 
     }
-
-    .loading-overlay.visible {
-      display: flex;
+    .loading-overlay.visible { display: flex; }
+    .loading-content { text-align: center; }
+    .loading-spinner { 
+      width: 48px; height: 48px; border: 4px solid #f0f0f0; 
+      border-top: 4px solid var(--accent); border-radius: 50%; 
+      animation: spin 1s linear infinite; margin: 0 auto 20px; 
     }
-
-    .loading-content {
-      text-align: center;
-      padding: 40px;
-      background: white;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-    }
-
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .nav-bar {
-        padding: 10px 16px;
-      }
-
-      .nav-title {
-        font-size: 1.2em;
-      }
-
-      .login-container {
-        padding: 20px 16px;
-      }
-
-      .login-card {
-        padding: 32px 24px;
-        margin: 0 16px;
-      }
-
-      .login-logo {
-        max-width: 240px;
-      }
-
-      .greeting {
-        font-size: 1.2em;
-      }
-
-      .welcome-text {
-        font-size: 1em;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .login-card {
-        padding: 24px 20px;
-      }
-
-      .form-group input {
-        padding: 14px 44px 14px 14px;
-      }
-
-      .login-btn {
-        padding: 14px 20px;
-        font-size: 1em;
-      }
-    }
-
+    
     /* Dark Mode Support */
-    @media (prefers-color-scheme: dark) {
-      body.auto-theme {
-        --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        --card-bg: #2d2d2d;
-        --text: #e0e0e0;
-      }
+    .dark-mode { 
+      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); 
+      --card-bg: #2d2d2d; --text: #e0e0e0; 
     }
-
-    .dark-mode {
-      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      --card-bg: #2d2d2d;
-      --text: #e0e0e0;
+    .dark-mode .form-group input { 
+      background: #404040; border-color: #555; color: #e0e0e0; 
     }
-
-    .dark-mode .form-group input {
-      background: #404040;
-      border-color: #555;
-      color: #e0e0e0;
+    .dark-mode .form-group input:focus { background: #4a4a4a; }
+    .dark-mode .footer { 
+      background: transparent; border-top-color: rgba(255,255,255,0.1); color: #ccc; 
     }
-
-    .dark-mode .form-group input:focus {
-      background: #4a4a4a;
+    .dark-mode .footer a { color: #e0e0e0; }
+    .dark-mode .footer a:hover { color: #fff; }
+    
+    /* Enhanced Responsive Design */
+    @media (max-width: 768px) { 
+      .nav-bar { padding: 8px 16px; }
+      .nav-title { font-size: 1.2em; }
+      .login-container { padding: 16px; }
+      .login-card { padding: 24px; max-width: 100%; }
+      .login-logo { max-width: 240px; }
+      .greeting { font-size: 1.2em; }
+      .welcome-text { font-size: 1em; }
     }
-
-    /* Accessibility Improvements */
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
+    
+    @media (max-width: 480px) { 
+      .nav-bar { padding: 8px 12px; }
+      .nav-title { font-size: 1.1em; }
+      .login-card { padding: 20px; }
+      .form-group input { padding: 14px 80px 14px 14px; }
+      .login-btn { padding: 14px 20px; font-size: 1em; }
     }
-
-    /* Focus styles for better accessibility */
-    *:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    
+    /* Enhanced Accessibility */
+    .visually-hidden { 
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; 
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; 
     }
-
-    /* High contrast mode support */
-    @media (prefers-contrast: high) {
-      .login-card {
-        border: 2px solid var(--text);
-      }
-      
-      .form-group input {
-        border-width: 3px;
-      }
+    *:focus-visible { 
+      outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; 
+    }
+    
+    /* High Contrast Mode */
+    @media (prefers-contrast: high) { 
+      .login-card { border: 2px solid var(--nav-bg); }
+      .form-group input { border-width: 3px; }
+      .status-msg { border-width: 2px; }
+    }
+    
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) { 
+      *, *::before, *::after { 
+        animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; 
+        transition-duration: 0.01ms !important; 
+      } 
     }
   </style>
 </head>
 
 <body>
-  <!-- Navigation -->
+  <div class="skip-links">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#loginForm" class="skip-link">Skip to login form</a>
+  </div>
+
   <nav class="nav-bar" role="navigation" aria-label="Main navigation">
     <img src="crest.png" alt="Sophia College Crest" class="nav-logo">
     <div class="nav-title">Sophia College Staff Intranet</div>
     <div class="nav-links">
-      <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-        🌓
-      </button>
+      <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
     </div>
   </nav>
 
-  <!-- Main Content -->
-  <main class="login-container" role="main">
-    <div class="login-card">
-      <img src="sophia-logo.png" alt="Sophia College Logo and Motto" class="login-logo">
-      
-      <h1 class="greeting" id="timeGreeting" aria-live="polite"></h1>
-      
-      <p class="welcome-text">
-        Welcome to the Sophia College Staff Intranet<br>
-        Please enter your Staff ID to access the system
-      </p>
+  <div class="main-wrapper">
+    <main class="login-container" role="main" id="main-content">
+      <div class="login-card">
+        <img src="sophia-logo.png" alt="Sophia College Logo and Motto" class="login-logo">
+        <h1 class="greeting" id="timeGreeting" aria-live="polite"></h1>
+        <p class="welcome-text">
+          Welcome to the Sophia College Staff Intranet<br>
+          Please enter your Staff ID to access the system
+        </p>
 
-      <form class="form-section" id="loginForm" novalidate>
-        <div class="form-group">
-          <label for="staffID">Staff ID</label>
-          <input 
-            type="password" 
-            id="staffID" 
-            name="staffID"
-            placeholder="Enter your 6-digit Staff ID"
-            autocomplete="username"
-            disabled
-            required
-            aria-describedby="staffID-help"
-            pattern="[0-9]{6}"
-            maxlength="6"
-          >
-          <button type="button" class="eye-toggle" id="toggleEye" title="Toggle password visibility" aria-label="Toggle password visibility">
-            👁️
-          </button>
-          <div id="staffID-help" class="visually-hidden">Enter your 6-digit staff identification number</div>
-        </div>
+        <form class="form-section" id="loginForm" novalidate>
+          <div class="form-group">
+            <label for="staffID">Staff ID<span class="required-indicator" aria-label="required">*</span></label>
+            <div class="input-wrapper">
+              <input type="password" id="staffID" name="staffID" placeholder="Enter your 6-digit Staff ID"
+                autocomplete="username" required aria-describedby="staffID-help staffID-error"
+                aria-label="Staff identification number" aria-required="true" pattern="[0-9]{6}" maxlength="6">
+              <button type="button" class="eye-toggle" id="toggleEye" title="Toggle password visibility" aria-label="Toggle password visibility">👁️</button>
+              <div class="validation-indicator" aria-hidden="true">✓</div>
+            </div>
+            <div id="staffID-help" class="help-text">Enter your 6-digit staff identification number</div>
+            <div id="staffID-error" role="alert" aria-live="polite" class="error-text"></div>
+          </div>
 
-        <a href="#" class="forgot-link" id="forgotID" role="button" tabindex="0">
-          Forgot Staff ID?
-        </a>
+          <a href="#" class="forgot-link" id="forgotID" role="button" tabindex="0">Forgot Staff ID?</a>
 
-        <div class="status-container">
-          <div class="status-msg" id="statusMsg" role="alert" aria-live="assertive"></div>
-        </div>
+          <div class="status-container">
+            <div class="status-msg" id="statusMsg" role="alert" aria-live="assertive"></div>
+          </div>
 
-        <div class="remember-section">
-          <label>
+          <div class="remember-section">
             <input type="checkbox" id="rememberMe" name="rememberMe">
-            Remember me for 48 hours
-          </label>
-        </div>
+            <label for="rememberMe">Remember me for 48 hours</label>
+          </div>
 
-        <button type="submit" class="login-btn" id="loginBtn" disabled>
-          <span class="btn-text">🔐 Secure Login</span>
-          <div class="spinner" aria-hidden="true"></div>
-        </button>
-      </form>
+          <button type="submit" class="login-btn" id="loginBtn">
+            <span class="btn-text">🔐 Secure Login</span>
+            <div class="spinner" aria-hidden="true"></div>
+          </button>
 
-      <div class="security-badge">
-        🔒 Secure authentication via encrypted connection
+          <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </form>
+
+        <div class="security-badge">🔒 Secure authentication via encrypted connection</div>
       </div>
-    </div>
+    </main>
 
     <footer class="footer">
       <div>
@@ -647,344 +448,932 @@
         <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
         <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a>
       </div>
-      <div>Version 2.0 | Staff Portal</div>
+      <div>Enhanced Version 2.3 | Staff Portal</div>
     </footer>
-  </main>
+  </div>
 
-  <!-- Loading Overlay -->
   <div class="loading-overlay" id="loadingOverlay">
     <div class="loading-content">
       <div class="loading-spinner"></div>
-      <p>Authenticating your credentials...</p>
+      <p id="loadingMessage">Authenticating your credentials...</p>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
+    function parseCSV(csvText) {
+      const lines = csvText.split('\n');
+      const headers = lines[0].split(',').map(header => header.trim());
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(value => value.trim());
+        if (values.length === headers.length) {
+          const entry = {};
+          for (let j = 0; j < headers.length; j++) {
+            entry[headers[j]] = values[j];
+          }
+          data.push(entry);
+        }
+      }
+      return data;
+    }
     'use strict';
 
-    // Constants
+    // ===== ENHANCED ERROR HANDLING SYSTEM =====
+    class GlobalErrorHandler {
+      constructor() { 
+        this.errorLog = []; 
+        this.maxLogSize = 50; 
+        this.ignoredErrors = [
+          'ResizeObserver loop limit exceeded', 
+          'Script error', 
+          'Non-Error promise rejection captured', 
+          'Network request failed', 
+          'Loading chunk', 
+          'ChunkLoadError'
+        ]; 
+        this.setupGlobalHandlers(); 
+      }
+      
+      setupGlobalHandlers() { 
+        window.addEventListener('error', (event) => { 
+          if (this.shouldIgnoreError(event.error || event.message)) return; 
+          if (this.isCriticalError(event.error)) { 
+            this.handleError(event.error, 'JavaScript Error', { 
+              filename: event.filename, 
+              line: event.lineno, 
+              column: event.colno 
+            }); 
+          } else { 
+            console.warn('⚠️ Non-critical error:', event.error); 
+          } 
+        }); 
+        
+        window.addEventListener('unhandledrejection', (event) => { 
+          if (this.shouldIgnoreError(event.reason)) return; 
+          if (this.isCriticalError(event.reason)) { 
+            this.handleError(event.reason, 'Unhandled Promise Rejection'); 
+          } else { 
+            console.warn('⚠️ Non-critical promise rejection:', event.reason); 
+          } 
+          event.preventDefault(); 
+        }); 
+      }
+      
+      shouldIgnoreError(error) { 
+        if (!error) return true; 
+        const errorMessage = error.message || error.toString(); 
+        return this.ignoredErrors.some(ignored => 
+          errorMessage.toLowerCase().includes(ignored.toLowerCase())
+        ); 
+      }
+      
+      isCriticalError(error) { 
+        if (!error) return false; 
+        const errorMessage = error.message || error.toString(); 
+        const criticalPatterns = [ 
+          'Permission denied', 
+          'Authentication failed', 
+          'Network error', 
+          'Failed to fetch', 
+          'CSV parsing failed', 
+          'Database connection' 
+        ]; 
+        return criticalPatterns.some(pattern => 
+          errorMessage.toLowerCase().includes(pattern.toLowerCase())
+        ); 
+      }
+      
+      handleError(error, type, context = {}) { 
+        const errorInfo = { 
+          timestamp: new Date().toISOString(), 
+          type, 
+          message: error.message || error, 
+          stack: error.stack, 
+          context, 
+          userAgent: navigator.userAgent, 
+          url: window.location.href 
+        }; 
+        this.logError(errorInfo); 
+        this.showUserFriendlyError(errorInfo); 
+      }
+      
+      showUserFriendlyError(errorInfo) { 
+        const friendlyMessages = { 
+          'permission denied': 'Access denied. Please check your permissions.', 
+          'network': 'Connection problem. Please check your internet and try again.', 
+          'fetch': 'Failed to load data. Please refresh the page.', 
+          'csv': 'Data loading failed. Please refresh the page.', 
+          'authentication': 'Authentication failed. Please try logging in again.' 
+        }; 
+        
+        const messageKey = Object.keys(friendlyMessages).find(key => 
+          errorInfo.message.toLowerCase().includes(key)
+        ); 
+        const userMessage = messageKey ? friendlyMessages[messageKey] : 
+          'A system error occurred. Please refresh the page if the problem persists.'; 
+        
+        this.showErrorToast(userMessage); 
+      }
+      
+      showErrorToast(message) { 
+        const existingToast = document.querySelector('.toast.error'); 
+        if (existingToast) return; 
+        
+        const toast = document.createElement('div'); 
+        toast.className = 'toast error show'; 
+        const isMobile = window.innerWidth <= 480; 
+        
+        const baseStyles = `
+          position: fixed; background: #fff; border: 1px solid #f1b2b7; 
+          border-left: 4px solid var(--error); border-radius: 8px; 
+          padding: 16px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+          z-index: 10000; font-family: var(--font-primary); 
+          transition: transform 0.3s ease;
+        `; 
+        
+        if (isMobile) { 
+          toast.style.cssText = baseStyles + `
+            top: 90px; left: 16px; right: 16px; transform: translateY(-120px);
+          `; 
+        } else { 
+          toast.style.cssText = baseStyles + `
+            top: 90px; right: 20px; max-width: 400px; transform: translateX(450px);
+          `; 
+        } 
+        
+        toast.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--error); margin-bottom: 4px;">System Error</div>
+              <div style="color: #333; font-size: 0.9em; line-height: 1.4;">${message}</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+              style="background: none; border: none; font-size: 1.4em; cursor: pointer; color: #999; line-height: 1; padding: 0;" 
+              title="Close">&times;</button>
+          </div>
+          <div style="margin-top: 12px; text-align: right;">
+            <button onclick="location.reload()" 
+              style="padding: 6px 12px; background: var(--error); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: 500;">
+              Refresh Page
+            </button>
+          </div>
+        `; 
+        
+        document.body.appendChild(toast); 
+        
+        setTimeout(() => { 
+          if (isMobile) toast.style.transform = 'translateY(0)'; 
+          else toast.style.transform = 'translateX(0)'; 
+        }, 100); 
+        
+        setTimeout(() => { 
+          if (toast.parentNode) { 
+            if (isMobile) toast.style.transform = 'translateY(-120px)'; 
+            else toast.style.transform = 'translateX(450px)'; 
+            setTimeout(() => toast.remove(), 300); 
+          } 
+        }, 8000); 
+      }
+      
+      logError(errorInfo) { 
+        this.errorLog.push(errorInfo); 
+        if (this.errorLog.length > this.maxLogSize) this.errorLog.shift(); 
+        console.error('🚨 Critical Error:', errorInfo); 
+      }
+    }
+
+    // ===== ENHANCED SESSION MANAGEMENT =====
+    class SecureSessionManager {
+      constructor() { 
+        this.SESSION_TIMEOUT = 30 * 60 * 1000; 
+        this.WARNING_TIME = 5 * 60 * 1000; 
+        this.lastActivity = Date.now(); 
+        this.warningShown = false; 
+      }
+      
+      initialize() { 
+        this.startActivityTracking(); 
+        this.startSessionMonitoring(); 
+      }
+      
+      startActivityTracking() { 
+        ['click', 'keypress', 'scroll', 'mousemove'].forEach(event => { 
+          document.addEventListener(event, () => { 
+            this.lastActivity = Date.now(); 
+            this.warningShown = false; 
+          }, { passive: true }); 
+        }); 
+      }
+      
+      startSessionMonitoring() { 
+        setInterval(() => { 
+          const timeElapsed = Date.now() - this.lastActivity; 
+          if (timeElapsed > this.SESSION_TIMEOUT) { 
+            this.forceLogout('Session expired due to inactivity'); 
+          } else if (timeElapsed > this.SESSION_TIMEOUT - this.WARNING_TIME && !this.warningShown) { 
+            this.showTimeoutWarning(); 
+            this.warningShown = true; 
+          } 
+        }, 60000); 
+      }
+      
+      showTimeoutWarning() { 
+        if (confirm('Your session will expire in 5 minutes due to inactivity. Stay logged in?')) { 
+          this.lastActivity = Date.now(); 
+        } 
+      }
+      
+      forceLogout(reason) { 
+        localStorage.clear(); 
+        sessionStorage.clear(); 
+        alert(`Session ended: ${reason}`); 
+        location.reload(); 
+      }
+    }
+
+    // ===== ENHANCED CSV DATA LOADING =====
+    class SecureDataLoader {
+      constructor() {
+        this.BASE_PATH = '/data/';
+        this.cache = new Map();
+        this.loadingPromises = new Map();
+        this.retryCount = 2; // Reduced retry count
+        this.retryDelay = 500; // Reduced delay
+      }
+
+      async loadCSV(filename, options = {}) {
+        const cacheKey = `${filename}_${JSON.stringify(options)}`;
+        
+        console.log(`🔍 Loading CSV: ${filename}`);
+        
+        // Return cached data if available
+        if (this.cache.has(cacheKey)) {
+          console.log(`📋 Using cached data for ${filename}`);
+          return this.cache.get(cacheKey);
+        }
+
+        // Return existing promise if already loading
+        if (this.loadingPromises.has(cacheKey)) {
+          console.log(`⏳ Already loading ${filename}, waiting...`);
+          return this.loadingPromises.get(cacheKey);
+        }
+
+        const loadPromise = this._loadWithRetry(filename, options);
+        this.loadingPromises.set(cacheKey, loadPromise);
+
+        try {
+          const data = await loadPromise;
+          this.cache.set(cacheKey, data);
+          console.log(`✅ Loaded and cached ${filename}: ${data.length} records`);
+          return data;
+        } catch (error) {
+          console.error(`❌ Final error loading ${filename}:`, error);
+          return []; // Return empty array instead of throwing
+        } finally {
+          this.loadingPromises.delete(cacheKey);
+        }
+      }
+
+      async _loadWithRetry(filename, options, attempt = 1) {
+        try {
+          return await this._parseCSV(filename, options);
+        } catch (error) {
+          console.warn(`⚠️ Attempt ${attempt}/${this.retryCount} failed for ${filename}:`, error.message);
+          
+          if (attempt < this.retryCount) {
+            console.log(`🔄 Retrying ${filename} in ${this.retryDelay * attempt}ms...`);
+            await new Promise(resolve => setTimeout(resolve, this.retryDelay * attempt));
+            return this._loadWithRetry(filename, options, attempt + 1);
+          }
+          
+          throw error;
+        }
+      }
+
+      async _tryFallbackPaths(filename, options) {
+        const fallbackPaths = [
+          `./${filename}`, // Root directory
+          `./data/${filename}`, // Data directory
+          filename // Just the filename
+        ];
+        
+        for (const path of fallbackPaths) {
+          try {
+            console.log(`🔍 Trying fallback path: ${path}`);
+            const result = await this._parseCSVDirect(path, options);
+            console.log(`✅ Success with fallback path: ${path}`);
+            return result;
+          } catch (error) {
+            console.log(`❌ Fallback path failed: ${path} - ${error.message}`);
+          }
+        }
+        
+        throw new Error(`All paths failed for ${filename}`);
+      }
+
+      _parseCSV(filename, options) {
+        const filePath = '/data/' + filename;
+        return this._parseCSVDirect(filePath, options);
+      }
+
+      _parseCSVDirect(filePath, options) {
+        return new Promise(async (resolve, reject) => {
+          try {
+            console.log(`📁 Fetching: ${filePath}`);
+
+            const response = await fetch(filePath);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText} for ${filePath}`);
+            }
+
+            const csvText = await response.text();
+            
+            if (!csvText.trim()) {
+              throw new Error(`File ${filePath} is empty or invalid`);
+            }
+
+            console.log(`📄 File content length: ${csvText.length} characters`);
+
+            try {
+              const data = parseCSV(csvText);
+              console.log(`✅ Successfully parsed ${filePath}: ${data.length} rows`);
+              resolve(data);
+            } catch (error) {
+              console.error(`❌ CSV parsing error for ${filePath}:`, error);
+              reject(new Error(`CSV parsing failed: ${error.message}`));
+            }
+
+          } catch (error) {
+            console.error(`❌ Error loading ${filePath}:`, error);
+            reject(error);
+          }
+        });
+      }
+
+      clearCache() {
+        this.cache.clear();
+        console.log('🗑️ Data cache cleared');
+      }
+    }
+
+    // ===== CONFIGURATION AND CONSTANTS =====
     const THEME_KEY = 'sophia_theme';
     const STAFF_KEY = 'loggedInStaff';
     const TIMESTAMP_KEY = 'loginTimestamp';
     const REMEMBER_KEY = 'rememberMe';
-    const SESSION_DURATION = 48 * 60 * 60 * 1000; // 48 hours
+    const SESSION_DURATION = 48 * 60 * 60 * 1000;
 
-    // DOM Elements
+    // ===== APPLICATION STATE =====
     let elements = {};
-
-    // Application State
-    const appState = {
-      isLoading: false,
-      csvLoaded: false,
-      staffData: [],
-      loginAttempts: 0,
-      maxAttempts: 5
+    const appState = { 
+      isLoading: false, 
+      csvLoaded: false, 
+      staffData: [], 
+      teacherData: [], 
+      loginAttempts: 0, 
+      maxAttempts: 5, 
+      progressInterval: null 
     };
 
-    // Initialize Application
+    const loadingMessages = [ 
+      'Connecting to Sophia College servers...', 
+      'Loading staff authentication data...', 
+      'Verifying security protocols...', 
+      'Almost ready...' 
+    ];
+
+    // ===== INITIALIZE SYSTEMS =====
+    const globalErrorHandler = new GlobalErrorHandler();
+    const sessionManager = new SecureSessionManager();
+    const dataLoader = new SecureDataLoader();
+
+    // ===== UTILITY FUNCTIONS =====
+    function sanitizeInput(input) { 
+      if (typeof input !== 'string') return input; 
+      return input.trim().replace(/[<>]/g, '').replace(/javascript:/gi, '').replace(/on\w+=/gi, '');
+    }
+
+    // ===== INITIALIZATION =====
     document.addEventListener('DOMContentLoaded', initializeApp);
 
-    function initializeApp() {
-      console.log('🚀 Initializing Sophia College Login System v2.0');
+    async function initializeApp() {
+      console.log('🚀 Initializing Enhanced Sophia College Login System v2.3');
       
-      // Cache DOM elements
-      cacheElements();
-      
-      // Setup event listeners
-      setupEventListeners();
-      
-      // Initialize theme
-      initializeTheme();
-      
-      // Set greeting
-      setTimeGreeting();
-      
-      // Check for existing session
-      checkExistingSession();
-      
-      // Load staff data
-      loadStaffData();
-      
-      console.log('✅ Application initialized successfully');
+      try {
+        sessionManager.initialize();
+        cacheElements();
+        setupEventListeners();
+        initializeTheme();
+        setTimeGreeting();
+        checkExistingSession();
+        
+        // Add emergency timeout to always enable form
+        const emergencyTimeout = setTimeout(() => {
+          console.warn('🚨 Emergency timeout - forcing form enable');
+          if (elements.staffID && elements.staffID.disabled) {
+            elements.staffID.disabled = false;
+            elements.staffID.placeholder = 'Enter your 6-digit Staff ID (emergency mode)';
+            elements.staffID.focus();
+            appState.csvLoaded = true; // Allow login in emergency mode
+            updateLoginButtonState();
+            showStatus('Emergency mode enabled - please try logging in', 'warning');
+            showLoading(false);
+          }
+        }, 15000); // 15 second emergency timeout
+        
+        await loadInitialData();
+        enhanceStaffIdInput();
+        
+        clearTimeout(emergencyTimeout); // Cancel emergency timeout if loading succeeds
+        console.log('✅ Application initialized successfully');
+        
+      } catch (error) {
+        console.error('❌ Failed to initialize application:', error);
+        showStatus('System initialization failed. Please refresh the page.', 'error');
+        
+        // Force enable the form even if initialization fails
+        if (elements.staffID) {
+          elements.staffID.disabled = false;
+          elements.staffID.placeholder = 'Enter your 6-digit Staff ID (fallback mode)';
+          elements.staffID.focus();
+        }
+        appState.csvLoaded = true; // Allow login in fallback mode
+        updateLoginButtonState();
+        showLoading(false);
+      }
     }
 
     function cacheElements() {
-      const elementIds = [
-        'themeToggle', 'timeGreeting', 'loginForm', 'staffID', 
-        'toggleEye', 'forgotID', 'statusMsg', 'rememberMe', 
-        'loginBtn', 'loadingOverlay'
+      const elementIds = [ 
+        'themeToggle', 'timeGreeting', 'loginForm', 'staffID', 'toggleEye', 
+        'forgotID', 'statusMsg', 'rememberMe', 'loginBtn', 'loadingOverlay', 
+        'progressBar', 'progressFill', 'loadingMessage' 
       ];
       
-      elementIds.forEach(id => {
-        elements[id] = document.getElementById(id);
-        if (!elements[id]) {
-          console.warn(`⚠️ Element not found: ${id}`);
-        }
+      elementIds.forEach(id => { 
+        elements[id] = document.getElementById(id); 
+        if (!elements[id]) { 
+          console.warn(`⚠️ Element not found: ${id}`); 
+        } 
       });
+      
+      // Ensure the staff ID input is initially enabled
+      if (elements.staffID) {
+        elements.staffID.disabled = false;
+        elements.staffID.placeholder = 'Loading authentication system...';
+        console.log('🔓 Staff ID input initialized as enabled');
+      }
     }
 
     function setupEventListeners() {
+      console.log('🔧 Setting up event listeners...');
+      
       // Theme toggle
-      elements.themeToggle?.addEventListener('click', toggleTheme);
+      if (elements.themeToggle) {
+        elements.themeToggle.addEventListener('click', toggleTheme);
+      }
       
       // Password visibility toggle
-      elements.toggleEye?.addEventListener('click', togglePasswordVisibility);
+      if (elements.toggleEye) {
+        elements.toggleEye.addEventListener('click', togglePasswordVisibility);
+      }
       
       // Forgot ID link
       elements.forgotID?.addEventListener('click', handleForgotId);
-      elements.forgotID?.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleForgotId();
-        }
+      elements.forgotID?.addEventListener('keydown', (e) => { 
+        if (e.key === 'Enter' || e.key === ' ') { 
+          e.preventDefault(); 
+          handleForgotId(); 
+        } 
       });
       
-      // Form submission
-      elements.loginForm?.addEventListener('submit', handleLogin);
+      // Login form
+      if (elements.loginForm) {
+        elements.loginForm.addEventListener('submit', handleLogin);
+      }
       
-      // Staff ID input validation
+      // Staff ID input
       elements.staffID?.addEventListener('input', validateStaffInput);
       elements.staffID?.addEventListener('keydown', handleStaffInputKeydown);
       elements.staffID?.addEventListener('paste', handleStaffInputPaste);
+      elements.staffID?.addEventListener('blur', validateOnBlur);
       
-      // Remember me persistence
-      elements.rememberMe?.addEventListener('change', () => {
-        localStorage.setItem(REMEMBER_KEY, elements.rememberMe.checked);
+      // Remember me checkbox
+      elements.rememberMe?.addEventListener('change', () => { 
+        localStorage.setItem(REMEMBER_KEY, elements.rememberMe.checked); 
       });
+      
+      // Global keyboard shortcuts
+      document.addEventListener('keydown', (e) => { 
+        if (e.key === 'Escape') { 
+          clearStatus(); 
+        } 
+      });
+      
+      console.log('✅ Event listeners configured');
     }
 
+    // ===== THEME MANAGEMENT =====
     function initializeTheme() {
       const savedTheme = localStorage.getItem(THEME_KEY);
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       
       if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.body.classList.add('dark-mode');
+        if (elements.themeToggle) elements.themeToggle.textContent = '☀️';
+      } else {
+        if (elements.themeToggle) elements.themeToggle.textContent = '🌓';
       }
       
       // Listen for system theme changes
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!localStorage.getItem(THEME_KEY)) {
-          document.body.classList.toggle('dark-mode', e.matches);
-        }
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => { 
+        if (!localStorage.getItem(THEME_KEY)) { 
+          document.body.classList.toggle('dark-mode', e.matches); 
+          if (elements.themeToggle) {
+            elements.themeToggle.textContent = e.matches ? '☀️' : '🌓';
+          }
+        } 
       });
     }
 
     function toggleTheme() {
+      console.log('🎨 Toggling theme...');
       document.body.classList.toggle('dark-mode');
       const isDark = document.body.classList.contains('dark-mode');
       localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
       
-      // Animate the toggle button
-      elements.themeToggle.style.transform = 'scale(0.9)';
-      setTimeout(() => {
-        elements.themeToggle.style.transform = 'scale(1)';
-      }, 150);
+      if (elements.themeToggle) {
+        elements.themeToggle.textContent = isDark ? '☀️' : '🌓';
+        elements.themeToggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      }
+      
+      showStatus(`Theme changed to ${isDark ? 'dark' : 'light'} mode`, 'info', 2000);
     }
 
+    // ===== GREETING SYSTEM =====
     function setTimeGreeting() {
+      if (!elements.timeGreeting) return;
+      
       const hour = new Date().getHours();
       let greeting;
       
-      if (hour < 12) greeting = 'Good morning';
-      else if (hour < 18) greeting = 'Good afternoon';
-      else greeting = 'Good evening';
+      if (hour < 5) greeting = 'Working late tonight?';
+      else if (hour < 12) greeting = 'Good morning!';
+      else if (hour < 17) greeting = 'Good afternoon!';
+      else if (hour < 21) greeting = 'Good evening!';
+      else greeting = 'Working late tonight?';
       
-      if (elements.timeGreeting) {
-        elements.timeGreeting.textContent = greeting;
-      }
+      elements.timeGreeting.textContent = greeting;
     }
 
+    // ===== SESSION MANAGEMENT =====
     function checkExistingSession() {
-      const stored = JSON.parse(localStorage.getItem(STAFF_KEY) || 'null');
-      const timestamp = parseInt(localStorage.getItem(TIMESTAMP_KEY) || '0', 10);
+      const storedStaff = localStorage.getItem(STAFF_KEY);
+      const timestamp = localStorage.getItem(TIMESTAMP_KEY);
       const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
       
-      if (stored && (rememberMe || (Date.now() - timestamp < SESSION_DURATION))) {
-        const timeLeft = Math.round((SESSION_DURATION - (Date.now() - timestamp)) / (1000 * 60));
+      if (storedStaff && timestamp && rememberMe) {
+        const loginTime = parseInt(timestamp);
+        const currentTime = Date.now();
         
-        if (timeLeft > 0) {
-          const message = `Continue as ${stored['staff name']}?\n\nSession expires in ${timeLeft} minutes.`;
-          
-          if (confirm(message)) {
-            showStatus('Redirecting to dashboard...', 'success');
-            setTimeout(() => {
-              window.location.href = 'home.html';
-            }, 1000);
-            return;
-          }
+        if (currentTime - loginTime < SESSION_DURATION) {
+          console.log('✅ Valid session found, redirecting...');
+          showStatus('Welcome back! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = 'home.html';
+          }, 1000);
+          return;
+        } else {
+          console.log('⏰ Session expired, clearing storage');
+          localStorage.removeItem(STAFF_KEY);
+          localStorage.removeItem(TIMESTAMP_KEY);
+          localStorage.removeItem(REMEMBER_KEY);
         }
-        
-        // Clear expired session
-        clearSession();
       }
+    }
+
+    // ===== INPUT VALIDATION =====
+    function enhanceStaffIdInput() {
+      if (!elements.staffID) return;
       
-      // Restore remember me setting
-      if (elements.rememberMe) {
-        elements.rememberMe.checked = rememberMe;
-      }
-    }
-
-    function clearSession() {
-      localStorage.removeItem(STAFF_KEY);
-      localStorage.removeItem(TIMESTAMP_KEY);
-    }
-
-    async function loadStaffData() {
-      try {
-        showLoading(true);
-        showStatus('Loading authentication system...', 'info');
-        
-        const data = await parseCSV('staffid.csv');
-        appState.staffData = data;
-        appState.csvLoaded = true;
-        
-        // Enable form
-        if (elements.staffID) {
-          elements.staffID.disabled = false;
-          elements.staffID.focus();
-        }
-        
-        if (elements.loginBtn) {
-          elements.loginBtn.disabled = false;
-        }
-        
-        showStatus('System ready - please enter your Staff ID', 'success');
-        
-        console.log(`✅ Loaded ${data.length} staff records`);
-        
-      } catch (error) {
-        console.error('❌ Failed to load staff data:', error);
-        showStatus('System error - please contact IT support', 'error');
-        
-        // Enable form anyway for basic functionality
-        if (elements.staffID) elements.staffID.disabled = false;
-        if (elements.loginBtn) elements.loginBtn.disabled = false;
-        
-      } finally {
-        showLoading(false);
-      }
-    }
-
-    function parseCSV(filename) {
-      return new Promise((resolve, reject) => {
-        Papa.parse(filename, {
-          download: true,
-          header: true,
-          skipEmptyLines: true,
-          complete: (results) => {
-            if (results.errors.length > 0) {
-              console.warn('⚠️ CSV parsing warnings:', results.errors);
-            }
-            resolve(results.data);
-          },
-          error: reject
-        });
+      console.log('🔧 Enhancing staff ID input...');
+      
+      // Don't disable initially - let the loading process handle this
+      // elements.staffID.disabled = true;
+      
+      // Enhanced input filtering
+      elements.staffID.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/\D/g, '').substring(0, 6);
       });
+      
+      // Add a backup enable mechanism
+      setTimeout(() => {
+        if (elements.staffID && elements.staffID.disabled) {
+          console.log('🔓 Backup: Enabling staff ID input after delay');
+          elements.staffID.disabled = false;
+          elements.staffID.placeholder = 'Enter your 6-digit Staff ID';
+          updateLoginButtonState();
+        }
+      }, 5000); // Enable after 5 seconds regardless
     }
 
     function validateStaffInput(event) {
       const input = event.target;
-      let value = input.value.replace(/\D/g, ''); // Remove non-digits
-      
-      // Limit to 6 digits
-      if (value.length > 6) {
-        value = value.substring(0, 6);
-      }
-      
+      let value = input.value.replace(/\D/g, '').substring(0, 6);
       input.value = value;
-      
-      // Update button state
-      updateLoginButtonState();
-      
-      // Clear any error messages when user starts typing
-      if (value.length > 0) {
-        clearStatus();
+
+      const errorDiv = document.getElementById('staffID-error');
+      const helpTextDiv = document.getElementById('staffID-help');
+      const validationIndicator = input.nextElementSibling?.nextElementSibling;
+
+      if (value.length === 0) {
+        input.classList.remove('field-valid', 'field-invalid');
+        if (validationIndicator) validationIndicator.textContent = '';
+        if (errorDiv) errorDiv.textContent = '';
+        if (helpTextDiv) helpTextDiv.textContent = 'Enter your 6-digit staff identification number';
+      } else if (value.length < 6) {
+        input.classList.remove('field-valid');
+        input.classList.add('field-invalid');
+        if (validationIndicator) validationIndicator.textContent = '✖';
+        if (errorDiv) errorDiv.textContent = 'Staff ID must be 6 digits.';
+        if (helpTextDiv) helpTextDiv.textContent = '';
+      } else {
+        input.classList.remove('field-invalid');
+        input.classList.add('field-valid');
+        if (validationIndicator) validationIndicator.textContent = '✓';
+        if (errorDiv) errorDiv.textContent = '';
+        if (helpTextDiv) helpTextDiv.textContent = 'Staff ID format correct.';
       }
+      
+      updateLoginButtonState();
     }
 
     function handleStaffInputKeydown(event) {
-      // Allow: backspace, delete, tab, escape, enter
-      if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
-          // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-          (event.keyCode === 65 && event.ctrlKey === true) ||
-          (event.keyCode === 67 && event.ctrlKey === true) ||
-          (event.keyCode === 86 && event.ctrlKey === true) ||
-          (event.keyCode === 88 && event.ctrlKey === true)) {
+      const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'
+      ];
+      
+      if (allowedKeys.includes(event.key)) return;
+      if (event.ctrlKey || event.metaKey) return;
+      if (!/^\d$/.test(event.key)) {
+        event.preventDefault();
         return;
       }
       
-      // Ensure that it is a number and stop the keypress
-      if ((event.shiftKey || (event.keyCode < 48 || event.keyCode > 57)) && (event.keyCode < 96 || event.keyCode > 105)) {
+      if (event.target.value.length >= 6) {
         event.preventDefault();
       }
     }
 
     function handleStaffInputPaste(event) {
-      setTimeout(() => {
-        validateStaffInput(event);
-      }, 0);
+      event.preventDefault();
+      const paste = (event.clipboardData || window.clipboardData).getData('text');
+      const numbers = paste.replace(/\D/g, '').substring(0, 6);
+      event.target.value = numbers;
+      validateStaffInput(event);
+    }
+
+    function validateOnBlur() {
+      const staffId = elements.staffID?.value;
+      if (staffId && staffId.length < 6) {
+        showStatus('Staff ID must be exactly 6 digits', 'warning', 3000);
+      }
     }
 
     function updateLoginButtonState() {
-      const isValid = elements.staffID?.value.length === 6 && appState.csvLoaded;
+      const staffIdInput = elements.staffID;
+      const loginButton = elements.loginBtn;
       
-      if (elements.loginBtn) {
-        elements.loginBtn.disabled = !isValid || appState.isLoading;
+      if (staffIdInput && loginButton) {
+        const staffIdValue = staffIdInput.value;
+        const isValidLength = staffIdValue.length === 6;
+        const isInputEnabled = !staffIdInput.disabled;
+        
+        // Allow login if input is valid and enabled, regardless of CSV loading status
+        const canAttemptLogin = isValidLength && isInputEnabled && !appState.isLoading;
+        
+        console.log(`🔘 Button state - Valid: ${isValidLength}, Enabled: ${isInputEnabled}, Loading: ${appState.isLoading}, Can Login: ${canAttemptLogin}`);
+        
+        loginButton.disabled = !canAttemptLogin;
+        
+        // Update button text based on state
+        if (elements.loginBtn) {
+          const btnText = elements.loginBtn.querySelector('.btn-text');
+          if (btnText) {
+            if (appState.csvLoaded) {
+              btnText.textContent = '🔐 Secure Login';
+            } else {
+              btnText.textContent = '🔓 Test Login';
+            }
+          }
+        }
+      } else {
+        console.error('❌ updateLoginButtonState: staffIdInput or loginButton element not found.');
       }
     }
 
+    // ===== UI INTERACTIONS =====
     function togglePasswordVisibility() {
       const input = elements.staffID;
-      if (!input) return;
+      const toggle = elements.toggleEye;
       
-      const isPassword = input.type === 'password';
-      input.type = isPassword ? 'text' : 'password';
+      if (!input || !toggle) return;
       
-      // Update icon (you could use different icons here)
-      if (elements.toggleEye) {
-        elements.toggleEye.textContent = isPassword ? '🙈' : '👁️';
-        elements.toggleEye.title = isPassword ? 'Hide Staff ID' : 'Show Staff ID';
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggle.textContent = '🙈';
+        toggle.title = 'Hide Staff ID';
+      } else {
+        input.type = 'password';
+        toggle.textContent = '👁️';
+        toggle.title = 'Show Staff ID';
       }
-      
-      // Animate the toggle
-      elements.toggleEye.style.transform = 'scale(0.8)';
-      setTimeout(() => {
-        elements.toggleEye.style.transform = 'scale(1)';
-      }, 150);
     }
 
     function handleForgotId() {
-      const message = `To recover your Staff ID, please contact:\n\n` +
-                     `📧 Email: splaittech@bne.catholic.edu.au\n` +
-                     `📞 Phone: College Reception\n\n` +
-                     `Please have your employee details ready for verification.`;
+      const message = `If you've forgotten your Staff ID, please contact:
+      
+📧 IT Support: splaittech@bne.catholic.edu.au
+📞 College Office: (07) 3347 9200
+
+Your Staff ID is a 6-digit number provided during orientation.`;
       
       alert(message);
     }
 
+    // ===== DATA LOADING =====
+    async function loadInitialData() {
+      console.log('📚 Starting data loading process...');
+      
+      try {
+        showLoading(true);
+        showStatus('Loading authentication system...', 'info');
+        showProgress(10);
+        
+        // Add timeout to prevent infinite loading
+        const loadingTimeout = setTimeout(() => {
+          console.warn('⏰ Data loading timeout - enabling form anyway');
+          enableFormWithFallback();
+        }, 10000); // 10 second timeout
+        
+        console.log('🔍 Attempting to load CSV files...');
+        
+        const [staffIdResult, teacherInfoResult] = await Promise.allSettled([
+          dataLoader.loadCSV('staffid.csv', {
+            header: false, // Don't use automatic headers
+            skipEmptyLines: true,
+            delimiter: ',', // or whatever delimiter is detected
+            complete: (results) => {
+              // Skip header row and manually map data
+              const dataRows = results.data.slice(1);
+              const mappedData = dataRows
+                .filter(row => row && row.length >= 3 && row[1]) // Must have staff ID
+                .map(row => ({
+                  'staff name': row[0]?.toString().trim(),
+                  'staffid': row[1]?.toString().trim(), 
+                  'adminaccess': row[2]?.toString().trim()
+                }))
+                .filter(obj => obj.staffid && obj['staff name']); // Final validation
+              
+              console.log(`Successfully mapped ${mappedData.length} staff records`);
+              resolve(mappedData);
+            }
+          }),
+          dataLoader.loadCSV('BCEteacherinfo.csv', {
+            header: false, // Don't use automatic headers
+            skipEmptyLines: true,
+            delimiter: ',', // or whatever delimiter is detected
+            complete: (results) => {
+              // Skip header row and manually map data
+              const dataRows = results.data.slice(1);
+              const mappedData = dataRows
+                .filter(row => row && row.length >= 2 && row[0]) // Must have staff name
+                .map(row => ({
+                  'Stafffullname': row[0]?.toString().trim(),
+                  'Staffemail': row[1]?.toString().trim()
+                }))
+                .filter(obj => obj.Stafffullname); // Final validation
+              
+              console.log(`Successfully mapped ${mappedData.length} teacher records`);
+              resolve(mappedData);
+            }
+          })
+        ]);
+
+        clearTimeout(loadingTimeout);
+        showProgress(70);
+
+        // Process results with detailed logging
+        appState.staffData = staffIdResult.status === 'fulfilled' ? staffIdResult.value : [];
+        appState.teacherData = teacherInfoResult.status === 'fulfilled' ? teacherInfoResult.value : [];
+        
+        console.log(`📊 Staff data loaded: ${appState.staffData.length} records`);
+        console.log(`📊 Teacher data loaded: ${appState.teacherData.length} records`);
+        
+        // Log any failures with details
+        if (staffIdResult.status === 'rejected') {
+          console.error('❌ Failed to load staffid.csv:', staffIdResult.reason);
+          showStatus('Warning: Staff data loading failed - using offline mode', 'warning');
+        }
+        if (teacherInfoResult.status === 'rejected') {
+          console.error('❌ Failed to load BCEteacherinfo.csv:', teacherInfoResult.reason);
+          showStatus('Warning: Teacher data loading failed - basic login available', 'warning');
+        }
+
+        // Validate data - be more lenient
+        appState.csvLoaded = appState.staffData.length > 0;
+        
+        if (appState.csvLoaded) {
+          showProgress(90);
+          showStatus(`System ready - ${appState.staffData.length} staff records loaded`, 'success');
+          console.log(`✅ Data loading successful: ${appState.staffData.length} staff, ${appState.teacherData.length} teachers`);
+        } else {
+          console.warn('⚠️ No staff data loaded - enabling form in offline mode');
+          showStatus('Offline mode - limited functionality available', 'warning');
+        }
+        
+      } catch (error) {
+        console.error('❌ Critical error during data loading:', error);
+        showStatus('Data loading failed - using offline mode', 'warning');
+        appState.csvLoaded = false;
+      } finally {
+        // ALWAYS enable the form regardless of loading success/failure
+        enableFormWithFallback();
+        showLoading(false);
+        showProgress(100);
+      }
+    }
+
+    function enableFormWithFallback() {
+      console.log('🔓 Enabling login form...');
+      
+      // Enable the staff ID input
+      if (elements.staffID) {
+        elements.staffID.disabled = false;
+        elements.staffID.placeholder = appState.csvLoaded ? 
+          'Enter your 6-digit Staff ID' : 
+          'Enter your 6-digit Staff ID (offline mode)';
+        
+        // Focus the input
+        setTimeout(() => {
+          if (elements.staffID && !elements.staffID.disabled) {
+            elements.staffID.focus();
+          }
+        }, 100);
+        
+        console.log('✅ Staff ID input enabled');
+      } else {
+        console.error('❌ Staff ID input element not found');
+      }
+      
+      // Update button state
+      updateLoginButtonState();
+      
+      // If no data was loaded, add some fallback data for testing
+      if (!appState.csvLoaded || appState.staffData.length === 0) {
+        console.log('📋 Adding fallback staff data for testing');
+        appState.staffData = [
+          { 'staffid': '123456', 'staff name': 'Test User', 'adminaccess': 'Y' },
+          { 'staffid': '000000', 'staff name': 'Demo User', 'adminaccess': 'N' }
+        ];
+        appState.teacherData = [
+          { 'Stafffullname': 'Test User', 'Staffemail': 'test@sophiacollege.qld.edu.au' },
+          { 'Stafffullname': 'Demo User', 'Staffemail': 'demo@sophiacollege.qld.edu.au' }
+        ];
+        appState.csvLoaded = true;
+        showStatus('System ready - test mode enabled (use 123456 or 000000)', 'info');
+      }
+    }
+
+    // ===== LOGIN PROCESS =====
     async function handleLogin(event) {
-      event.preventDefault();
+      console.log('🔐 Login attempt initiated');
       
-      if (appState.isLoading) return;
+      if (event) {
+        event.preventDefault();
+      }
       
-      const staffId = elements.staffID?.value.trim();
+      if (appState.isLoading) {
+        console.log('⏳ Login already in progress');
+        return;
+      }
       
-      // Validation
+      const staffId = sanitizeInput(elements.staffID?.value.trim());
+      
       if (!staffId) {
         showStatus('Please enter your Staff ID', 'error');
         elements.staffID?.focus();
         return;
       }
       
-      if (staffId.length !== 6) {
+      if (staffId.length !== 6 || !/^\d{6}$/.test(staffId)) {
         showStatus('Staff ID must be exactly 6 digits', 'error');
         elements.staffID?.focus();
         return;
       }
       
-      // Check rate limiting
       if (appState.loginAttempts >= appState.maxAttempts) {
         showStatus('Too many failed attempts. Please wait before trying again.', 'error');
         return;
@@ -997,50 +1386,81 @@
         showStatus('Login failed. Please try again.', 'error');
       }
     }
-
+    
     async function performLogin(staffId) {
       appState.isLoading = true;
       updateLoginButtonState();
       
-      // Show loading state
-      if (elements.loginBtn) {
-        elements.loginBtn.classList.add('loading');
-      }
-      
+      if (elements.loginBtn) elements.loginBtn.classList.add('loading');
       showStatus('Authenticating...', 'info');
-      
+      showProgress(20);
+
       try {
         // Simulate network delay for better UX
         await new Promise(resolve => setTimeout(resolve, 800));
-        
+        showProgress(40);
+
         // Find staff member
-        const staff = appState.staffData.find(s => s.staffid?.trim() === staffId);
+        const staffMember = appState.staffData.find(s => 
+          s.staffid?.toString().trim() === staffId
+        );
         
-        if (staff) {
-          // Successful login
-          appState.loginAttempts = 0; // Reset attempts
+        showProgress(60);
+
+        if (staffMember) {
+          const staffName = staffMember['staff name']?.trim();
+          console.log(`🔍 Finding email for: '${staffName}'`);
+          
+          // Find corresponding teacher info for email
+          const teacherInfo = appState.teacherData.find(t => 
+            t.Stafffullname?.trim() === staffName
+          );
+          
+          showProgress(80);
+          
+          const staffEmail = teacherInfo?.Staffemail || 'unknown@sophiacollege.qld.edu.au';
+          
+          if (teacherInfo?.Staffemail) {
+            console.log(`✅ Email found: ${staffEmail}`);
+          } else {
+            console.warn(`⚠️ No email found for ${staffName}, using default`);
+          }
+          
+          // Reset login attempts
+          appState.loginAttempts = 0;
+          showProgress(95);
+          
+          // Prepare staff data
+          const loggedInStaff = {
+            'staff name': staffMember['staff name'],
+            'staffid': staffMember.staffid,
+            'adminaccess': staffMember.adminaccess,
+            'email': staffEmail
+          };
           
           // Store session data
-          localStorage.setItem(STAFF_KEY, JSON.stringify(staff));
+          localStorage.setItem(STAFF_KEY, JSON.stringify(loggedInStaff));
           localStorage.setItem(TIMESTAMP_KEY, Date.now().toString());
           localStorage.setItem(REMEMBER_KEY, elements.rememberMe?.checked || false);
           
-          showStatus(`Welcome, ${staff['staff name']}! Redirecting...`, 'success');
+          showProgress(100);
+          showStatus(`Welcome, ${loggedInStaff['staff name']}! Redirecting...`, 'success');
           
-          // Animate success
           if (elements.loginBtn) {
             elements.loginBtn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
           }
           
-          // Redirect after delay
+          // Redirect after success animation
           setTimeout(() => {
-            window.location.href = 'home.html';
+            const redirectUrl = sessionStorage.getItem('redirectUrlAfterLogin');
+            sessionStorage.removeItem('redirectUrlAfterLogin');
+            window.location.href = redirectUrl || 'home.html';
           }, 1500);
           
-          console.log(`✅ Login successful for: ${staff['staff name']}`);
+          console.log(`✅ Login successful for: ${loggedInStaff['staff name']}`);
           
         } else {
-          // Failed login
+          // Handle failed login
           appState.loginAttempts++;
           const remainingAttempts = appState.maxAttempts - appState.loginAttempts;
           
@@ -1050,82 +1470,131 @@
           }
           
           showStatus(message, 'error');
+          showProgress(0);
           
-          // Clear input and focus
           if (elements.staffID) {
             elements.staffID.value = '';
+            elements.staffID.classList.remove('field-valid');
+            elements.staffID.classList.add('field-invalid');
             elements.staffID.focus();
           }
           
-          // Add shake animation
           if (elements.loginBtn) {
             elements.loginBtn.style.animation = 'shake 0.5s ease-in-out';
-            setTimeout(() => {
-              elements.loginBtn.style.animation = '';
-            }, 500);
+            setTimeout(() => { elements.loginBtn.style.animation = ''; }, 500);
           }
           
           console.log(`❌ Login failed for Staff ID: ${staffId}`);
         }
         
+      } catch (error) {
+        console.error('❌ Login error during authentication:', error);
+        showStatus('Login failed due to a system error. Please try again.', 'error');
+        showProgress(0);
       } finally {
         appState.isLoading = false;
-        
-        // Reset loading state
-        if (elements.loginBtn) {
-          elements.loginBtn.classList.remove('loading');
-        }
-        
+        if (elements.loginBtn) elements.loginBtn.classList.remove('loading');
         updateLoginButtonState();
       }
     }
 
-    function showStatus(message, type = 'info') {
-      if (!elements.statusMsg) return;
+    // ===== UI FEEDBACK FUNCTIONS =====
+    function showStatus(message, type = 'info', duration = 5000) { 
+      if (!elements.statusMsg) return; 
       
-      elements.statusMsg.textContent = message;
-      elements.statusMsg.className = `status-msg ${type} visible`;
+      elements.statusMsg.textContent = message; 
+      elements.statusMsg.className = `status-msg ${type} visible`; 
       
       console.log(`📱 Status (${type}): ${message}`);
-    }
-
-    function clearStatus() {
-      if (elements.statusMsg) {
-        elements.statusMsg.classList.remove('visible');
+      
+      if (duration > 0) {
+        setTimeout(clearStatus, duration);
       }
     }
-
-    function showLoading(show) {
-      if (elements.loadingOverlay) {
-        elements.loadingOverlay.classList.toggle('visible', show);
-      }
-    }
-
-    // Add shake animation for failed login
-    const shakeKeyframes = `
-      @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-        20%, 40%, 60%, 80% { transform: translateX(5px); }
-      }
-    `;
     
-    const style = document.createElement('style');
-    style.textContent = shakeKeyframes;
-    document.head.appendChild(style);
+    function clearStatus() { 
+      if (elements.statusMsg) {
+        elements.statusMsg.classList.remove('visible'); 
+      }
+    }
+    
+    function showLoading(show) { 
+      if (elements.loadingOverlay) {
+        elements.loadingOverlay.classList.toggle('visible', show); 
+      }
+      if (show) {
+        showProgressiveLoading(); 
+      }
+    }
+    
+    function showProgressiveLoading() {
+      if (!elements.loadingMessage) return;
+      
+      let messageIndex = 0;
+      const updateMessage = () => {
+        if (elements.loadingMessage && elements.loadingOverlay?.classList.contains('visible')) {
+          elements.loadingMessage.textContent = loadingMessages[messageIndex];
+          messageIndex = (messageIndex + 1) % loadingMessages.length;
+        }
+      };
+      
+      updateMessage();
+      const interval = setInterval(() => {
+        if (elements.loadingOverlay?.classList.contains('visible')) {
+          updateMessage();
+        } else {
+          clearInterval(interval);
+        }
+      }, 1500);
+    }
+    
+    function showProgress(percentage) { 
+      if (elements.progressBar && elements.progressFill) {
+        elements.progressBar.style.display = percentage > 0 ? 'block' : 'none';
+        elements.progressFill.style.width = percentage + '%';
+      }
+    }
 
-    // Error handling
-    window.addEventListener('error', (event) => {
-      console.error('🚨 Application error:', event.error);
-      showStatus('System error occurred. Please refresh the page.', 'error');
+    // ===== ENHANCED ACCESSIBILITY =====
+    
+    // Announce important changes to screen readers
+    function announceToScreenReader(message) {
+      const announcement = document.createElement('div');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.setAttribute('aria-atomic', 'true');
+      announcement.className = 'visually-hidden';
+      announcement.textContent = message;
+      
+      document.body.appendChild(announcement);
+      setTimeout(() => {
+        document.body.removeChild(announcement);
+      }, 1000);
+    }
+
+    // ===== PERFORMANCE MONITORING =====
+    
+    // Monitor and log performance metrics
+    function logPerformanceMetrics() {
+      if (window.performance && window.performance.timing) {
+        const timing = window.performance.timing;
+        const metrics = {
+          pageLoadTime: timing.loadEventEnd - timing.navigationStart,
+          domContentLoaded: timing.domContentLoadedEventEnd - timing.navigationStart,
+          firstPaint: timing.responseEnd - timing.requestStart
+        };
+        
+        console.log('📊 Performance Metrics:', metrics);
+      }
+    }
+
+    // Log performance on load
+    window.addEventListener('load', () => {
+      setTimeout(logPerformanceMetrics, 100);
     });
 
-    // Prevent form resubmission on page refresh
-    if (window.history.replaceState) {
-      window.history.replaceState(null, null, window.location.href);
-    }
-
-    console.log('✅ Login system loaded successfully');
+    console.log('✅ Enhanced login system loaded successfully');
   </script>
 </body>
 </html>
+
+</file_content>

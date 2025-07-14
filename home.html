@@ -1,222 +1,176 @@
 <!DOCTYPE html>
-<html lang="en" aria-label="Sophia College Staff Intranet">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sophia College Staff Intranet</title>
+  <link rel="icon" type="image/x-icon" href="crest.png">
+  <link rel="stylesheet" href="shared/common-styles.css">
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon" href="../logo.ico" type="image/x-icon">
-  
-  <!-- Preload critical assets -->
-  <link rel="preload" href="crest.png" as="image">
-  <link rel="preload" href="sophia-logo.png" as="image">
-  
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
-  
-  <!-- Papa Parse for CSV loading -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="/shared/sophia-unified-system.js"></script>
-  
   <style>
-    :root { 
-      --nav-bg: #003057; 
-      --nav-fg: #fff; 
-      --bg: linear-gradient(135deg, #fbecec 0%, #f0f4f8 100%); 
-      --card-bg: #fff; 
-      --accent: #660000; 
-      --text: #2c2c2c;
-      --shadow: 0 4px 12px rgba(0,0,0,0.08);
-      --border-radius: 12px;
-      --transition: all 0.3s ease;
-      --nav-height: 64px;
-    }
-    
-    * { 
-      box-sizing: border-box; 
-    }
-    
-    body { 
-      margin: 0; 
-      background: var(--bg); 
-      color: var(--text); 
-      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-      line-height: 1.6;
-      animation: fadeIn 0.8s ease;
-    }
-    
-    @keyframes fadeIn { 
-      from { opacity: 0; } 
-      to { opacity: 1; } 
-    }
-    
-    @keyframes fadeInUp { 
-      from { opacity: 0; transform: translateY(20px); } 
-      to { opacity: 1; transform: translateY(0); } 
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: -200px 0; }
-      100% { background-position: calc(200px + 100%) 0; }
-    }
-    
-    /* Enhanced Navigation */
-    .nav-bar { 
-      display: flex; 
-      align-items: center; 
-      background: var(--nav-bg); 
-      color: var(--nav-fg); 
-      padding: 12px 24px; 
-      position: sticky; 
-      top: 0; 
-      z-index: 1000;
-      box-shadow: var(--shadow);
-      height: var(--nav-height);
-    }
-    
-    .nav-logo { 
-      height: 40px; 
-      margin-right: 16px;
-      transition: var(--transition);
-    }
-    
-    .nav-logo:hover {
-      transform: scale(1.05);
-    }
-    
-    .nav-title { 
-      font-size: 1.3em; 
-      font-weight: 600;
-      margin-right: auto;
-    }
-    
-    .nav-links { 
-      display: flex; 
-      align-items: center; 
-      gap: 16px;
-    }
-    
-    #staffName { 
-      font-weight: 600; 
-      color: rgba(255,255,255,0.9);
-      font-size: 0.95em;
-    }
-    
-    .theme-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: var(--nav-fg);
-      font-size: 1.2em;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 8px;
-      transition: var(--transition);
-      display: inline-flex;
+    /* ===== LOGIN/DASHBOARD TOGGLE ===== */
+    #loginSection {
+      display: none;
       align-items: center;
       justify-content: center;
+      min-height: calc(100vh - 60px);
     }
-    
-    .theme-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: rotate(180deg);
+    #mainContent {
+      display: none;
     }
-    
-    .dropdown { 
-      position: relative; 
+
+    /* ===== ENHANCED ANIMATIONS ===== */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
     }
-    
-    .dropbtn { 
-      background: rgba(255,255,255,0.1); 
-      color: var(--nav-fg); 
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 16px; 
-      border-radius: 8px; 
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(0.95); opacity: 0; }
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ===== ENHANCED TOAST NOTIFICATIONS ===== */
+    .toast {
+      position: fixed;
+      top: calc(var(--nav-height, 60px) + 20px);
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      z-index: 10000;
+      max-width: 400px;
+      transform: translateX(450px);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+    }
+
+    .toast.show {
+      display: block;
+      transform: translateX(0);
+    }
+
+    .toast.success { 
+      border-left: 4px solid var(--success);
+      background: linear-gradient(135deg, rgba(40, 167, 69, 0.05), rgba(40, 167, 69, 0.02));
+    }
+
+    .toast.error { 
+      border-left: 4px solid var(--danger);
+      background: linear-gradient(135deg, rgba(220, 53, 69, 0.05), rgba(220, 53, 69, 0.02));
+    }
+
+    .toast.warning { 
+      border-left: 4px solid var(--warning);
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.05), rgba(255, 193, 7, 0.02));
+      color: #856404;
+    }
+
+    .toast.info { 
+      border-left: 4px solid var(--info);
+      background: linear-gradient(135deg, rgba(23, 162, 184, 0.05), rgba(23, 162, 184, 0.02));
+    }
+
+    .toast-close {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      color: #999;
       cursor: pointer;
-      font-weight: 500;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .dropbtn:hover { 
-      background: rgba(255,255,255,0.2); 
-      transform: translateY(-1px);
-    }
-    
-    .dropdown-content { 
-      display: none; 
-      position: absolute; 
-      right: 0; 
-      background: var(--card-bg); 
-      min-width: 220px; 
-      box-shadow: var(--shadow); 
-      border-radius: var(--border-radius); 
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.1);
-      animation: fadeInUp 0.2s ease;
-      z-index: 1001;
-    }
-    
-    .dropdown-content a, 
-    .dropdown-content button { 
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px; 
-      text-decoration: none; 
-      color: var(--nav-bg); 
-      background: none; 
-      border: none; 
-      width: 100%; 
-      text-align: left; 
-      cursor: pointer;
-      font-size: 0.95em;
-      font-weight: 500;
       transition: var(--transition);
     }
-    
-    .dropdown-content a:hover, 
-    .dropdown-content button:hover { 
-      background: rgba(0,48,87,0.08); 
-      transform: translateX(4px);
+
+    .toast-close:hover {
+      color: #333;
+      transform: scale(1.1);
+    }
+
+    /* ===== ENHANCED CONNECTION STATUS ===== */
+    .connection-status {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 500;
+      z-index: 1000;
+      transition: var(--transition);
+      backdrop-filter: blur(10px);
+    }
+
+    .connection-status.loading {
+      background: rgba(23, 162, 184, 0.1);
+      color: var(--info);
+      border: 1px solid rgba(23, 162, 184, 0.3);
+    }
+
+    .connection-status.connected {
+      background: rgba(40, 167, 69, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(40, 167, 69, 0.3);
+    }
+
+    .connection-status.error {
+      background: rgba(220, 53, 69, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    /* ===== ENHANCED MAIN LAYOUT ===== */
+    .main-wrapper {
+      min-height: calc(100vh - var(--nav-height, 60px));
+      display: flex;
+      flex-direction: column;
     }
     
-    .dropdown:hover .dropdown-content { 
-      display: block; 
-    }
-    
-    .badge { 
-      background: var(--accent); 
-      color: #fff; 
-      border-radius: 50px; 
-      padding: 4px 8px; 
-      font-size: 0.75em; 
-      margin-left: 8px;
-      font-weight: 600;
-      min-width: 20px;
-      text-align: center;
-      animation: pulse 2s infinite;
-    }
-    
-    /* Main Container */
-    .container { 
-      padding: 32px 20px; 
+    .dashboard-container { 
+      padding: 24px 20px; 
       max-width: 1100px; 
       margin: 0 auto; 
-      text-align: center; 
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
     }
     
     .home-logo { 
       max-width: 220px; 
-      margin-bottom: 16px; 
-      animation: fadeInUp 0.6s ease;
+      margin: 0 auto 8px; 
+      animation: fadeInUp 0.6s ease, float 6s ease-in-out infinite;
       filter: drop-shadow(0 4px 12px rgba(0,0,0,0.1));
       transition: var(--transition);
     }
@@ -225,349 +179,491 @@
       transform: scale(1.02);
     }
     
-    .greeting { 
+    .dashboard-greeting { 
       font-size: 1.3em; 
       margin-bottom: 6px; 
       color: var(--accent); 
       animation: fadeInUp 0.6s ease 0.2s both; 
-      opacity: 0;
       font-weight: 600;
+      background: linear-gradient(45deg, var(--accent), #880000);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
-    .welcome-text { 
+    .dashboard-welcome { 
       font-size: 1em; 
-      margin-bottom: 24px; 
+      margin-bottom: 16px; 
       animation: fadeInUp 0.6s ease 0.4s both; 
-      opacity: 0;
       color: #666;
-    }
-    
-    /* Enhanced Loading State */
-    .loading-banner {
-      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-      border: 1px solid #90caf9;
-      border-radius: var(--border-radius);
-      padding: 12px;
-      margin-bottom: 20px;
-      text-align: center;
-      color: var(--nav-bg);
       font-weight: 500;
-      display: none;
+    }
+
+    /* ===== ENHANCED LOADING BANNER ===== */
+    .loading-banner {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      color: var(--info);
+      padding: 12px 24px;
+      text-align: center;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(23, 162, 184, 0.2);
+      animation: fadeInUp 0.5s ease;
       position: relative;
       overflow: hidden;
-      font-size: 0.9em;
     }
-    
+
     .loading-banner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -200px;
-      width: 200px;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-      animation: shimmer 2s infinite;
-    }
-    
-    /* Compact Quick Stats */
-    .quick-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin: 20px auto;
-      max-width: 500px;
-      margin-bottom: 32px;
-    }
-    
-    .stat-card {
-      background: rgba(255,255,255,0.7);
-      padding: 14px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(0,0,0,0.08);
-      transition: var(--transition);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .stat-card:hover {
-      transform: translateY(-2px);
-      background: rgba(255,255,255,0.9);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    
-    .stat-card.loading {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-    
-    .stat-number {
-      font-size: 1.4em;
-      font-weight: 700;
-      color: var(--accent);
-      display: block;
-      line-height: 1.1;
-    }
-    
-    .stat-label {
-      font-size: 0.75em;
-      color: #777;
-      margin-top: 2px;
-      line-height: 1.2;
-    }
-    
-    /* Enhanced Action Cards - More Prominent and Centered */
-    .actions { 
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 32px; 
-      justify-content: center;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-    
-    .action-card { 
-      background: var(--card-bg); 
-      padding: 40px 28px; 
-      border-radius: 16px; 
-      box-shadow: 0 6px 20px rgba(0,0,0,0.12); 
-      cursor: pointer; 
-      text-align: center; 
-      animation: fadeInUp 0.6s ease both; 
-      opacity: 0;
-      transition: var(--transition);
-      border: 2px solid transparent;
-      position: relative;
-      overflow: hidden;
-      min-height: 200px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    
-    .action-card::before {
       content: '';
       position: absolute;
       top: 0;
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      transition: left 0.5s ease;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
     }
-    
-    .action-card:hover::before {
-      left: 100%;
+
+    .loading-banner.hide {
+      animation: fadeInUp 0.5s ease reverse;
+      transform: translateY(-100%);
     }
-    
-    .action-card:nth-child(1) { 
-      animation-delay: 0.6s; 
-    }
-    
-    .action-card:nth-child(2) { 
-      animation-delay: 0.8s; 
-    }
-    
-    .action-card:nth-child(3) { 
-      animation-delay: 1s; 
-    }
-    
-    .action-card:nth-child(4) { 
-      animation-delay: 1.2s; 
-    }
-    
-    .action-card:hover { 
-      transform: translateY(-12px) scale(1.03); 
-      box-shadow: 0 12px 35px rgba(0,0,0,0.18);
-      border-color: var(--accent);
-    }
-    
-    .action-card:active {
-      transform: translateY(-6px) scale(0.98);
-    }
-    
-    .action-card.disabled { 
-      opacity: 0.6; 
-      cursor: not-allowed; 
-    }
-    
-    .action-card.disabled:hover {
-      transform: none;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
-      border-color: transparent;
-    }
-    
-    .action-card .icon { 
-      font-size: 3em; 
-      margin-bottom: 20px;
-      transition: var(--transition);
-      display: block;
-    }
-    
-    .action-card:hover .icon {
-      transform: scale(1.15);
-    }
-    
-    .action-card .label { 
-      font-size: 1.2em; 
-      font-weight: 700; 
-      color: var(--nav-bg); 
-      line-height: 1.3;
-      position: relative;
-      z-index: 1;
-      margin-bottom: 8px;
-    }
-    
-    .action-card .description {
-      font-size: 0.95em;
-      color: #666;
-      line-height: 1.4;
-      font-weight: 400;
-    }
-    
-    .action-card .label small { 
-      display: block; 
-      font-size: 0.8em; 
-      color: #666; 
-      font-weight: 400;
-    }
-    
-    /* Footer */
-    .footer { 
-      margin-top: 48px; 
-      font-size: 0.8em; 
-      color: #777;
-      padding-top: 20px;
-      border-top: 1px solid rgba(0,0,0,0.08);
-    }
-    
-    .footer a { 
-      color: var(--nav-bg); 
-      text-decoration: none; 
-      margin: 0 8px;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-    
-    .footer a:hover { 
-      text-decoration: underline; 
-      color: var(--accent);
-    }
-    
-    /* Fixed Toast Notifications */
-    .toast {
-      position: fixed;
-      top: calc(var(--nav-height) + 20px);
-      right: 24px;
-      padding: 16px 20px 16px 16px;
-      background: #007bff;
-      color: #fff;
-      border-radius: var(--border-radius);
-      display: none;
-      z-index: 10000;
-      box-shadow: var(--shadow);
-      font-weight: 500;
-      max-width: 400px;
-      transform: translateX(400px);
-      transition: transform 0.3s ease;
-      border-left: 4px solid currentColor;
-      position: relative;
-      min-height: 48px;
-    }
-    
-    .toast.success { background: #28a745; }
-    .toast.error { background: #dc3545; }
-    .toast.info { background: #17a2b8; }
-    .toast.warning { background: #ffc107; color: #333; }
-    
-    .toast-close {
-      position: absolute;
-      top: 50%;
-      right: 8px;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.2);
-      border: none;
-      color: currentColor;
-      font-size: 16px;
-      cursor: pointer;
-      opacity: 0.8;
-      transition: all 0.2s ease;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
+
+    /* ===== ENHANCED QUICK STATS ===== */
+    .quick-stats { 
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
       justify-content: center;
+      max-width: 500px;
+      margin: 0 auto 16px;
+      animation: fadeInUp 0.6s ease 0.6s both;
+    }
+    
+    .stat-card { 
+      background: var(--card-bg);
+      padding: 16px 12px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--info), var(--accent));
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .stat-card.loading {
+      animation: pulse 1.5s infinite;
+    }
+    
+    .stat-number { 
+      display: block;
+      font-size: 1.4em;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 4px;
       line-height: 1;
     }
     
-    .toast-close:hover {
+    .stat-label { 
+      font-size: 0.75em;
+      color: #666;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== SKELETON LOADING ===== */
+    .skeleton-line {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 4px;
+      margin: 0 auto;
+    }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ===== ENHANCED SEARCH ===== */
+    .search-section {
+      max-width: 600px;
+      margin: 0 auto 24px;
+      animation: fadeInUp 0.6s ease 0.7s both;
+    }
+
+    .search-container-enhanced {
+      position: relative;
+      display: flex;
+      align-items: center;
+      background: var(--card-bg);
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 4px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .search-container-enhanced:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(102, 0, 0, 0.1);
+    }
+
+    .search-input-enhanced {
+      flex: 1;
+      border: none;
+      outline: none;
+      padding: 12px 16px;
+      font-size: 1em;
+      background: transparent;
+      color: var(--text);
+      font-family: var(--font-primary);
+    }
+
+    .search-input-enhanced::placeholder {
+      color: #999;
+    }
+
+    .search-clear-btn {
+      background: none;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #999;
+      font-size: 1.2em;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .search-clear-btn.visible {
       opacity: 1;
-      background: rgba(255,255,255,0.3);
-      transform: translateY(-50%) scale(1.1);
+      visibility: visible;
+    }
+
+    .search-clear-btn:hover {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .search-results-info {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 0.9em;
+      color: #666;
+      min-height: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .search-results-info.visible {
+      animation: slideDown 0.3s ease;
+    }
+
+    .keyboard-shortcuts-hint {
+      font-size: 0.8em;
+      color: #999;
+      margin-top: 8px;
+      opacity: 0.7;
+      transition: opacity 0.3s ease;
+    }
+
+    .keyboard-shortcuts-hint:hover {
+      opacity: 1;
+    }
+
+    /* ===== ENHANCED ACTION CARDS ===== */
+    .actions { 
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+      animation: fadeInUp 0.6s ease 0.8s both;
+      transition: all 0.3s ease;
     }
     
-    /* Enhanced Dark mode support */
-    body.dark-mode {
-      --bg: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-      --card-bg: #333;
-      --text: #fff;
-      --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    .action-card { 
+      background: var(--card-bg);
+      padding: 28px 24px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,0.05);
+      position: relative;
+      overflow: hidden;
+      flex: 0 1 320px;
+    }
+
+    .action-card.filtered-out {
+      animation: fadeOut 0.3s ease forwards;
+      pointer-events: none;
+    }
+
+    .action-card.filtered-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .action-card.highlighted {
+      border-color: var(--accent);
+      box-shadow: 0 8px 25px rgba(102, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .action-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--nav-bg));
+    }
+
+    .action-card::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: radial-gradient(circle, rgba(102,0,0,0.05) 0%, transparent 70%);
+      transform: translate(-50%, -50%);
+      transition: all 0.3s ease;
+      border-radius: 50%;
     }
     
-    body.dark-mode .action-card {
-      background: #333;
-      color: #fff;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    .action-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .action-card:hover::after {
+      width: 300px;
+      height: 300px;
+    }
+
+    .action-card:active {
+      transform: translateY(-2px);
     }
     
-    body.dark-mode .action-card:hover {
-      box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    .action-card .icon { 
+      font-size: 3em;
+      margin-bottom: 16px;
+      opacity: 0.9;
+      transition: var(--transition);
+      z-index: 1;
+      position: relative;
+    }
+
+    .action-card:hover .icon {
+      transform: scale(1.1);
+      opacity: 1;
     }
     
-    body.dark-mode .action-card .label {
-      color: #fff;
+    .action-card .label { 
+      font-size: 1.2em;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+      z-index: 1;
+      position: relative;
     }
     
-    body.dark-mode .stat-card {
-      background: rgba(51,51,51,0.8);
-      border-color: rgba(255,255,255,0.1);
+    .action-card .description { 
+      font-size: 0.9em;
+      color: var(--text-light, #666);
+      line-height: 1.4;
+      z-index: 1;
+      position: relative;
     }
-    
-    body.dark-mode .loading-banner {
+
+    /* ===== HIGHLIGHT MATCHING TEXT ===== */
+    .highlight {
+      background: linear-gradient(120deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+      padding: 1px 2px;
+      border-radius: 2px;
+      font-weight: 600;
+    }
+
+    /* ===== ENHANCED FOOTER ===== */
+    .footer {
+      margin-top: 40px;
+      padding: 28px 20px;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(0,0,0,0.1);
+      text-align: center;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .footer a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .footer a:hover {
+      color: var(--primary, #880000);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* ===== REFRESH BUTTON ===== */
+    .refresh-stats-btn {
+      background: none;
+      border: 1px solid #ddd;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85em;
+      color: #666;
+      transition: var(--transition);
+      margin-bottom: 16px;
+      font-family: var(--font-primary);
+      font-weight: 500;
+    }
+
+    .refresh-stats-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .refresh-stats-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .last-updated-timestamp {
+      font-size: 0.8em;
+      color: #666;
+      margin-top: 8px;
+      transition: color 0.3s;
+    }
+
+    /* ===== THEME TOGGLE ===== */
+    .theme-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* ===== DARK MODE ===== */
+    .dark-mode {
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+    }
+
+    .dark-mode .loading-banner {
       background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
       border-color: #4a5568;
       color: #e2e8f0;
     }
-    
-    /* Responsive Design */
+
+    .dark-mode .footer {
+      background: rgba(45,45,45,0.8);
+      border-top-color: rgba(255,255,255,0.1);
+      color: #ccc;
+    }
+
+    .dark-mode .footer a {
+      color: #e0e0e0;
+    }
+
+    .dark-mode .footer a:hover {
+      color: #fff;
+    }
+
+    .dark-mode .search-container-enhanced {
+      border-color: #555;
+      background: #2a2a2a;
+    }
+
+    .dark-mode .search-container-enhanced:focus-within {
+      border-color: #e0e0e0;
+      box-shadow: 0 0 0 3px rgba(224, 224, 224, 0.1);
+    }
+
+    .dark-mode .search-clear-btn:hover {
+      background: #444;
+      color: #ccc;
+    }
+
+    .dark-mode .highlight {
+      background: linear-gradient(120deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.2) 100%);
+    }
+
+    .dark-mode .stat-card,
+    .dark-mode .action-card {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+
+    .dark-mode .refresh-stats-btn {
+      border-color: #555;
+      color: #ccc;
+    }
+
+    .dark-mode .refresh-stats-btn:hover:not(:disabled) {
+      border-color: #e0e0e0;
+      color: #fff;
+    }
+
+    .dark-mode .last-updated-timestamp {
+      color: #a0aec0;
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
     @media (max-width: 768px) { 
-      .nav-bar {
-        padding: 10px 16px;
-      }
-      
-      .nav-title {
-        font-size: 1.1em;
-      }
-      
-      .container {
+      .dashboard-container {
         padding: 24px 16px;
       }
-      
-      .actions { 
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0 8px;
-      } 
       
       .action-card { 
         padding: 32px 24px;
         min-height: 180px;
+        flex-basis: 100%;
       }
       
       .quick-stats {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
         max-width: 320px;
       }
@@ -584,16 +680,12 @@
         font-size: 0.7em;
       }
       
-      .greeting {
+      .dashboard-greeting {
         font-size: 1.1em;
       }
       
       .home-logo {
         max-width: 180px;
-      }
-      
-      #staffName {
-        display: none;
       }
       
       .toast {
@@ -606,11 +698,26 @@
       .toast.show {
         transform: translateY(0);
       }
+
+      .connection-status {
+        bottom: 16px;
+        left: 16px;
+        font-size: 0.75em;
+      }
+
+      .search-section {
+        margin-bottom: 16px;
+      }
+
+      .search-input-enhanced {
+        padding: 10px 12px;
+        font-size: 0.95em;
+      }
     }
     
     @media (max-width: 480px) {
       .quick-stats {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         max-width: 280px;
         gap: 6px;
       }
@@ -627,14 +734,6 @@
         font-size: 0.65em;
       }
       
-      .nav-links {
-        gap: 8px;
-      }
-      
-      .dropdown-content {
-        min-width: 180px;
-      }
-      
       .action-card .icon {
         font-size: 2.5em;
         margin-bottom: 16px;
@@ -643,619 +742,311 @@
       .action-card .label {
         font-size: 1.1em;
       }
-    }
-    
-    /* Large screens - better centering */
-    @media (min-width: 1200px) {
-      .actions {
-        grid-template-columns: repeat(2, 300px);
-        justify-content: center;
-        gap: 40px;
+
+      .dashboard-container {
+        padding: 20px 12px;
+      }
+
+      .footer {
+        padding: 20px 12px;
+        font-size: 0.8em;
       }
     }
-    
-    /* Accessibility improvements */
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-    
-    /* Focus styles for keyboard navigation */
-    .action-card:focus,
-    .dropbtn:focus,
-    .theme-btn:focus {
+
+    /* ===== FOCUS STYLES ===== */
+    .action-card:focus {
       outline: 3px solid var(--accent);
       outline-offset: 2px;
     }
-    
-    /* Skip link for accessibility */
-    .skip-link {
-      position: absolute;
-      top: -40px;
-      left: 6px;
+
+    .search-input-enhanced:focus {
+      outline: none;
+    }
+
+    /* ===== HIGH CONTRAST MODE ===== */
+    @media (prefers-contrast: high) {
+      .action-card {
+        border: 2px solid var(--text);
+      }
+      
+      .stat-card {
+        border: 2px solid var(--text);
+      }
+    }
+
+    /* ===== PERFORMANCE OPTIMIZATIONS ===== */
+    .action-card,
+    .stat-card,
+    .toast {
+      will-change: transform;
+    }
+
+    /* ===== CUSTOM SCROLLBAR ===== */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
       background: var(--accent);
-      color: white;
-      padding: 8px;
-      text-decoration: none;
-      z-index: 100000;
       border-radius: 4px;
     }
-    
-    .skip-link:focus {
-      top: 6px;
-    }
-    
-    /* Connection status indicator */
-    .connection-status {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      padding: 8px 12px;
-      border-radius: 20px;
-      font-size: 0.8em;
-      font-weight: 500;
-      transition: var(--transition);
-      z-index: 1000;
-    }
-    
-    .connection-status.online {
-      background: #28a745;
-      color: white;
-    }
-    
-    .connection-status.offline {
-      background: #dc3545;
-      color: white;
-    }
-    
-    .connection-status.loading {
-      background: #ffc107;
-      color: #333;
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #880000;
     }
   </style>
 </head>
+
 <body>
-  <!-- Skip link for accessibility -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
-  
-  <!-- Navigation -->
+  <!-- Skip Links for Accessibility -->
+  <div class="skip-links">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#quick-stats" class="skip-link">Skip to dashboard statistics</a>
+    <a href="#actions" class="skip-link">Skip to navigation options</a>
+  </div>
+
+  <!-- Enhanced Navigation -->
   <nav class="nav-bar" role="navigation" aria-label="Main navigation">
-    <img src="crest.png" alt="College Crest" class="nav-logo">
+    <div class="nav-left">
+      <img src="crest.png" alt="College Crest" class="nav-logo" loading="lazy">
+    </div>
     <div class="nav-title">🌐 Sophia College Staff Intranet</div>
-    <div class="nav-links">
-      <span id="staffName" aria-live="polite"></span>
-      <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
-      <div class="dropdown">
-        <button class="dropbtn" aria-label="Navigation menu" aria-expanded="false" aria-haspopup="true">
-          ☰ Menu
-        </button>
-        <div class="dropdown-content" role="menu">
-          <a href="home.html" onclick="navigate('home.html'); return false;" role="menuitem">🏠 Home</a>
-          <a href="staff.html" onclick="navigate('staff.html'); return false;" role="menuitem">📝 Infringement Tracker</a>
-          <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;" role="menuitem">🏫 Out-of-Class Logger</a>
-          <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;" role="menuitem">🔄 Re-Engagement Room</a>
-          <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;" role="menuitem">
-            👥 Admin Dashboard 
-            <span id="badge" class="badge" style="display:none;" aria-label="notifications"></span>
-          </a>
-          <button onclick="logout(); return false;" role="menuitem">🚪 Logout</button>
+    <div class="nav-right">
+      <div class="nav-links">
+        <span id="staffName" aria-live="polite"></span>
+        <button class="theme-btn" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">🌓</button>
+        <div class="dropdown">
+          <button class="dropbtn" aria-label="Navigation menu" aria-expanded="false" aria-haspopup="true">
+            ☰ Menu
+          </button>
+          <div class="dropdown-content" role="menu">
+            <a href="home.html" onclick="navigate('home.html'); return false;" role="menuitem">🏠 Home</a>
+            <a href="staff.html" onclick="navigate('staff.html'); return false;" role="menuitem">📝 Infringement Tracker</a>
+            <a href="outofclass.html" onclick="navigate('outofclass.html'); return false;" role="menuitem">🏫 Out-of-Class Logger</a>
+            <a href="positiveaffirmations.html" onclick="navigate('positiveaffirmations.html'); return false;" role="menuitem">✨ Positive Affirmations</a>
+            <a href="reengagementroom.html" onclick="navigate('reengagementroom.html'); return false;" role="menuitem">🔄 Re-Engagement Room</a>
+            <a href="admin.html" id="adminLink" onclick="navigate('admin.html'); return false;" role="menuitem" style="display:none;">
+              👥 Admin Dashboard 
+              <span id="badge" class="badge" style="display:none;" aria-label="notifications"></span>
+            </a>
+            <button onclick="logout(); return false;" role="menuitem">🚪 Logout</button>
+          </div>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- Loading Banner -->
-  <div id="loadingBanner" class="loading-banner" role="status" aria-live="polite">
-    🔄 Loading dashboard data...
-  </div>
-
-  <!-- Main Content -->
-  <main id="main-content" class="container" role="main">
-    <img src="sophia-logo.png" alt="Sophia College Logo & Motto" class="home-logo">
-    <h1 id="greeting" class="greeting"></h1>
-    <p class="welcome-text">Select a tool below to get started</p>
-
-    <!-- Compact Quick Stats -->
-    <section class="quick-stats" id="quickStats" style="display:none;" aria-label="Dashboard statistics">
-      <div class="stat-card loading" id="todayInfractionsCard">
-        <span class="stat-number" id="todayInfractions">-</span>
-        <span class="stat-label">Today's Infractions</span>
-      </div>
-      <div class="stat-card loading" id="weekReferralsCard">
-        <span class="stat-number" id="weekReferrals">-</span>
-        <span class="stat-label">Week Referrals</span>
-      </div>
-      <div class="stat-card loading" id="activeStudentsCard">
-        <span class="stat-number" id="activeStudents">-</span>
-        <span class="stat-label">Total Students</span>
-      </div>
-    </section>
-
-    <!-- Enhanced Action Cards -->
-    <section class="actions" aria-label="Main navigation options">
-      <div class="action-card" onclick="navigate('staff.html')" tabindex="0" role="button" aria-label="Access Infringement Tracker" onkeydown="handleCardKeydown(event, 'staff.html')">
-        <div class="icon" aria-hidden="true">✏️</div>
-        <div class="label">Infringement Tracker</div>
-        <div class="description">Log and manage student uniform and behavior infractions</div>
-      </div>
-      
-      <div class="action-card" onclick="navigate('outofclass.html')" tabindex="0" role="button" aria-label="Access Out-of-Class Logger" onkeydown="handleCardKeydown(event, 'outofclass.html')">
-        <div class="icon" aria-hidden="true">🏫</div>
-        <div class="label">Out-of-Class Logger</div>
-        <div class="description">Track students who leave class during lessons</div>
-      </div>
-      
-      <div class="action-card" onclick="navigate('reengagementroom.html')" tabindex="0" role="button" aria-label="Access Re-Engagement Room System" onkeydown="handleCardKeydown(event, 'reengagementroom.html')">
-        <div class="icon" aria-hidden="true">🔄</div>
-        <div class="label">Re-Engagement Room</div>
-        <div class="description">Submit referrals and manage student interventions</div>
-      </div>
-
-      <div class="action-card" onclick="navigate('admin.html')" tabindex="0" role="button" aria-label="Access Administrator Dashboard" onkeydown="handleCardKeydown(event, 'admin.html')">
-        <div class="icon" aria-hidden="true">📚👨‍💻</div>
-        <div class="label">Administrator Dashboard</div>
-        <div class="description">Administrator Access for School Leadership</div>
-      </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <p>© 2025 Sophia College | 
-        <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
-        <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
-        Version 1.2
+  <!-- Login Section -->
+  <section id="loginSection">
+    <div class="login-card">
+      <img src="sophia-logo.png" alt="Sophia College Logo and Motto" class="login-logo">
+      <h1 class="greeting" id="timeGreeting"></h1>
+      <p class="welcome-text">
+        Welcome to the Sophia College Staff Intranet<br>
+        Please enter your Staff ID to access the system
       </p>
-    </footer>
-  </main>
+
+      <form class="form-section" id="loginForm" novalidate>
+        <div class="form-group">
+          <label for="staffID">Staff ID<span class="required-indicator" aria-label="required">*</span></label>
+          <div class="input-wrapper">
+            <input type="password" id="staffID" name="staffID" placeholder="Enter your 6-digit Staff ID"
+              autocomplete="username" required aria-describedby="staffID-help staffID-error"
+              aria-label="Staff identification number" aria-required="true" pattern="[0-9]{6}" maxlength="6">
+            <button type="button" class="eye-toggle" id="toggleEye" title="Toggle password visibility" aria-label="Toggle password visibility">👁️</button>
+            <div class="validation-indicator" aria-hidden="true">✓</div>
+          </div>
+          <div id="staffID-help" class="help-text">Enter your 6-digit staff identification number</div>
+          <div id="staffID-error" role="alert" aria-live="polite" class="error-text"></div>
+        </div>
+
+        <a href="#" class="forgot-link" id="forgotID" role="button" tabindex="0">Forgot Staff ID?</a>
+
+        <div class="status-container">
+          <div class="status-msg" id="statusMsg" role="alert" aria-live="assertive"></div>
+        </div>
+
+        <div class="remember-section">
+          <input type="checkbox" id="rememberMe" name="rememberMe">
+          <label for="rememberMe">Remember me for 48 hours</label>
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span class="btn-text">🔐 Secure Login</span>
+          <div class="spinner" aria-hidden="true"></div>
+        </button>
+
+        <div class="progress-bar" id="progressBar" style="display: none;">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </form>
+
+      <div class="security-badge">🔒 Secure authentication via encrypted connection</div>
+    </div>
+  </section>
+
+  <!-- Main Content Section -->
+  <section id="mainContent">
+    <!-- Loading Banner -->
+    <div id="loadingBanner" class="loading-banner" role="status" aria-live="polite">
+      🔄 Loading dashboard data...
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Main Content -->
+      <main id="main-content" class="dashboard-container" role="main">
+        <img src="sophia-logo.png" alt="Sophia College Logo & Motto" class="home-logo" loading="lazy">
+        <h1 id="greeting" class="dashboard-greeting"></h1>
+        <p class="dashboard-welcome">Select a tool below to get started</p>
+
+        <!-- Enhanced Quick Stats -->
+        <section class="quick-stats" id="quick-stats" aria-label="Dashboard statistics">
+          <div class="stat-card loading" id="todayInfractionsCard">
+            <div class="skeleton-line" style="width: 40%; height: 24px; margin-bottom: 8px;"></div>
+            <div class="skeleton-line" style="width: 80%; height: 12px;"></div>
+          </div>
+          <div class="stat-card loading" id="weekReferralsCard">
+            <div class="skeleton-line" style="width: 30%; height: 24px; margin-bottom: 8px;"></div>
+            <div class="skeleton-line" style="width: 70%; height: 12px;"></div>
+          </div>
+          <div class="stat-card loading" id="activeStudentsCard">
+            <div class="skeleton-line" style="width: 50%; height: 24px; margin-bottom: 8px;"></div>
+            <div class="skeleton-line" style="width: 90%; height: 12px;"></div>
+          </div>
+          <div class="stat-card loading" id="weekAffirmationsCard">
+            <div class="skeleton-line" style="width: 35%; height: 24px; margin-bottom: 8px;"></div>
+            <div class="skeleton-line" style="width: 75%; height: 12px;"></div>
+          </div>
+        </section>
+        
+        <section class="charts" id="charts" style="display:none; max-width: 800px; margin: 20px auto;">
+          <canvas id="infractionsChart"></canvas>
+        </section>
+
+        <!-- Enhanced Action Cards -->
+        <section class="actions" id="actions" aria-label="Main navigation options">
+          <div class="action-card" onclick="navigate('staff.html')" tabindex="0" role="button" aria-label="Access Infringement Tracker" onkeydown="handleCardKeydown(event, 'staff.html')" data-keywords="infringement tracker uniform behavior violations log manage student">
+            <div class="icon" aria-hidden="true">✏️</div>
+            <div class="label">Infringement Tracker</div>
+            <div class="description">Log and manage student uniform and behavior infractions</div>
+          </div>
+          
+          <div class="action-card" onclick="navigate('outofclass.html')" tabindex="0" role="button" aria-label="Access Out-of-Class Logger" onkeydown="handleCardKeydown(event, 'outofclass.html')" data-keywords="out of class logger track students leave lessons bathroom toilet break">
+            <div class="icon" aria-hidden="true">🏫</div>
+            <div class="label">Out-of-Class Logger</div>
+            <div class="description">Track students who leave class during lessons</div>
+          </div>
+          
+          <div class="action-card" onclick="navigate('positiveaffirmations.html')" tabindex="0" role="button" aria-label="Access Positive Affirmations" onkeydown="handleCardKeydown(event, 'positiveaffirmations.html')" data-keywords="positive affirmations recognize celebrate student achievements praise rewards">
+            <div class="icon" aria-hidden="true">✨</div>
+            <div class="label">Positive Affirmations</div>
+            <div class="description">Recognize and celebrate student achievements</div>
+          </div>
+          
+          <div class="action-card" onclick="navigate('reengagementroom.html')" tabindex="0" role="button" aria-label="Access Re-Engagement Room System" onkeydown="handleCardKeydown(event, 'reengagementroom.html')" data-keywords="re-engagement room referrals interventions timeout discipline behavior management">
+            <div class="icon" aria-hidden="true">🔄</div>
+            <div class="label">Re-Engagement Room</div>
+            <div class="description">Submit referrals and manage student interventions</div>
+          </div>
+
+          <div class="action-card" onclick="navigate('admin.html')" tabindex="0" role="button" aria-label="Access Administrator Dashboard" onkeydown="handleCardKeydown(event, 'admin.html')" data-keywords="administrator dashboard admin leadership management reports analytics data">
+            <div class="icon" aria-hidden="true">📊</div>
+            <div class="label">Administrator Dashboard</div>
+            <div class="description">Administrator Access for School Leadership</div>
+          </div>
+        </section>
+
+        <!-- Data refresh button -->
+        <div style="text-align: center; margin-bottom: 16px;">
+          <button id="refreshStatsBtn" class="refresh-stats-btn" onclick="refreshDashboardStats()" title="Refresh dashboard statistics">
+            🔄 Refresh Stats
+          </button>
+          <div id="lastUpdated" class="last-updated-timestamp"></div>
+        </div>
+
+        <!-- Enhanced Search Section -->
+        <section class="search-section" aria-label="Search tools">
+          <div class="search-container-enhanced">
+            <input 
+              type="search" 
+              id="searchInput" 
+              class="search-input-enhanced"
+              placeholder="Find a tool... (or use Alt+1-5 shortcuts)" 
+              aria-label="Search for tools and features"
+              autocomplete="off"
+            >
+            <button 
+              id="searchClearBtn" 
+              class="search-clear-btn" 
+              title="Clear search"
+              aria-label="Clear search"
+            >×</button>
+          </div>
+          <div id="searchResults" class="search-results-info"></div>
+          <div class="keyboard-shortcuts-hint">
+            💡 Use Alt+1-5 for quick access to tools
+          </div>
+        </section>
+
+        <!-- Positive Affirmation Section -->
+      </main>
+
+      <!-- Enhanced Footer -->
+      <footer class="footer">
+        <p>© 2025 Sophia College | 
+          <a href="https://www.sophiacollege.qld.edu.au" target="_blank" rel="noopener">College Homepage</a> | 
+          <a href="mailto:splaittech@bne.catholic.edu.au">IT Support</a> | 
+          Enhanced Version 2.4
+        </p>
+      </footer>
+    </div>
+  </section>
 
   <!-- Enhanced Toast Notification -->
   <div id="toast" class="toast" role="alert" aria-live="assertive">
     <button class="toast-close" onclick="closeToast()" aria-label="Close notification">&times;</button>
+    <div id="toastMessage"></div>
   </div>
 
-  <!-- Connection Status -->
+  <!-- Enhanced Connection Status -->
   <div id="connectionStatus" class="connection-status loading" style="display:none;">
     <span id="connectionText">Connecting...</span>
   </div>
 
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="/shared/sophia-unified-system.js"></script>
+  <script src="js/critical-fixes.js"></script>
+  <script src="js/home.js"></script>
   <script>
-    // Enhanced theme management and utilities
-    const THEME_KEY = 'theme';
-    let db = null;
-    let dataManager = null;
-    let retryCount = 0;
-    const MAX_RETRIES = 3;
-    
-    // Utility functions
-    function navigate(url) { 
-      // Add loading state
-      showToast('🔄 Loading...', 'info', 1000);
-      window.location.href = url; 
-    }
-    
-    function logout() { 
-      if (dataManager) {
-        dataManager.cleanup();
-      }
-      localStorage.removeItem('loggedInStaff'); 
-      showToast('👋 Logged out successfully', 'info');
-      setTimeout(() => navigate('index.html'), 1000);
-    }
-    
-    function handleCardKeydown(event, url) {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        navigate(url);
-      }
-    }
-    
-    function closeToast() {
-      const toast = document.getElementById('toast');
-      if (toast) {
-        toast.style.transform = window.innerWidth <= 768 ? 'translateY(-100px)' : 'translateX(400px)';
-        setTimeout(() => {
-          toast.style.display = 'none';
-        }, 300);
-      }
-    }
-    
-    // Enhanced toast function
-    function showToast(message, type = 'info', duration = 4000) {
-      const toast = document.getElementById('toast');
-      if (!toast) return;
-      
-      // Clear any existing close timeout
-      if (toast.closeTimeout) {
-        clearTimeout(toast.closeTimeout);
-      }
-      
-      // Clear existing content and set message
-      toast.innerHTML = message;
-      toast.className = `toast ${type}`;
-      toast.style.display = 'block';
-      
-      // Add close button
-      const closeBtn = document.createElement('button');
-      closeBtn.className = 'toast-close';
-      closeBtn.innerHTML = '&times;';
-      closeBtn.onclick = closeToast;
-      closeBtn.setAttribute('aria-label', 'Close notification');
-      toast.appendChild(closeBtn);
-      
-      // Animate in
-      requestAnimationFrame(() => {
-        if (window.innerWidth <= 768) {
-          toast.style.transform = 'translateY(0)';
-          toast.classList.add('show');
-        } else {
-          toast.style.transform = 'translateX(0)';
-        }
-      });
-      
-      // Auto close
-      toast.closeTimeout = setTimeout(() => {
-        closeToast();
-      }, duration);
-    }
-    
-    // Theme toggle functionality
-    function toggleTheme() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
-      
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.textContent = isDark ? '☀️' : '🌓';
-        themeToggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-        themeToggle.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
-      }
-      
-      showToast(`🎨 Switched to ${isDark ? 'dark' : 'light'} mode`, 'info', 2000);
-    }
-    
-    // Enhanced connection status
-    function updateConnectionStatus(status, text) {
-      const statusElement = document.getElementById('connectionStatus');
-      const textElement = document.getElementById('connectionText');
-      
-      if (statusElement && textElement) {
-        statusElement.className = `connection-status ${status}`;
-        textElement.textContent = text;
-        statusElement.style.display = 'block';
+    document.addEventListener('DOMContentLoaded', function() {
+        // Apply performance optimizations immediately
+        PerformanceOptimizer.addCriticalCSS();
         
-        // Auto-hide online status after 3 seconds
-        if (status === 'online') {
-          setTimeout(() => {
-            statusElement.style.display = 'none';
-          }, 3000);
-        }
-      }
-    }
-    
-    // Enhanced students count loader with retry logic
-    async function loadStudentsCount() {
-      try {
-        updateConnectionStatus('loading', 'Loading students...');
+        // Initialize toast system
+        UnifiedToast.init();
         
-        if (typeof Papa === 'undefined') {
-          throw new Error('Papa Parse not available');
-        }
+        // Add global error handling
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            ErrorHandler.showUserFriendlyError(error, 'Global Error');
+            return false;
+        };
         
-        return new Promise((resolve, reject) => {
-          Papa.parse('students.csv', {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: (results) => {
-              console.log('✅ Students CSV loaded:', results.data.length, 'students');
-              updateConnectionStatus('online', 'Connected');
-              resolve(results.data.length);
-            },
-            error: (error) => {
-              console.error('❌ Error loading students CSV:', error);
-              updateConnectionStatus('offline', 'Connection error');
-              reject(error);
-            }
-          });
-        });
-      } catch (error) {
-        updateConnectionStatus('offline', 'Failed to load data');
-        throw error;
-      }
-    }
-    
-    // Enhanced stats loader with better error handling
-    async function loadQuickStats() {
-      try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        
-        // Show stats section with loading state
-        document.getElementById('quickStats').style.display = 'grid';
-        
-        // Load students count from CSV with retry logic
-        try {
-          const studentsCount = await loadStudentsCount();
-          document.getElementById('activeStudents').textContent = studentsCount;
-          document.getElementById('activeStudentsCard').classList.remove('loading');
-        } catch (error) {
-          document.getElementById('activeStudents').textContent = '?';
-          document.getElementById('activeStudentsCard').classList.remove('loading');
-          
-          if (retryCount < MAX_RETRIES) {
-            retryCount++;
-            console.log(`Retrying student count load (${retryCount}/${MAX_RETRIES})`);
-            setTimeout(() => loadQuickStats(), 2000 * retryCount);
-            return;
-          }
-        }
-        
-        // Load Firebase stats if available
-        if (db) {
-          try {
-            // Today's infractions
-            const infractionsToday = await db.collection('infringements')
-              .where('timestamp', '>=', today)
-              .get();
-            
-            // This week's referrals
-            const referralsWeek = await db.collection('referrals')
-              .where('timestamp', '>=', weekAgo)
-              .get();
-            
-            // Update display
-            document.getElementById('todayInfractions').textContent = infractionsToday.size;
-            document.getElementById('weekReferrals').textContent = referralsWeek.size;
-            
-            document.getElementById('todayInfractionsCard').classList.remove('loading');
-            document.getElementById('weekReferralsCard').classList.remove('loading');
-            
-          } catch (firebaseError) {
-            console.warn('Could not load Firebase stats:', firebaseError);
-            // Show fallback values for Firebase stats
-            document.getElementById('todayInfractions').textContent = '-';
-            document.getElementById('weekReferrals').textContent = '-';
-            
-            document.getElementById('todayInfractionsCard').classList.remove('loading');
-            document.getElementById('weekReferralsCard').classList.remove('loading');
-          }
-        } else {
-          // Firebase not available, show fallback
-          document.getElementById('todayInfractions').textContent = '-';
-          document.getElementById('weekReferrals').textContent = '-';
-          
-          document.getElementById('todayInfractionsCard').classList.remove('loading');
-          document.getElementById('weekReferralsCard').classList.remove('loading');
-        }
-        
-      } catch (error) {
-        console.warn('Could not load stats:', error);
-        // Show error state but still display what we can
-        document.getElementById('activeStudents').textContent = '?';
-        document.getElementById('todayInfractions').textContent = '-';
-        document.getElementById('weekReferrals').textContent = '-';
-        
-        // Remove loading states
-        document.querySelectorAll('.stat-card.loading').forEach(card => {
-          card.classList.remove('loading');
+        window.addEventListener('unhandledrejection', function(event) {
+            ErrorHandler.showUserFriendlyError(event.reason, 'Promise Rejection');
+            event.preventDefault();
         });
         
-        document.getElementById('quickStats').style.display = 'grid';
-        
-        showToast('⚠️ Some data could not be loaded', 'warning', 3000);
-      }
-    }
-    
-    // Initialize Firebase with enhanced error handling
-    async function initializeFirebase() {
-      try {
-        if (typeof firebase === 'undefined') {
-          console.warn('Firebase not available');
-          return;
-        }
-        
-        firebase.initializeApp({
-          apiKey: 'AIzaSyD0yaJtrClhyXWjBqDmtdxdM2kWl8AvtKU',
-          authDomain: 'sophia-infringements.firebaseapp.com',
-          projectId: 'sophia-infringements'
-        });
-        
-        db = firebase.firestore();
-        
-        // Test connection
-        await db.collection('test').limit(1).get();
-        console.log('✅ Firebase connected successfully');
-        
-        // Load admin badge if user has access
-        const staff = JSON.parse(localStorage.getItem('loggedInStaff') || 'null');
-        if (staff && staff.adminaccess === 'Y') {
-          try {
-            const snapshot = await db.collection('infringements').get();
-            const badge = document.getElementById('badge');
-            if (badge && snapshot.size > 0) {
-              badge.textContent = snapshot.size;
-              badge.style.display = 'inline-block';
-            }
-          } catch (err) {
-            console.warn('Could not load badge count:', err);
-          }
-        }
-        
-      } catch (error) {
-        console.warn('Firebase initialization failed:', error);
-        updateConnectionStatus('offline', 'Firebase unavailable');
-      }
-    }
-    
-    // Initialize unified system if available
-    async function initializeUnifiedSystem() {
-      try {
-        if (typeof SophiaSystem !== 'undefined' && SophiaSystem.dataManager) {
-          dataManager = SophiaSystem.dataManager;
-          console.log('✅ Unified system available');
-        } else {
-          console.log('ℹ️ Unified system not available, using fallback methods');
-        }
-      } catch (error) {
-        console.warn('Unified system initialization failed:', error);
-      }
-    }
-    
-    // Keyboard navigation support
-    function setupKeyboardNavigation() {
-      document.addEventListener('keydown', (e) => {
-        // Handle dropdown menu with keyboard
-        if (e.key === 'Escape') {
-          const dropdowns = document.querySelectorAll('.dropdown-content');
-          dropdowns.forEach(dropdown => {
-            dropdown.style.display = 'none';
-          });
-        }
-        
-        // Handle toast close with Escape
-        if (e.key === 'Escape') {
-          closeToast();
-        }
-      });
-      
-      // Enhanced dropdown accessibility
-      const dropdownBtn = document.querySelector('.dropbtn');
-      const dropdownContent = document.querySelector('.dropdown-content');
-      
-      if (dropdownBtn && dropdownContent) {
-        dropdownBtn.addEventListener('click', () => {
-          const isOpen = dropdownContent.style.display === 'block';
-          dropdownContent.style.display = isOpen ? 'none' : 'block';
-          dropdownBtn.setAttribute('aria-expanded', !isOpen);
-        });
-      }
-    }
-    
-    // Page initialization with enhanced error handling
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('🏠 Home page loading...');
-      
-      try {
-        // Check authentication
-        const staff = JSON.parse(localStorage.getItem('loggedInStaff') || 'null');
-        if (!staff) {
-          showToast('❌ Please log in to access the intranet', 'error');
-          setTimeout(() => navigate('index.html'), 2000);
-          return;
-        }
-        
-        // Setup theme
-        const savedTheme = localStorage.getItem(THEME_KEY);
-        if (savedTheme === 'dark') {
-          document.body.classList.add('dark-mode');
-          const themeToggle = document.getElementById('themeToggle');
-          if (themeToggle) {
-            themeToggle.textContent = '☀️';
-            themeToggle.title = 'Switch to light mode';
-            themeToggle.setAttribute('aria-label', 'Switch to light mode');
-          }
-        }
-        
-        // Setup theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-          themeToggle.addEventListener('click', toggleTheme);
-        }
-        
-        // Display staff info
-        const staffNameElement = document.getElementById('staffName');
-        if (staffNameElement) {
-          staffNameElement.textContent = staff['staff name'];
-        }
-        
-        // Hide admin link if no access
-        if (staff.adminaccess !== 'Y') {
-          const adminLink = document.getElementById('adminLink');
-          if (adminLink) {
-            adminLink.style.display = 'none';
-          }
-        }
-        
-        // Generate greeting
-        const greeting = document.getElementById('greeting');
-        if (greeting) {
-          const hour = new Date().getHours();
-          const timeOfDay = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-          greeting.textContent = `${timeOfDay}, ${staff['staff name']}!`;
-        }
-        
-        // Show loading banner briefly
-        const loadingBanner = document.getElementById('loadingBanner');
-        if (loadingBanner) {
-          loadingBanner.style.display = 'block';
-          setTimeout(() => {
-            loadingBanner.style.display = 'none';
-          }, 2000);
-        }
-        
-        // Initialize systems
-        await Promise.all([
-          initializeUnifiedSystem(),
-          initializeFirebase()
-        ]);
-        
-        // Load data
-        await loadQuickStats();
-        
-        // Setup keyboard navigation
-        setupKeyboardNavigation();
-        
-        // Welcome message
-        setTimeout(() => {
-          showToast(`🎉 Welcome back, ${staff['staff name']}!`, 'success', 3000);
-        }, 1500);
-        
-        console.log('✅ Home page initialized successfully');
-        
-      } catch (error) {
-        console.error('❌ Home page initialization failed:', error);
-        showToast('❌ Failed to initialize dashboard. Please refresh the page.', 'error', 5000);
-        updateConnectionStatus('offline', 'Initialization failed');
-      }
+        console.log('✅ Critical fixes applied successfully to home page');
     });
-    
-    // Enhanced global error handling
-    window.addEventListener('error', (e) => {
-      console.error('Global error:', e.error);
-      showToast('❌ An error occurred. Please refresh the page if problems persist.', 'error', 5000);
-      updateConnectionStatus('offline', 'Error detected');
-    });
-    
-    // Handle online/offline events
-    window.addEventListener('online', () => {
-      updateConnectionStatus('online', 'Connection restored');
-      showToast('🌐 Connection restored', 'success', 2000);
-      
-      // Retry loading data if needed
-      if (retryCount > 0) {
-        setTimeout(loadQuickStats, 1000);
-      }
-    });
-    
-    window.addEventListener('offline', () => {
-      updateConnectionStatus('offline', 'No internet connection');
-      showToast('📡 Connection lost - working offline', 'warning', 3000);
-    });
-    
-    // Make functions globally accessible
-    window.navigate = navigate;
-    window.logout = logout;
-    window.toggleTheme = toggleTheme;
-    window.showToast = showToast;
-    window.closeToast = closeToast;
-    window.handleCardKeydown = handleCardKeydown;
   </script>
 </body>
 </html>

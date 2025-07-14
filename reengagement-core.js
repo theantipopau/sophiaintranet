@@ -201,22 +201,20 @@ class ToastManager {
         const toastElement = document.createElement('div');
         toastElement.id = `toast-${id}`;
         toastElement.className = `toast toast-${type}`;
-        toastElement.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${colors[type] || colors.info};
-            color: white;
-            padding: 16px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            max-width: 300px;
-            word-wrap: break-word;
-            margin-bottom: 10px;
-        `;
+        toastElement.style.cssText = `position: fixed;
+top: 20px;
+right: 20px;
+background: ${colors[type] || colors.info};
+color: white;
+padding: 16px 20px;
+border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+z-index: 10000;
+transform: translateX(400px);
+transition: transform 0.3s ease;
+max-width: 300px;
+word-wrap: break-word;
+margin-bottom: 10px;`;
 
         // Add message
         const messageSpan = document.createElement('span');
